@@ -383,13 +383,13 @@ namespace SimpleNetwork.Interfaces
     /// <summary>
     /// Biomass backup model (efficiency = 1).
     /// </summary>
-    public class BiomassBackup : IStorage
+    public class HydroBiomassBackup : IStorage
     {
         private readonly BasicBackup _mCore;
 
-        public BiomassBackup(double capacity)
+        public HydroBiomassBackup(double capacity)
         {
-            _mCore = new BasicBackup("Biomass backup", capacity);
+            _mCore = new BasicBackup("Hydro-biomass backup", capacity);
         }
 
         public bool Measurering

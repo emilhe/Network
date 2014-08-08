@@ -14,6 +14,7 @@ namespace SimpleVisualisation
         public TimeSeriesControl()
         {
             InitializeComponent();
+            ChartUtils.EnableZooming(chart);
 
             seriesListView.ItemSelectionChanged += seriesListView_ItemSelectionChanged;
         }

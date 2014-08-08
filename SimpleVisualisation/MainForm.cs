@@ -37,34 +37,60 @@ namespace SimpleVisualisation
             var system = new NetworkSystem(nodes, edges);
             Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
+            //ContourStuff(system, noCol);
+            TsStuff(system, noCol);
+        }
+
+        public void TsStuff(NetworkSystem sys, NodeCollection noCol)
+        {
+            noCol.Penetration = 1.15;
+            noCol.Mixing = 0.65;
+            sys.Simulate(24*365);
+            DisplayTs(sys.Output);
+        }
+
+        public void ContourStuff(NetworkSystem sys, NodeCollection noCol)
+        {
             var gridParams = new GridScanParameters
             {
                 MixingFrom = 0.35,
                 MixingTo = 0.95,
-                MixingSteps = 24,
+                MixingSteps = 12, //24
                 PenetrationFrom = 1.1,
                 PenetrationTo = 1.25,
-                PenetrationSteps = 15
+                PenetrationSteps = 5//15
             };
 
-            DisplayContour(DoGridScan(gridParams, system, noCol));
+            DisplayContour(DoGridScan(gridParams, sys, noCol));
         }
 
         public Tuple<double, double, bool>[,] DoGridScan(GridScanParameters gridParams, NetworkSystem sys, NodeCollection noCol)
         {
             var watch = new Stopwatch();
-
-            return GridEvaluator.EvalDense(delegate(int[] idxs)
+            var tuples = new Tuple<double, double, bool>[gridParams.PenetrationSteps, gridParams.MixingSteps];
+            // Eval grid.
+            var grid = GridEvaluator.EvalSparse(delegate(int[] idxs)
             {
-                noCol.Mixing = gridParams.MixingFrom + gridParams.MixingStep*idxs[0];
-                noCol.Penetration = gridParams.PenetrationFrom + gridParams.PenetrationStep*idxs[1];
+                noCol.Penetration = gridParams.PenetrationFrom + gridParams.PenetrationStep*idxs[0];
+                noCol.Mixing = gridParams.MixingFrom + gridParams.MixingStep * idxs[1];
                 // Do simulation.
                 watch.Restart();
                 sys.Simulate(24*7*52, false);
                 Console.WriteLine("Mix " + noCol.Mixing + "; Penetation " + noCol.Penetration + ": " +
                                   watch.ElapsedMilliseconds + ", " + (sys.Output.Success ? "SUCCESS" : "FAIL"));
-                return new Tuple<double, double, bool>(noCol.Mixing, noCol.Penetration, sys.Output.Success);
-            }, new[]{gridParams.MixingSteps, gridParams.PenetrationSteps});
+                return sys.Output.Success; 
+            }, new[]{gridParams.PenetrationSteps, gridParams.MixingSteps});
+            // Map coordinates.
+            for (int i = 0; i < grid.GetLength(0); i++)
+            {
+                for (int j = 0; j < grid.GetLength(1); j++)
+                {
+                    tuples[i, j] = new Tuple<double, double, bool>(gridParams.PenetrationFrom + gridParams.PenetrationStep*i,
+                        gridParams.MixingFrom + gridParams.MixingStep*j, grid[i, j]);
+                }
+                
+            }
+            return tuples;
         }
 
         #region Contour mapping

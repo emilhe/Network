@@ -75,6 +75,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChartUtils.cs" />
     <Compile Include="ContourControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -95,9 +96,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ZoomChart.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <EmbeddedResource Include="ContourControl.resx">
       <DependentUpon>ContourControl.cs</DependentUpon>
     </EmbeddedResource>

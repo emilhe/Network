@@ -63,7 +63,7 @@ namespace UnitTest
             _mNumberOfEvals = 0;
             var grid = GridEvaluator.EvalSparse(ReadGrid, _mDims);
             Assert.AreEqual(_mGrid, grid);
-            Assert.AreEqual(_mNumberOfEvals, 17); // Less than gru
+            Assert.AreEqual(_mNumberOfEvals, 17); // Less than grid.Length
         }
 
     }

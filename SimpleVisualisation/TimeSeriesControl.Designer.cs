@@ -1,4 +1,6 @@
-﻿namespace SimpleVisualisation
+﻿using System.Windows.Forms.DataVisualization.Charting;
+
+namespace SimpleVisualisation
 {
     partial class TimeSeriesControl
     {
@@ -31,7 +33,7 @@
             System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            this.chart = new ZoomChart();
+            this.chart = new Chart();
             this.seriesListView = new System.Windows.Forms.ListView();
             ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
             this.SuspendLayout();
@@ -55,7 +57,6 @@
             this.chart.Size = new System.Drawing.Size(954, 316);
             this.chart.TabIndex = 1;
             this.chart.Text = "chart";
-            this.chart.PostInit();
             // 
             // seriesListView
             // 
@@ -83,7 +84,7 @@
 
         #endregion
 
-        private ZoomChart chart;
+        private Chart chart;
         private System.Windows.Forms.ListView seriesListView;
 
     }

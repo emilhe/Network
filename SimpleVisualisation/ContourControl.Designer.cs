@@ -1,4 +1,6 @@
-﻿namespace SimpleVisualisation
+﻿using System.Windows.Forms.DataVisualization.Charting;
+
+namespace SimpleVisualisation
 {
     partial class ContourControl
     {
@@ -31,7 +33,7 @@
             System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            this.chart = new ZoomChart();
+            this.chart = new Chart();
             ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
             this.SuspendLayout();
             // 
@@ -51,7 +53,6 @@
             this.chart.Size = new System.Drawing.Size(553, 254);
             this.chart.TabIndex = 0;
             this.chart.Text = "chart";
-            this.chart.PostInit();
             // 
             // ContourControl
             // 
@@ -67,6 +68,6 @@
 
         #endregion
 
-        private ZoomChart chart;
+        private Chart chart;
     }
 }
