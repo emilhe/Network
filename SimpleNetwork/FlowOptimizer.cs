@@ -45,11 +45,10 @@ namespace SimpleNetwork
         /// <summary>
         /// Initialization.
         /// </summary>
-        /// <param name="logName"> name of Gurobi log file </param>
         /// <param name="n"> problem size (number of nodes) </param>
-        public FlowOptimizer(string logName, int n)
+        public FlowOptimizer(int n)
         {
-            _mEnv = new GRBEnv(logName);
+            _mEnv = new GRBEnv();
             _mEnv.Set(GRB.IntParam.LogToConsole, 0);
             _mModel = new GRBModel(_mEnv);
             _mN = n;

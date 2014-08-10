@@ -21,7 +21,7 @@ namespace UnitTest
         [Test]
         public void TwoNodeTest()
         {
-            var opt = new FlowOptimizer("TwoNodeTest.log", 2);
+            var opt = new FlowOptimizer(2);
             var nodes = new double[] {2, -1};
             var edges = new EdgeSet(2);
             edges.AddEdge(0, 1);
@@ -48,7 +48,7 @@ namespace UnitTest
         [Test]
         public void FourNodeAllEdgeTest()
         {
-            var opt = new FlowOptimizer("FourNodeAllEdgeTest.log", 4);
+            var opt = new FlowOptimizer(4);
             var nodes = new double[] { 2, -1, 4, -3 };
             var edges = new EdgeSet(4);
             edges.AddEdge(0, 1);
@@ -70,7 +70,7 @@ namespace UnitTest
         [Test]
         public void FourNodeFewEdgeTest()
         {
-            var opt = new FlowOptimizer("FourNodeAllEdgeTest.log", 4);
+            var opt = new FlowOptimizer(4);
             var nodes = new double[] { 2, -1, 4, -3 };
             var edges = new EdgeSet(4);
             edges.AddEdge(0, 1);
@@ -89,7 +89,7 @@ namespace UnitTest
         [Test]
         public void ChargeLimitTest()
         {
-            var opt = new FlowOptimizer("ChargeLimitTest.log", 2);
+            var opt = new FlowOptimizer(2);
             var nodes = new double[] { 2, -1 };
             var edges = new EdgeSet(2);
             edges.AddEdge(0, 1);
@@ -104,7 +104,7 @@ namespace UnitTest
         [Test]
         public void DischargeTest()
         {
-            var opt = new FlowOptimizer("DischargeTest.log", 2);
+            var opt = new FlowOptimizer(2);
             var nodes = new double[] { 2, -3 };
             var edges = new EdgeSet(2);
             edges.AddEdge(0, 1);

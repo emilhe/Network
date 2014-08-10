@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
-            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -42,15 +41,14 @@
             this.panel1.Size = new System.Drawing.Size(688, 251);
             this.panel1.TabIndex = 0;
             // 
-            // TimeSeriesForm
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(712, 275);
             this.Controls.Add(this.panel1);
-            this.Name = "TimeSeriesForm";
-            this.Text = "Time Series Visualisation";
-            this.panel1.ResumeLayout(false);
+            this.Name = "MainForm";
+            this.Text = "Visualisation";
             this.ResumeLayout(false);
 
         }

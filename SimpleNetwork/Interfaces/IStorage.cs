@@ -29,10 +29,32 @@ namespace SimpleNetwork.Interfaces
         /// </summary>
         double Capacity { get; }
 
+        /// <summary>
+        /// Injects an amount of energy (positive or negative) into the storage.
+        /// </summary>
+        /// <param name="tick"> tick </param>
+        /// <param name="amount"> amount of energy </param>
+        /// <returns> remaining energy </returns>
         double Inject(int tick, double amount);
 
-        double RemainingCapacity(Response response);
+        /// <summary>
+        /// Restore (= fully charge/discharge) the storage.
+        /// </summary>
+        /// <param name="tick"> tick </param>
+        /// <param name="response"> should we charge or discharge? </param>
+        /// <returns> cost of discharge </returns>
+        double Restore(int tick, Response response);
 
+        /// <summary>
+        /// Remaining capacity for a specific response; charge or dicharge.
+        /// </summary>
+        /// <param name="response"> needed backup response </param>
+        /// <returns> remaining capacity </returns>
+        double RemainingCapacity(Response response);
+        
+        /// <summary>
+        /// Reset capacity (the be used when a new simulation is started).
+        /// </summary>
         void ResetCapacity();
     }
 
@@ -41,7 +63,7 @@ namespace SimpleNetwork.Interfaces
     /// <summary>
     /// Storage (rechargeable).
     /// </summary>
-    internal class BasicStorage : IStorage
+    public class BasicStorage : IStorage
     {
         private bool _mMeasurering;
         private double _mRemainingCapacity;
@@ -111,6 +133,22 @@ namespace SimpleNetwork.Interfaces
         {
             if (amount > 0) return Charge(tick, amount);
             return -Discharge(tick, -amount);
+        }
+
+        public double Restore(int tick, Response response)
+        {
+            if (response == Response.Charge)
+            {
+                var cost = EffectiveEnergyNeededToRestoreFullCapacity();
+                Restore(tick);
+                return -cost;
+            }
+            else
+            {
+                var cost = EffectiveEnergyReleasedOnDrainEmpty();
+                Drain(tick);
+                return cost;
+            }
         }
 
         /// <summary>
@@ -236,6 +274,11 @@ namespace SimpleNetwork.Interfaces
             return ((IStorage) _mCore).Inject(tick, amount);
         }
 
+        public double Restore(int tick, Response response)
+        {
+            return ((IStorage) _mCore).Restore(tick, response);
+        }
+
         public double RemainingCapacity(Response response)
         {
             return ((IStorage) _mCore).RemainingCapacity(response);
@@ -298,6 +341,11 @@ namespace SimpleNetwork.Interfaces
         public double Inject(int tick, double amount)
         {
             return ((IStorage) _mCore).Inject(tick, amount);
+        }
+
+        public double Restore(int tick, Response response)
+        {
+            return ((IStorage) _mCore).Restore(tick, response);
         }
 
         public double RemainingCapacity(Response response)
@@ -368,6 +416,12 @@ namespace SimpleNetwork.Interfaces
             return amount > 0 ? amount : ((IStorage) _mCore).Inject(tick, amount);
         }
 
+        public double Restore(int tick, Response response)
+        {
+            // A backup cannot be charged.
+            return (response == Response.Charge)? 0 : ((IStorage) _mCore).Restore(tick, response);
+        }
+
         public double RemainingCapacity(Response response)
         {
             // A backup cannot be charged.
@@ -432,6 +486,11 @@ namespace SimpleNetwork.Interfaces
             return ((IStorage) _mCore).Inject(tick, amount);
         }
 
+        public double Restore(int tick, Response response)
+        {
+            return ((IStorage) _mCore).Restore(tick, response);
+        }
+
         public double RemainingCapacity(Response response)
         {
             return ((IStorage) _mCore).RemainingCapacity(response);
@@ -444,4 +503,5 @@ namespace SimpleNetwork.Interfaces
     }
 
     #endregion
+
 }

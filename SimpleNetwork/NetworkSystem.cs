@@ -78,7 +78,7 @@ namespace SimpleNetwork
         {
             Nodes = nodes;
 
-            _flowOptimizer = new FlowOptimizer("flowOpt.log", Nodes.Count);
+            _flowOptimizer = new FlowOptimizer(Nodes.Count);
             _flowOptimizer.SetEdges(edges);
 
             _mDeltas = new double[Nodes.Count];
@@ -210,7 +210,7 @@ namespace SimpleNetwork
                 // Restore the lower storage level.
                 for (int index = 0; index < Nodes.Count; index++)
                 {
-                    _mDeltas[index] = Nodes[index].Storages[_mStorageLevel].Inject(_mTick, _mDeltas[index]);
+                    _mDeltas[index] += Nodes[index].Storages[_mStorageLevel].Restore(_mTick, SystemResponse);
                 }
                 // Go to the next storage level.
                 _mStorageLevel++;

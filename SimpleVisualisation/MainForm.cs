@@ -37,15 +37,19 @@ namespace SimpleVisualisation
             var system = new NetworkSystem(nodes, edges);
             Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
-            //ContourStuff(system, noCol);
-            TsStuff(system, noCol);
+            ContourStuff(system, noCol);
+            //TsStuff(system, noCol);
         }
 
         public void TsStuff(NetworkSystem sys, NodeCollection noCol)
         {
+            var watch = new Stopwatch();
+            watch.Start();
             noCol.Penetration = 1.15;
             noCol.Mixing = 0.65;
             sys.Simulate(24*365);
+            Console.WriteLine("Mix " + noCol.Mixing + "; Penetation " + noCol.Penetration + ": " +
+                  watch.ElapsedMilliseconds + ", " + (sys.Output.Success ? "SUCCESS" : "FAIL"));
             DisplayTs(sys.Output);
         }
 
