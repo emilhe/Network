@@ -29,15 +29,33 @@ namespace SimpleVisualisation
             watch.Start();
 
             var client = new MainAccessClient();
-            var noCol = new NodeCollection(client.GetAllCountryData());
-            var nodes = noCol.Nodes;
+
+            var opt = new MixOptimizer(client.GetAllCountryData());
+            //opt.OptimizeIndividually();
+            opt.ReadMixCahce();
+            opt.OptimizeLocally();
+            var nodes = opt.Nodes;
             var edges = new EdgeSet(nodes.Count);
             // For now, connect the nodes in a straight line.
             for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
             var system = new NetworkSystem(nodes, edges);
-            Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
+            for (var pen = 1.02; pen <= 1.10; pen += 0.0025)
+            {
+                opt.SetPenetration(pen);
+                system.Simulate(24 * 7 * 52);
+                Console.WriteLine("Penetation " + pen + ", " + (system.Output.Success ? "SUCCESS" : "FAIL"));
+            }
+            DisplayTs(system.Output);
 
-            ContourStuff(system, noCol);
+            //var noCol = new NodeCollection(client.GetAllCountryData());
+            //var nodes = noCol.Nodes;
+            //var edges = new EdgeSet(nodes.Count);
+            //// For now, connect the nodes in a straight line.
+            //for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
+            //var system = new NetworkSystem(nodes, edges);
+            //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
+
+            //ContourStuff(system, noCol);
             //TsStuff(system, noCol);
         }
 
@@ -57,12 +75,12 @@ namespace SimpleVisualisation
         {
             var gridParams = new GridScanParameters
             {
-                MixingFrom = 0.35,
-                MixingTo = 0.95,
-                MixingSteps = 12, //24
-                PenetrationFrom = 1.1,
-                PenetrationTo = 1.25,
-                PenetrationSteps = 5//15
+                MixingFrom = 0.55,
+                MixingTo = 0.75,
+                MixingSteps = 20, //24
+                PenetrationFrom = 1.06,
+                PenetrationTo = 1.10,
+                PenetrationSteps = 16//15
             };
 
             DisplayContour(DoGridScan(gridParams, sys, noCol));

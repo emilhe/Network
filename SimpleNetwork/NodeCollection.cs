@@ -65,8 +65,8 @@ namespace SimpleNetwork
                 node.Storages = new Dictionary<int, IStorage>
                 {
                     {0, new BatteryStorage(6*avgLoad)}, // Fixed for now
-                    {1, new HydrogenStorage(75*avgLoad)}, // To be country dependent
-                    {2, new HydroBiomassBackup(450*avgLoad)} // To be country dependent
+                    {1, new HydrogenStorage(68.18*avgLoad)}, //  25TWh*(6hourLoad/2.2TWh); To be country dependent
+                    {2, new HydroBiomassBackup(409.09*avgLoad)} // 150TWh*(6hourLoad/2.2TWh); To be country dependent
                 };
                 _mStorages.AddRange(node.Storages.Values);
 

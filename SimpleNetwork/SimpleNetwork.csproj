@@ -41,6 +41,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
     <UseVSHostingProcess>true</UseVSHostingProcess>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -68,6 +69,7 @@
   <ItemGroup>
     <Compile Include="Extensions.cs" />
     <Compile Include="GridEvaluator.cs" />
+    <Compile Include="MixOptimizer.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="FlowOptimizer.cs" />
     <Compile Include="Interfaces\IGenerator.cs" />

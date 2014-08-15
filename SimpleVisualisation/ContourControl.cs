@@ -33,12 +33,6 @@ namespace SimpleVisualisation
             chart.Series.Clear();
             chart.Series.Add(success);
             chart.Series.Add(fail);
-
-            chart.ChartAreas[0].AxisX.Minimum = 1.10;
-            chart.ChartAreas[0].AxisX.Maximum = 1.25;
-
-            chart.ChartAreas[0].AxisY.Minimum = 0.35;
-            chart.ChartAreas[0].AxisY.Maximum = 0.95;
         }
     }
 }
