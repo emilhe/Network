@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using ProtoBuf;
 
 namespace DataItems
 {
@@ -152,13 +153,15 @@ namespace DataItems
     /// <summary>
     /// Implementation of a continious time series.
     /// </summary>
-    [Serializable]
+    [ProtoContract]
     public class DenseTimeSeries : ITimeSeries
     {
+        [ProtoMember(1)]
         public string Name { get; set; }
+        [ProtoMember(2)]
+        private readonly List<double> _mValues;
 
         private double _mScale = 1;
-        private readonly List<double> _mValues;
 
         public DenseTimeSeries(string name, int capacity = 100)
         {

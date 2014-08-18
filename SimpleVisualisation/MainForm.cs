@@ -28,34 +28,36 @@ namespace SimpleVisualisation
             var watch = new Stopwatch();
             watch.Start();
 
-            var client = new MainAccessClient();
+            var client = new AccessClient();
 
-            var opt = new MixOptimizer(client.GetAllCountryData());
+            //var opt = new MixOptimizer(client.GetAllCountryData(TsSource.ISET));
+            //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
+
             //opt.OptimizeIndividually();
-            opt.ReadMixCahce();
-            opt.OptimizeLocally();
-            var nodes = opt.Nodes;
-            var edges = new EdgeSet(nodes.Count);
-            // For now, connect the nodes in a straight line.
-            for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
-            var system = new NetworkSystem(nodes, edges);
-            for (var pen = 1.02; pen <= 1.10; pen += 0.0025)
-            {
-                opt.SetPenetration(pen);
-                system.Simulate(24 * 7 * 52);
-                Console.WriteLine("Penetation " + pen + ", " + (system.Output.Success ? "SUCCESS" : "FAIL"));
-            }
-            DisplayTs(system.Output);
-
-            //var noCol = new NodeCollection(client.GetAllCountryData());
-            //var nodes = noCol.Nodes;
+            ////opt.ReadMixCahce();
+            ////opt.OptimizeLocally();
+            //var nodes = opt.Nodes;
             //var edges = new EdgeSet(nodes.Count);
             //// For now, connect the nodes in a straight line.
             //for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
             //var system = new NetworkSystem(nodes, edges);
-            //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
+            //for (var pen = 1.02; pen <= 1.10; pen += 0.0025)
+            //{
+            //    opt.SetPenetration(pen);
+            //    system.Simulate(24 * 7 * 52);
+            //    Console.WriteLine("Penetation " + pen + ", " + (system.Output.Success ? "SUCCESS" : "FAIL"));
+            //}
+            //DisplayTs(system.Output);
 
-            //ContourStuff(system, noCol);
+            var noCol = new NodeCollection(client.GetAllCountryData(TsSource.VE));
+            var nodes = noCol.Nodes;
+            var edges = new EdgeSet(nodes.Count);
+            // For now, connect the nodes in a straight line.
+            for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
+            var system = new NetworkSystem(nodes, edges);
+            Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
+
+            ContourStuff(system, noCol);
             //TsStuff(system, noCol);
         }
 
@@ -78,7 +80,7 @@ namespace SimpleVisualisation
                 MixingFrom = 0.55,
                 MixingTo = 0.75,
                 MixingSteps = 20, //24
-                PenetrationFrom = 1.06,
+                PenetrationFrom = 1.04,
                 PenetrationTo = 1.10,
                 PenetrationSteps = 16//15
             };

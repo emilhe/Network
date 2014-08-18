@@ -33,11 +33,11 @@ namespace SimpleNetwork
 
             foreach (var country in data)
             {
-                var load = country.TimeSeries.Single(item => item.Name.Equals("L"));
+                var load = country.TimeSeries.Single(item => item.Name.Equals("Load"));
                 var node = new Node(country.Abbreviation, load);
                 var avgLoad = load.GetAverage();
-                var wind = country.TimeSeries.Single(item => item.Name.Equals("Gw"));
-                var solar = country.TimeSeries.Single(item => item.Name.Equals("Gs"));
+                var wind = country.TimeSeries.Single(item => item.Name.Equals("Wind"));
+                var solar = country.TimeSeries.Single(item => item.Name.Equals("Solar"));
                 _mProductionTuples.Add(new Tuple<DenseTimeSeries, DenseTimeSeries, double>(wind, solar, avgLoad));
 
                 node.PowerGenerators = new List<IGenerator>
