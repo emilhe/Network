@@ -12,57 +12,27 @@ using SimpleNetwork.Interfaces;
 
 namespace SimpleNetwork
 {
-    public class NetworkSystem : IDisposable
+    public class NetworkSystem
     {
-
-        private const double Delta = 1e-4;
 
         #region Fields
 
         // System fields.
         private Dictionary<string, ITimeSeries> _mSystemTimeSeries;
-        private readonly FlowOptimizer _flowOptimizer;
-        private int _mMaximumStorageLevel = -1;
-        private List<Node> _mNodes;
-        private bool _mSuccess = true;
-        private bool _mLogging;        
+        private readonly IExportStrategy _mStrategy;
         private readonly Stopwatch _mWatch;
         private readonly bool _mDebug;
+        private bool _mSuccess;
 
         // Current iteration fields.
-        private readonly double[] _mDeltas;
-        private readonly double[] _mLoLims;
-        private readonly double[] _mHiLims;
-        private double _mDeltaSum;
-        private int _mStorageLevel;
         private int _mTick;
-
-        private bool OutOfStorage
-        {
-            get { return _mStorageLevel > _mMaximumStorageLevel; }
-        }
-        private Response SystemResponse
-        {
-            get { return (_mDeltaSum > 0) ? Response.Charge : Response.Discharge; }
-        }
 
         #endregion
 
         /// <summary>
         /// The list of simulation nodes; each node represents a country.
         /// </summary>
-        public List<Node> Nodes
-        {
-            get { return _mNodes; }
-            set
-            {
-                _mNodes = value;
-                if (_mNodes == null) return;
-
-                // Auto detect the maximum storage level.
-                _mMaximumStorageLevel = _mNodes.SelectMany(item => item.Storages.Keys).Max();
-            }
-        }
+        public List<Node> Nodes { get; set; }
 
         /// <summary>
         /// The latest simulation output (if any).
@@ -72,19 +42,13 @@ namespace SimpleNetwork
         /// <summary>
         /// Construction.
         /// </summary>
-        /// <param name="nodes"> the nodes of the system </param>
-        /// <param name="edges"> network edges </param>
-        public NetworkSystem(List<Node> nodes, EdgeSet edges, bool debug = false)
+        /// <param name="strategy"> strategy determining how energy is exported (if at all) </param>
+        /// <param name="debug"> if true, debug info is printed to console </param>
+        public NetworkSystem(IExportStrategy strategy, bool debug = false)
         {
-            Nodes = nodes;
-
-            _flowOptimizer = new FlowOptimizer(Nodes.Count);
-            _flowOptimizer.SetEdges(edges);
-
-            _mDeltas = new double[Nodes.Count];
-            _mLoLims = new double[Nodes.Count];
-            _mHiLims = new double[Nodes.Count];
             _mDebug = debug;
+            _mStrategy = strategy;
+            Nodes = _mStrategy.Nodes;
 
             if (_mDebug) {_mWatch = new Stopwatch();}
         }
@@ -99,28 +63,31 @@ namespace SimpleNetwork
             ResetStorages();
             if (log) StartLogging();
             else ClearLogs();
-            _mLogging = log;
 
             // Simulation main loop.
-            _mSuccess = true;
             _mTick = 0;
+            _mSuccess = true;
             while (_mTick <= ticks)
             {
-                Evaluate();
-                if(_mLogging) _mSystemTimeSeries["Mismatch"].AddData(_mTick, _mDeltaSum);
+                if (_mDebug) _mWatch.Restart();
+                _mStrategy.Respond(_mTick);
+                if (log) _mSystemTimeSeries["Mismatch"].AddData(_mTick, _mStrategy.Mismatch);
+                if (log) _mSystemTimeSeries["Curtailment"].AddData(_mTick, _mStrategy.Curtailment);
+                if (_mStrategy.Failure) _mSuccess = false;
+                if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
                 _mTick++;
-                if(!_mLogging && !_mSuccess) break;
+                if (!log && _mStrategy.Failure) break;
             }
 
             CreateOutput();
         }
 
+        /// <summary>
+        /// Reset storages (if a new simulation is initiated).
+        /// </summary>
         private void ResetStorages()
         {
-            foreach (var storage in _mNodes.SelectMany(item => item.Storages.Values))
-            {
-                storage.ResetCapacity();
-            }
+            foreach (var storage in Nodes.SelectMany(item => item.Storages.Values)) storage.ResetCapacity();
         }
 
         /// <summary>
@@ -131,7 +98,7 @@ namespace SimpleNetwork
             _mSystemTimeSeries = null;
 
             // Reset node time series.
-            foreach (var measureable in _mNodes.SelectMany(item => item.Measureables))
+            foreach (var measureable in Nodes.SelectMany(item => item.Measureables))
             {
                 measureable.Reset();
             }
@@ -151,29 +118,15 @@ namespace SimpleNetwork
             _mSystemTimeSeries = systemTimeSeries.ToDictionary(item => item.Name, item => item);
 
             // Node time series setup.
-            foreach (var measureable in _mNodes.SelectMany(item => item.Measureables))
+            foreach (var measureable in Nodes.SelectMany(item => item.Measureables))
             {
                 measureable.StartMeasurement();
             }
         }
 
         /// <summary>
-        /// Evaluate the simulation at _mTick. NB: INTEGER flow opt. = ~ 1 ms; CONTINOUS = ~ 500 ms.
-        /// Evaluate the simulation at _mTick. NB: INTEGER at later points; 200 ms... 
+        /// Wrap output data.
         /// </summary>
-        private void Evaluate()
-        {
-            if (_mDebug) _mWatch.Restart();
-            DetermineSystemResponse();
-            if (_mDebug) Console.WriteLine("System response: " + _mWatch.ElapsedMilliseconds);
-            TraverseStorageLevels();
-            if (_mDebug) Console.WriteLine("Traverse storage: " + _mWatch.ElapsedMilliseconds);
-            OptimizeEnergyFlows();
-            if (_mDebug) Console.WriteLine("Optimization: " + _mWatch.ElapsedMilliseconds);
-            CurtailExcessEnergy();
-            if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
-        }
-
         private void CreateOutput()
         {
             Output = new SimulationOutput
@@ -182,112 +135,10 @@ namespace SimpleNetwork
                 CountryTimeSeriesMap = new Dictionary<string, List<ITimeSeries>>(),
                 Success = _mSuccess
             };
-            foreach (var node in _mNodes)
+            foreach (var node in Nodes)
             {
                 Output.CountryTimeSeriesMap.Add(node.CountryName, node.CollectTimeSeries());
             }
-        }
-
-        #region Evaluation subroutines.
-
-        /// <summary>
-        /// Determine system response; charge or discharge.
-        /// </summary>
-        private void DetermineSystemResponse()
-        {
-            for (int i = 0; i < Nodes.Count; i++) _mDeltas[i] = Nodes[i].GetDelta(_mTick);
-            _mDeltaSum = _mDeltas.Sum();
-        }
-
-        /// <summary>
-        /// Detmine the storage level at which the flow optimisation is to take place. Restore/drain all lower levels.
-        /// </summary>
-        private void TraverseStorageLevels()
-        {
-            _mStorageLevel = 0;
-            while (InsufficientStorageAtCurrentLevel())
-            {
-                // Restore the lower storage level.
-                for (int index = 0; index < Nodes.Count; index++)
-                {
-                    _mDeltas[index] += Nodes[index].Storages[_mStorageLevel].Restore(_mTick, SystemResponse);
-                }
-                // Go to the next storage level.
-                _mStorageLevel++;
-                if (OutOfStorage) return;
-            }
-            // Setup limits.
-            var idx = 0;
-            foreach (var storage in Nodes.Select(item => item.Storages[_mStorageLevel]))
-            {
-                _mLoLims[idx] = storage.RemainingCapacity(Response.Discharge);
-                _mHiLims[idx] = storage.RemainingCapacity(Response.Charge);
-                idx++;
-            }
-        }
-
-        /// <summary>
-        /// Optimize the energy flows and perform the optimal charges/discharges.
-        /// </summary>
-        private void OptimizeEnergyFlows()
-        {
-            if (OutOfStorage) return;
-
-            // Determine FLOWS using Gurobi optimization.
-            _flowOptimizer.SetNodes(_mDeltas, _mLoLims, _mHiLims);
-            _flowOptimizer.Solve();
-
-            // Charge based on flow optimization results.
-            for (int index = 0; index < Nodes.Count; index++)
-            {
-                _mDeltas[index] = Nodes[index].Storages[_mStorageLevel].Inject(_mTick, _flowOptimizer.NodeOptimum[index]);
-            }
-        }
-
-        /// <summary>
-        /// Curtail all exess energy and report any negative curtailment (success = false).
-        /// </summary>
-        private void CurtailExcessEnergy()
-        {
-            var dSum = _mDeltas.Sum();
-            if (dSum < -_mDeltas.Length*Delta)
-            {
-                _mSuccess = false;
-            }
-            if(_mLogging) _mSystemTimeSeries["Curtailment"].AddData(_mTick, dSum);
-        }
-
-        #endregion
-
-        #region Help methods
-
-        /// <summary>
-        /// Determine if sufficient storage is availble at the current level.
-        /// </summary>
-        /// <returns> false if there is </returns>
-        private bool InsufficientStorageAtCurrentLevel()
-        {
-            var storage = Nodes.Select(item => item.Storages[_mStorageLevel].RemainingCapacity(SystemResponse)).Sum();
-            switch (SystemResponse)
-            {
-                case Response.Charge:
-                    return storage < (_mDeltas.Sum() + _mDeltas.Length*Delta);
-                case Response.Discharge:
-                    // Flip sign signs; the numbers are negative.
-                    return storage > (_mDeltas.Sum() - _mDeltas.Length*Delta);
-                default:
-                    throw new ArgumentException("Illegal Response.");
-            }
-        }
-
-        #endregion
-
-        /// <summary>
-        /// Dispose the object.
-        /// </summary>
-        public void Dispose()
-        {
-            _flowOptimizer.Dispose();
         }
 
     }

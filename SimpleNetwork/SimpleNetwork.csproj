@@ -71,8 +71,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExportStrategies\AllExportStrategy.cs" />
+    <Compile Include="ExportStrategies\DefaultExportStrategy.cs" />
+    <Compile Include="ExportStrategies\NoExportStrategy.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="Generators\ConstantGenerator.cs" />
+    <Compile Include="Generators\RandomGenerator.cs" />
+    <Compile Include="Generators\TimeSeriesGenerator.cs" />
     <Compile Include="GridEvaluator.cs" />
+    <Compile Include="Interfaces\IExportStrategy.cs" />
     <Compile Include="MixOptimizer.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="FlowOptimizer.cs" />
@@ -83,6 +90,11 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NetworkSystem.cs" />
+    <Compile Include="Storages\BasicBackup.cs" />
+    <Compile Include="Storages\BasicStorage.cs" />
+    <Compile Include="Storages\BatteryStorage.cs" />
+    <Compile Include="Storages\HydrogenStorage.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -97,6 +109,7 @@
       <Name>SimpleImporter</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

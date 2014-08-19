@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DataItems;
+using SimpleNetwork.Generators;
 using SimpleNetwork.Interfaces;
+using SimpleNetwork.Storages;
 
 namespace SimpleNetwork
 {
@@ -59,14 +61,14 @@ namespace SimpleNetwork
 
                 node.PowerGenerators = new List<IGenerator>
                         {
-                            new TsGenerator("WindPower", wind),
-                            new TsGenerator("SolarPower", solar)
+                            new TimeSeriesGenerator("WindPower", wind),
+                            new TimeSeriesGenerator("SolarPower", solar)
                         };
                 node.Storages = new Dictionary<int, IStorage>
                 {
                     {0, new BatteryStorage(6*avgLoad)}, // Fixed for now
                     {1, new HydrogenStorage(68.18*avgLoad)}, //  25TWh*(6hourLoad/2.2TWh); To be country dependent
-                    {2, new HydroBiomassBackup(409.09*avgLoad)} // 150TWh*(6hourLoad/2.2TWh); To be country dependent
+                    {2, new BasicBackup("Hydro-biomass backup", 409.09*avgLoad)} // 150TWh*(6hourLoad/2.2TWh); To be country dependent
                 };
                 _mStorages.AddRange(node.Storages.Values);
 

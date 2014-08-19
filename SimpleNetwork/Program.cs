@@ -13,9 +13,10 @@ namespace SimpleNetwork
 {
     internal class Program
     {
+
         private static void Main(string[] args)
         {
-            CsvImporter.Parse(TsSource.ISET);
+            EcnImporter.Parse();
         }
 
     }

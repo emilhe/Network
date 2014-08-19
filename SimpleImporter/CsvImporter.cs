@@ -8,7 +8,9 @@ using DataItems;
 
 namespace SimpleImporter
 {
-
+    /// <summary>
+    /// Class for parsing/importing time series data.
+    /// </summary>
     public class CsvImporter
     {
 
@@ -16,78 +18,6 @@ namespace SimpleImporter
         /// Base direction (where the files are).
         /// </summary>
         private static string Base;
-
-        #region Country code mappings
-
-        private static readonly Dictionary<string, string> CountryCodeMap2 = new Dictionary<string, string>
-        {
-            {"SE", "Sweden"},
-            {"SI", "Slovenia"},
-            {"SK", "Slovakia"},
-            {"RS", "Serbia"},
-            {"RO", "Romania"},
-            {"PT", "Portugal"},
-            {"PL", "Poland"},
-            {"NO", "Norway"},
-            {"NL", "Netherlands"},
-            {"LV", "Latvia"},
-            {"LU", "Luxemborg"},
-            {"LT", "Lithuania"},
-            {"IT", "Italy"},
-            {"IE", "Ireland"},
-            {"HU", "Hungary"},
-            {"HR", "Croatia"},
-            {"GR", "Greece"},
-            {"GB", "Great Britain"},
-            {"FR", "France"},
-            {"FI", "Finland"},
-            {"EE", "Estonia"},
-            {"ES", "Spain"},
-            {"DK", "Denmark"},
-            {"DE", "Germany"},
-            {"CZ", "Czech Republic"},
-            {"CH", "Switzerland"},
-            {"BA", "Bosnia"},
-            {"BG", "Bulgaria"},
-            {"BE", "Belgium"},
-            {"AT", "Austria"},
-        };
-
-        private static readonly Dictionary<string, string> CountryCodeMap3 = new Dictionary<string, string>
-        {
-            {"SWE", "Sweden"},
-            {"SVN", "Slovenia"},
-            {"SVK", "Slovakia"},
-            {"SRB", "Serbia"},
-            {"ROU", "Romania"},
-            {"PRT", "Portugal"},
-            {"POL", "Poland"},
-            {"NOR", "Norway"},
-            {"NLD", "Netherlands"},
-            {"LVA", "Latvia"},
-            {"LUX", "Luxemborg"},
-            {"LTU", "Lithuania"},
-            {"ITA", "Italy"},
-            {"IRL", "Ireland"},
-            {"HUN", "Hungary"},
-            {"HRV", "Croatia"},
-            {"GRC", "Greece"},
-            {"GBR", "Great Britain"},
-            {"FRA", "France"},
-            {"FIN", "Finland"},
-            {"EST", "Estonia"},
-            {"ESP", "Spain"},
-            {"DNK", "Denmark"},
-            {"DEU", "Germany"},
-            {"CZE", "Czech Republic"},
-            {"CHE", "Switzerland"},
-            {"BIH", "Bosnia"},
-            {"BGR", "Bulgaria"},
-            {"BEL", "Belgium"},
-            {"AUT", "Austria"},
-        };
-
-        #endregion
 
         public static void Parse(TsSource source)
         {
@@ -156,19 +86,12 @@ namespace SimpleImporter
         {
             var fI = new FileInfo(file);
             var sub = fI.Name.Replace(".csv", "");
-            if (source == TsSource.VE) return GetName(sub.Substring(3, 3));
-            if (source == TsSource.ISET) return GetName(sub.Substring(13, 2));
+            if (source == TsSource.VE) return CountryInfo.GetName(sub.Substring(3, 3));
+            if (source == TsSource.ISET) return CountryInfo.GetName(sub.Substring(13, 2));
             throw new ArgumentException("Non valid type");
         }
 
         #endregion
-
-        public static string GetName(string abbrevation)
-        {
-            if (abbrevation.Length == 2) return CountryCodeMap2[abbrevation];
-            if (abbrevation.Length == 3) return CountryCodeMap3[abbrevation];
-            throw new ArgumentException("Wrong abbrev");
-        }
 
     }
 

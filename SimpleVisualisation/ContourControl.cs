@@ -23,7 +23,7 @@ namespace SimpleVisualisation
         {
             // Construct new time series.
             var success = new Series("Success") {ChartType = SeriesChartType.Point, Color = Color.Green};
-            var fail = new Series("Fail") {ChartType = SeriesChartType.Point, Color = Color.Red};
+            var fail = new Series("Fail") {ChartType = SeriesChartType.Area, Color = Color.Red};
             foreach (var tuple in grid)
             {
                 if (tuple.Item3) success.Points.AddXY(tuple.Item1, tuple.Item2);

@@ -4,7 +4,7 @@ using ProtoBuf;
 
 namespace SimpleImporter
 {
-    class ProtoStore
+    public class ProtoStore
     {
 
         #region File path mappings.
@@ -23,6 +23,8 @@ namespace SimpleImporter
 
         #endregion
 
+        #region Time Series
+
         public static void SaveTimeSeries(TimeSeriesItemDal ts)
         {
             if (!Directory.Exists(BaseDir)) Directory.CreateDirectory(BaseDir);
@@ -32,6 +34,20 @@ namespace SimpleImporter
                 Serializer.Serialize(file, ts);
             }
         }
+
+        public static TimeSeriesItemDal LoadTimeSeries(string country, TsType type, TsSource source)
+        {
+            TimeSeriesItemDal result;
+            using (var file = File.OpenRead(GetFileName(country, type, source)))
+            {
+                result = Serializer.Deserialize<TimeSeriesItemDal>(file);
+            }
+            return result;
+        }
+
+        #endregion
+
+        #region Countries
 
         public static void SaveCountries(List<string> countries)
         {
@@ -53,16 +69,47 @@ namespace SimpleImporter
             return result;
         }
 
-        public static TimeSeriesItemDal LoadTimeSeries(string country, TsType type, TsSource source)
+        #endregion
+
+        #region ECN Data
+
+        public static void SaveEcnData(List<EcnDataRow> data)
         {
-            TimeSeriesItemDal result;
-            using (var file = File.OpenRead(GetFileName(country, type, source)))
+            using (var file = File.Create(Path.Combine(BaseDir, "EcnData")))
             {
-                result = Serializer.Deserialize<TimeSeriesItemDal>(file);
+                Serializer.Serialize(file, data);
+            }
+        }
+
+        public static List<EcnDataRow> LoadEcnData()
+        {
+            List<EcnDataRow> result;
+            using (var file = File.OpenRead(Path.Combine(BaseDir, "EcnData")))
+            {
+                result = Serializer.Deserialize<List<EcnDataRow>>(file);
             }
             return result;
         }
 
+        #endregion
+
+    }
+
+    [ProtoContract]
+    public class EcnDataRow
+    {
+        [ProtoMember(1)]
+        public string Country { get; set; }
+        [ProtoMember(2)]
+        public string RowHeader { get; set; }
+        [ProtoMember(3)]
+        public string ColumnHeader { get; set; }
+        [ProtoMember(4)]
+        public int Year { get; set; }
+        [ProtoMember(5)]
+        public string Unit { get; set; }
+        [ProtoMember(6)]
+        public double Value { get; set; }
     }
 
     [ProtoContract]

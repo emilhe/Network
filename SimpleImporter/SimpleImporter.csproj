@@ -50,8 +50,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessClient.cs" />
+    <Compile Include="CountryInfo.cs" />
     <Compile Include="CsvImporter.cs" />
-    <Compile Include="DataLogic.cs" />
+    <Compile Include="EcnImporter.cs" />
     <Compile Include="ProtoStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

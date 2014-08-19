@@ -53,14 +53,14 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MongoDB.Bson">
-      <HintPath>..\packages\mongocsharpdriver.1.9.2\lib\net35\MongoDB.Bson.dll</HintPath>
-    </Reference>
-    <Reference Include="MongoDB.Driver">
-      <HintPath>..\packages\mongocsharpdriver.1.9.2\lib\net35\MongoDB.Driver.dll</HintPath>
-    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="OxyPlot">
+      <HintPath>..\packages\OxyPlot.WindowsForms.2014.1.319.1\lib\NET45\OxyPlot.dll</HintPath>
+    </Reference>
+    <Reference Include="OxyPlot.WindowsForms">
+      <HintPath>..\packages\OxyPlot.WindowsForms.2014.1.319.1\lib\NET45\OxyPlot.WindowsForms.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
@@ -76,6 +76,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChartUtils.cs" />
@@ -84,6 +85,12 @@
     </Compile>
     <Compile Include="ContourControl.Designer.cs">
       <DependentUpon>ContourControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ContourControlOxy.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ContourControlOxy.Designer.cs">
+      <DependentUpon>ContourControlOxy.cs</DependentUpon>
     </Compile>
     <Compile Include="TimeSeriesControl.cs">
       <SubType>UserControl</SubType>
