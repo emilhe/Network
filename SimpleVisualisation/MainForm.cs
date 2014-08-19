@@ -22,6 +22,7 @@ namespace SimpleVisualisation
         {
             InitializeComponent();
 
+            // COMMIT TEST
             //CsvImporter.ResetDb();
 
             // Time manger start/interval MUST match time series!
