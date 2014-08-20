@@ -8,6 +8,8 @@ using OxyPlot.Series;
 using OxyPlot.WindowsForms;
 using SimpleImporter;
 using SimpleNetwork;
+using SimpleNetwork.ExportStrategies;
+using SimpleNetwork.ExportStrategies.FlowStrategy;
 
 namespace SimpleVisualisation
 {
@@ -87,20 +89,20 @@ namespace SimpleVisualisation
             //        .Sum();
             // For now, connect the nodes in a straight line.
             for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
-            var system = new NetworkSystem(new AllExportStrategy(nodes));
+            var system = new NetworkSystem(new CooperativeExportStrategy(nodes, new MinimalFlowStrategy(edges)));
             Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
 
-            ContourStuff(system, noCol);
-            //TsStuff(system, noCol);
+            //ContourStuff(system, noCol);
+            TsStuff(system, noCol);
         }
 
         public void TsStuff(NetworkSystem sys, NodeCollection noCol)
         {
             var watch = new Stopwatch();
             watch.Start();
-            noCol.Penetration = 1.05;
-            noCol.Mixing = 0.65;
+            noCol.Penetration = 1.032;
+            noCol.Mixing = 0.66;
             sys.Simulate(24*365);
             Console.WriteLine("Mix " + noCol.Mixing + "; Penetation " + noCol.Penetration + ": " +
                   watch.ElapsedMilliseconds + ", " + (sys.Output.Success ? "SUCCESS" : "FAIL"));

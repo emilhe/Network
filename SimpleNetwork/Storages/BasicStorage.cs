@@ -112,7 +112,7 @@ namespace SimpleNetwork.Storages
             {
                 var remainder = toDischarge - _mRemainingCapacity;
                 Drain(tick);
-                return remainder;
+                return (remainder*Efficiency);
             }
             // There is power; discharge.
             _mRemainingCapacity -= toDischarge;
@@ -133,7 +133,7 @@ namespace SimpleNetwork.Storages
             {
                 var excess = (toCharge + _mRemainingCapacity) - Capacity;
                 Restore(tick);
-                return excess;
+                return excess/Efficiency;
             }
             // There is still room; just charge.
             _mRemainingCapacity += toCharge;

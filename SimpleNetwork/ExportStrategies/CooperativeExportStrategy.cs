@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SimpleNetwork.ExportStrategies.FlowStrategy;
 using SimpleNetwork.Interfaces;
 
-namespace SimpleNetwork
+namespace SimpleNetwork.ExportStrategies
 {
-    public class DefaultExportStrategy : IExportStrategy
+    public class CooperativeExportStrategy : IExportStrategy
     {
-        private const double Tolerance = 1e-4;
-
         public List<Node> Nodes { get; private set; }
 
-        private readonly FlowOptimizer _flowOptimizer;
         private readonly int _mMaximumStorageLevel = -1;
+        private readonly IFlowStrategy _mFlowStrategy;
 
         #region Current iteration fields
 
@@ -23,8 +20,6 @@ namespace SimpleNetwork
         public bool Failure { get; private set; }
 
         private readonly double[] _mMismatches;
-        private readonly double[] _mLoLims;
-        private readonly double[] _mHiLims;
         private int _mStorageLevel;
         private int _mTick;
 
@@ -34,23 +29,19 @@ namespace SimpleNetwork
         {
             get { return _mStorageLevel > _mMaximumStorageLevel; }
         }
+
         private Response SystemResponse
         {
             get { return (Mismatch > 0) ? Response.Charge : Response.Discharge; }
         }
 
-        public DefaultExportStrategy(List<Node> nodes, EdgeSet edges)
+        public CooperativeExportStrategy(List<Node> nodes, IFlowStrategy flowStrategy)
         {
-            // Auto detect the maximum storage level.
             Nodes = nodes;
-            _mMaximumStorageLevel = Nodes.SelectMany(item => item.Storages.Keys).Max();
-
-            _flowOptimizer = new FlowOptimizer(Nodes.Count);
-            _flowOptimizer.SetEdges(edges);
-
-            _mLoLims = new double[Nodes.Count];
-            _mHiLims = new double[Nodes.Count];
+            _mFlowStrategy = flowStrategy;
             _mMismatches = new double[Nodes.Count];
+            // Auto detect the maximum storage level.
+            _mMaximumStorageLevel = Nodes.SelectMany(item => item.Storages.Keys).Max();
         }
 
         public void Respond(int tick)
@@ -59,8 +50,29 @@ namespace SimpleNetwork
 
             CalculateMismatches();
             TraverseStorageLevels();
-            OptimizeEnergyFlows();
+            DistributeRemainingPower();
             CurtailExcessEnergy();
+        }
+
+        private void DistributeRemainingPower()
+        {
+            if (OutOfStorage) return;
+
+            _mFlowStrategy.DistributePower(Nodes, _mMismatches, _mStorageLevel, _mTick);
+
+            //// TODO: Does this take efficiency properly into account; ANSWER: NO!?
+            //var remainingCapacity = Nodes.Select(item => item.Storages[_mStorageLevel].RemainingCapacity(SystemResponse)).Sum();
+            //var totalCapacity = Nodes.Select(item => item.Storages[_mStorageLevel].Capacity).Sum();
+            //var meanChargeLevel = (remainingCapacity - _mMismatches.Sum()) / totalCapacity;
+            //// Charge/discharge to equalize.
+            //for (int index = 0; index < Nodes.Count; index++)
+            //{
+            //    var storage = Nodes[index].Storages[_mStorageLevel];
+            //    var toInject = storage.RemainingCapacity(SystemResponse) - meanChargeLevel * storage.Capacity;
+            //    Nodes[index].Storages[_mStorageLevel].Inject(_mTick, toInject);
+            //    // This should be true after all "transfers complete".
+            //    _mMismatches[index] = 0;
+            //}
         }
 
         /// <summary>
@@ -78,6 +90,7 @@ namespace SimpleNetwork
         private void TraverseStorageLevels()
         {
             _mStorageLevel = 0;
+            // Restore lower levels if possible.
             while (InsufficientStorageAtCurrentLevel())
             {
                 // Restore the lower storage level.
@@ -89,32 +102,6 @@ namespace SimpleNetwork
                 _mStorageLevel++;
                 if (OutOfStorage) return;
             }
-            // Setup limits.
-            var idx = 0;
-            foreach (var storage in Nodes.Select(item => item.Storages[_mStorageLevel]))
-            {
-                _mLoLims[idx] = storage.RemainingCapacity(Response.Discharge);
-                _mHiLims[idx] = storage.RemainingCapacity(Response.Charge);
-                idx++;
-            }
-        }
-
-        /// <summary>
-        /// Optimize the energy flows and perform the optimal charges/discharges.
-        /// </summary>
-        private void OptimizeEnergyFlows()
-        {
-            if (OutOfStorage) return;
-
-            // Determine FLOWS using Gurobi optimization.
-            _flowOptimizer.SetNodes(_mMismatches, _mLoLims, _mHiLims);
-            _flowOptimizer.Solve();
-
-            // Charge based on flow optimization results.
-            for (int index = 0; index < Nodes.Count; index++)
-            {
-                _mMismatches[index] = Nodes[index].Storages[_mStorageLevel].Inject(_mTick, _flowOptimizer.NodeOptimum[index]);
-            }
         }
 
         /// <summary>
@@ -123,7 +110,7 @@ namespace SimpleNetwork
         private void CurtailExcessEnergy()
         {
             Curtailment = _mMismatches.Sum();
-            Failure = Curtailment < -_mMismatches.Length*Tolerance;
+            Failure = Curtailment < -_mMismatches.Length * _mFlowStrategy.Tolerance;
         }
 
         /// <summary>
@@ -136,10 +123,10 @@ namespace SimpleNetwork
             switch (SystemResponse)
             {
                 case Response.Charge:
-                    return storage < (_mMismatches.Sum() + _mMismatches.Length * Tolerance);
+                    return storage < (_mMismatches.Sum() + _mMismatches.Length * _mFlowStrategy.Tolerance);
                 case Response.Discharge:
                     // Flip sign signs; the numbers are negative.
-                    return storage > (_mMismatches.Sum() - _mMismatches.Length * Tolerance);
+                    return storage > (_mMismatches.Sum() - _mMismatches.Length * _mFlowStrategy.Tolerance);
                 default:
                     throw new ArgumentException("Illegal Response.");
             }

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SimpleNetwork.Interfaces;
+using SimpleNetwork.Storages;
 
 namespace UnitTest
 {
@@ -47,10 +43,15 @@ namespace UnitTest
         public void ChargeEfficiencyTest()
         {
             var storage = new BasicStorage("Test", 0.5, 12);
+            // Discharge EMPTY storage (should do nothing).
+            Assert.AreEqual(-12, storage.Inject(0, -12));
             // Charge/discharge
             Assert.AreEqual(0, storage.Inject(0, 12));
             Assert.AreEqual(12, storage.RemainingCapacity(Response.Charge));
             Assert.AreEqual(-3, storage.RemainingCapacity(Response.Discharge));
+            Assert.AreEqual(0, storage.Inject(0, 12));
+            // Charge FULL storage (should do nothing).
+            Assert.AreEqual(12, storage.Inject(0, 12));
         }
 
         [Test]

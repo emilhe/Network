@@ -71,9 +71,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExportStrategies\AllExportStrategy.cs" />
-    <Compile Include="ExportStrategies\DefaultExportStrategy.cs" />
+    <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
+    <Compile Include="ExportStrategies\FlowStrategy\IFlowStrategy.cs" />
+    <Compile Include="ExportStrategies\FlowStrategy\MinimalFlowStrategy.cs" />
     <Compile Include="ExportStrategies\NoExportStrategy.cs" />
+    <Compile Include="ExportStrategies\FlowStrategy\SkipFlowStrategy.cs" />
+    <Compile Include="ExportStrategies\SelfishExportStrategy.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Generators\ConstantGenerator.cs" />
     <Compile Include="Generators\RandomGenerator.cs" />
