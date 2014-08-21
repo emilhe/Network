@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using DataItems;
+using DataItems.TimeSeries;
 using SimpleNetwork.Interfaces;
+using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
 
 namespace SimpleNetwork.Generators
 {
@@ -22,6 +25,7 @@ namespace SimpleNetwork.Generators
         }
 
         public ITimeSeries TimeSeries { get; private set; }
+        public ITimeSeries UnderlyingTimeSeries { get { return _mTimeSeries; } }
 
         public string Name { get; private set; }
 

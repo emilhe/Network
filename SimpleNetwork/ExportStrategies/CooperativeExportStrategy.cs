@@ -1,116 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SimpleNetwork.ExportStrategies.FlowStrategy;
+using System.Text;
+using System.Threading.Tasks;
 using SimpleNetwork.Interfaces;
 
 namespace SimpleNetwork.ExportStrategies
 {
     public class CooperativeExportStrategy : IExportStrategy
     {
-        public List<Node> Nodes { get; private set; }
 
-        private readonly int _mMaximumStorageLevel = -1;
-        private readonly IFlowStrategy _mFlowStrategy;
-
-        #region Current iteration fields
-
-        public double Mismatch { get; private set; }
-        public double Curtailment { get; private set; }
-        public bool Failure { get; private set; }
-
-        private readonly double[] _mMismatches;
+        private List<Node> _mNodes;
+        private double[] _mMismatches;
+        private double _mTolerance;
+        private Response _mSystemResponse;
+        private int _mMaximumStorageLevel = -1;
         private int _mStorageLevel;
-        private int _mTick;
 
-        #endregion
-
-        private bool OutOfStorage
+        public void Bind(List<Node> nodes, double[] mismatches, double tolerance)
         {
-            get { return _mStorageLevel > _mMaximumStorageLevel; }
-        }
+            _mNodes = nodes;
+            _mTolerance = tolerance;
+            _mMismatches = mismatches;
 
-        private Response SystemResponse
-        {
-            get { return (Mismatch > 0) ? Response.Charge : Response.Discharge; }
-        }
-
-        public CooperativeExportStrategy(List<Node> nodes, IFlowStrategy flowStrategy)
-        {
-            Nodes = nodes;
-            _mFlowStrategy = flowStrategy;
-            _mMismatches = new double[Nodes.Count];
-            // Auto detect the maximum storage level.
-            _mMaximumStorageLevel = Nodes.SelectMany(item => item.Storages.Keys).Max();
-        }
-
-        public void Respond(int tick)
-        {
-            _mTick = tick;
-
-            CalculateMismatches();
-            TraverseStorageLevels();
-            DistributeRemainingPower();
-            CurtailExcessEnergy();
-        }
-
-        private void DistributeRemainingPower()
-        {
-            if (OutOfStorage) return;
-
-            _mFlowStrategy.DistributePower(Nodes, _mMismatches, _mStorageLevel, _mTick);
-
-            //// TODO: Does this take efficiency properly into account; ANSWER: NO!?
-            //var remainingCapacity = Nodes.Select(item => item.Storages[_mStorageLevel].RemainingCapacity(SystemResponse)).Sum();
-            //var totalCapacity = Nodes.Select(item => item.Storages[_mStorageLevel].Capacity).Sum();
-            //var meanChargeLevel = (remainingCapacity - _mMismatches.Sum()) / totalCapacity;
-            //// Charge/discharge to equalize.
-            //for (int index = 0; index < Nodes.Count; index++)
-            //{
-            //    var storage = Nodes[index].Storages[_mStorageLevel];
-            //    var toInject = storage.RemainingCapacity(SystemResponse) - meanChargeLevel * storage.Capacity;
-            //    Nodes[index].Storages[_mStorageLevel].Inject(_mTick, toInject);
-            //    // This should be true after all "transfers complete".
-            //    _mMismatches[index] = 0;
-            //}
-        }
-
-        /// <summary>
-        /// Determine system response; charge or discharge.
-        /// </summary>
-        private void CalculateMismatches()
-        {
-            for (int i = 0; i < Nodes.Count; i++) _mMismatches[i] = Nodes[i].GetDelta(_mTick);
-            Mismatch = _mMismatches.Sum();
+            if (!_mNodes.SelectMany(item => item.Storages.Keys).Any()) return;
+            _mMaximumStorageLevel = _mNodes.SelectMany(item => item.Storages.Keys).Max();
         }
 
         /// <summary>
         /// Detmine the storage level at which the flow optimisation is to take place. Restore/drain all lower levels.
         /// </summary>
-        private void TraverseStorageLevels()
+        public int TraverseStorageLevels(int tick)
         {
             _mStorageLevel = 0;
+            _mSystemResponse = (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge;
+
             // Restore lower levels if possible.
-            while (InsufficientStorageAtCurrentLevel())
+            while (_mStorageLevel <= _mMaximumStorageLevel && InsufficientStorageAtCurrentLevel())
             {
                 // Restore the lower storage level.
-                for (int index = 0; index < Nodes.Count; index++)
+                for (int index = 0; index < _mNodes.Count; index++)
                 {
-                    _mMismatches[index] += Nodes[index].Storages[_mStorageLevel].Restore(_mTick, SystemResponse);
+                    _mMismatches[index] += _mNodes[index].Storages[_mStorageLevel].Restore(tick, _mSystemResponse);
                 }
                 // Go to the next storage level.
                 _mStorageLevel++;
-                if (OutOfStorage) return;
             }
-        }
 
-        /// <summary>
-        /// Curtail all exess energy and report any negative curtailment (success = false).
-        /// </summary>
-        private void CurtailExcessEnergy()
-        {
-            Curtailment = _mMismatches.Sum();
-            Failure = Curtailment < -_mMismatches.Length * _mFlowStrategy.Tolerance;
+            return _mStorageLevel;
         }
 
         /// <summary>
@@ -119,18 +56,17 @@ namespace SimpleNetwork.ExportStrategies
         /// <returns> false if there is </returns>
         private bool InsufficientStorageAtCurrentLevel()
         {
-            var storage = Nodes.Select(item => item.Storages[_mStorageLevel].RemainingCapacity(SystemResponse)).Sum();
-            switch (SystemResponse)
+            var storage = _mNodes.Select(item => item.Storages[_mStorageLevel].RemainingCapacity(_mSystemResponse)).Sum();
+            switch (_mSystemResponse)
             {
                 case Response.Charge:
-                    return storage < (_mMismatches.Sum() + _mMismatches.Length * _mFlowStrategy.Tolerance);
+                    return storage < (_mMismatches.Sum() + _mMismatches.Length * _mTolerance);
                 case Response.Discharge:
                     // Flip sign signs; the numbers are negative.
-                    return storage > (_mMismatches.Sum() - _mMismatches.Length * _mFlowStrategy.Tolerance);
+                    return storage > (_mMismatches.Sum() - _mMismatches.Length * _mTolerance);
                 default:
                     throw new ArgumentException("Illegal Response.");
             }
         }
-
     }
 }

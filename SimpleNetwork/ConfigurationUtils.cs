@@ -5,11 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using SimpleImporter;
 using SimpleNetwork.Generators;
+using SimpleNetwork.Interfaces;
 using SimpleNetwork.Storages;
+using SimpleNetwork.TimeSeries;
 
 namespace SimpleNetwork
 {
-    public class Utils
+    public class ConfigurationUtils
     {
 
         private const int Year = 2010;
@@ -21,6 +23,29 @@ namespace SimpleNetwork
             // TODO: Draw edges...
 
             return result;
+        }
+
+        #region Node setup
+
+        public static List<Node> CreateNodes(TsSource source = TsSource.ISET)
+        {
+            var client = new AccessClient();
+            var nodes = client.GetAllCountryData(source);
+            
+            foreach (var node in nodes)
+            {
+                var load = node.LoadTimeSeries;
+                var avgLoad = load.GetAverage();
+
+                node.Storages = new Dictionary<int, IStorage>
+                {
+                    {0, new BatteryStorage(6*avgLoad)}, // Fixed for now
+                    {1, new HydrogenStorage(68.18*avgLoad)}, //  25TWh*(6hourLoad/2.2TWh) = 68.18; To be country dependent
+                    {2, new BasicBackup("Hydro-biomass backup", 409.09*avgLoad)} // 150TWh*(6hourLoad/2.2TWh) = 409.09; To be country dependent
+                };
+            }
+
+            return nodes;
         }
 
         /// <summary>
@@ -53,7 +78,7 @@ namespace SimpleNetwork
                 var match = relevantData.SingleOrDefault(item => item.Country.Equals(node.CountryName));
                 if (match == null) continue;
                 // We have a match, let's add the generator.
-                node.PowerGenerators.Add(new ConstantGenerator(type, match.Value));
+                node.Generators.Add(new ConstantGenerator(type, match.Value));
             }
         }
 
@@ -102,5 +127,8 @@ namespace SimpleNetwork
                 node.Storages.Add(node.Storages.Keys.Max() + 1, new BasicBackup(type, match.Value));
             }
         }
+
+        #endregion
+
     }
 }

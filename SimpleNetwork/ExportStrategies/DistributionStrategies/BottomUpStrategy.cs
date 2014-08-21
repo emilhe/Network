@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using SimpleNetwork.Interfaces;
 
-namespace SimpleNetwork.ExportStrategies.FlowStrategy
+namespace SimpleNetwork.ExportStrategies.DistributionStrategies
 {
-    public class SkipFlowStrategy : IFlowStrategy
+    public class BottomUpStrategy : IDistributionStrategy
     {
         public double Tolerance { get { return 0; } }
 

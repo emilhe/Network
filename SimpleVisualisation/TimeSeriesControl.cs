@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using DataItems;
+using SimpleNetwork.Interfaces;
 
 namespace SimpleVisualisation
 {

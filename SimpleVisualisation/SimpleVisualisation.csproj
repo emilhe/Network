@@ -80,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChartUtils.cs" />
+    <Compile Include="Configurations.cs" />
     <Compile Include="ContourControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -139,10 +140,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DataItems\DataItems.csproj">
-      <Project>{b07e045e-6265-4087-b3e8-2d6ed5616682}</Project>
-      <Name>DataItems</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SimpleImporter\SimpleImporter.csproj">
       <Project>{dd96e036-c8e4-42d4-ad91-12f9f21ca795}</Project>
       <Name>SimpleImporter</Name>

@@ -8,18 +8,20 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using DataItems;
+using DataItems.TimeSeries;
 using SimpleNetwork.Interfaces;
+using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
 
 namespace SimpleNetwork
 {
-    public class NetworkSystem
+    public class Simulation
     {
 
         #region Fields
 
         // System fields.
         private Dictionary<string, ITimeSeries> _mSystemTimeSeries;
-        private readonly IExportStrategy _mStrategy;
+        private readonly NetworkModel _mModel;
         private readonly Stopwatch _mWatch;
         private readonly bool _mDebug;
         private bool _mSuccess;
@@ -30,7 +32,7 @@ namespace SimpleNetwork
         #endregion
 
         /// <summary>
-        /// The list of simulation nodes; each node represents a country.
+        /// The list of simulation nodes; each node represents a geographic entity.
         /// </summary>
         public List<Node> Nodes { get; set; }
 
@@ -42,13 +44,13 @@ namespace SimpleNetwork
         /// <summary>
         /// Construction.
         /// </summary>
-        /// <param name="strategy"> strategy determining how energy is exported (if at all) </param>
+        /// <param name="model"> model to evaluate </param>
         /// <param name="debug"> if true, debug info is printed to console </param>
-        public NetworkSystem(IExportStrategy strategy, bool debug = false)
+        public Simulation(NetworkModel model, bool debug = false)
         {
             _mDebug = debug;
-            _mStrategy = strategy;
-            Nodes = _mStrategy.Nodes;
+            _mModel = model;
+            Nodes = _mModel.Nodes;
 
             if (_mDebug) {_mWatch = new Stopwatch();}
         }
@@ -70,13 +72,13 @@ namespace SimpleNetwork
             while (_mTick <= ticks)
             {
                 if (_mDebug) _mWatch.Restart();
-                _mStrategy.Respond(_mTick);
-                if (log) _mSystemTimeSeries["Mismatch"].AddData(_mTick, _mStrategy.Mismatch);
-                if (log) _mSystemTimeSeries["Curtailment"].AddData(_mTick, _mStrategy.Curtailment);
-                if (_mStrategy.Failure) _mSuccess = false;
+                _mModel.Respond(_mTick);
+                if (log) _mSystemTimeSeries["Mismatch"].AddData(_mTick, _mModel.Mismatch);
+                if (log) _mSystemTimeSeries["Curtailment"].AddData(_mTick, _mModel.Curtailment);
+                if (_mModel.Failure) _mSuccess = false;
                 if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
                 _mTick++;
-                if (!log && _mStrategy.Failure) break;
+                if (!log && _mModel.Failure) break;
             }
 
             CreateOutput();

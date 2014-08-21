@@ -71,42 +71,47 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccessClient.cs" />
     <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
-    <Compile Include="ExportStrategies\FlowStrategy\IFlowStrategy.cs" />
-    <Compile Include="ExportStrategies\FlowStrategy\MinimalFlowStrategy.cs" />
+    <Compile Include="Interfaces\IDistributionStrategy.cs" />
+    <Compile Include="ExportStrategies\DistributionStrategies\MinimalFlowStrategy.cs" />
     <Compile Include="ExportStrategies\NoExportStrategy.cs" />
-    <Compile Include="ExportStrategies\FlowStrategy\SkipFlowStrategy.cs" />
+    <Compile Include="ExportStrategies\DistributionStrategies\BottomUpStrategy.cs" />
     <Compile Include="ExportStrategies\SelfishExportStrategy.cs" />
-    <Compile Include="Extensions.cs" />
+    <Compile Include="MixController.cs" />
+    <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Generators\ConstantGenerator.cs" />
     <Compile Include="Generators\RandomGenerator.cs" />
     <Compile Include="Generators\TimeSeriesGenerator.cs" />
-    <Compile Include="GridEvaluator.cs" />
+    <Compile Include="Utils\GridEvaluator.cs" />
+    <Compile Include="Interfaces\ITimeSeries.cs" />
+    <Compile Include="Interfaces\ITimeSeriesItem.cs" />
+    <Compile Include="NetworkModel.cs" />
     <Compile Include="Interfaces\IExportStrategy.cs" />
     <Compile Include="MixOptimizer.cs" />
     <Compile Include="Node.cs" />
-    <Compile Include="FlowOptimizer.cs" />
+    <Compile Include="Utils\FlowOptimizer.cs" />
     <Compile Include="Interfaces\IGenerator.cs" />
     <Compile Include="Interfaces\IMeasureable.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
-    <Compile Include="NodeCollection.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="NetworkSystem.cs" />
+    <Compile Include="Simulation.cs" />
     <Compile Include="Storages\BasicBackup.cs" />
     <Compile Include="Storages\BasicStorage.cs" />
     <Compile Include="Storages\BatteryStorage.cs" />
     <Compile Include="Storages\HydrogenStorage.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="TimeManager.cs" />
+    <Compile Include="TimeSeries\BasicTimeSeriesItem.cs" />
+    <Compile Include="TimeSeries\DenseTimeSeries.cs" />
+    <Compile Include="TimeSeries\SparseTimeSeries.cs" />
+    <Compile Include="TimeSeries\TickTimeSeriesItem.cs" />
+    <Compile Include="ConfigurationUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DataItems\DataItems.csproj">
-      <Project>{b07e045e-6265-4087-b3e8-2d6ed5616682}</Project>
-      <Name>DataItems</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SimpleImporter\SimpleImporter.csproj">
       <Project>{DD96E036-C8E4-42D4-AD91-12F9F21CA795}</Project>
       <Name>SimpleImporter</Name>

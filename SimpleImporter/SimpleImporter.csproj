@@ -49,18 +49,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AccessClient.cs" />
     <Compile Include="CountryInfo.cs" />
     <Compile Include="CsvImporter.cs" />
     <Compile Include="EcnImporter.cs" />
     <Compile Include="ProtoStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DataItems\DataItems.csproj">
-      <Project>{B07E045E-6265-4087-B3E8-2D6ED5616682}</Project>
-      <Name>DataItems</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

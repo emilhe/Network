@@ -49,9 +49,14 @@
     <Compile Include="FlowOptimizerTest.cs" />
     <Compile Include="GridEvaluatorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimulationTest.cs" />
     <Compile Include="StorageTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SimpleImporter\SimpleImporter.csproj">
+      <Project>{DD96E036-C8E4-42D4-AD91-12F9F21CA795}</Project>
+      <Name>SimpleImporter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SimpleNetwork\SimpleNetwork.csproj">
       <Project>{e92f9d65-c0fd-4bf0-8713-56a0ce8b6e4b}</Project>
       <Name>SimpleNetwork</Name>

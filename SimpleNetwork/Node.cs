@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DataItems;
 using SimpleNetwork.Interfaces;
+using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
 
 namespace SimpleNetwork
 {
@@ -13,14 +14,15 @@ namespace SimpleNetwork
 
         public string CountryName { get; set; }
 
-        public Dictionary<int, IStorage> Storages { get; set; }
-        public List<IGenerator> PowerGenerators { get; set; }
+        public ITimeSeries LoadTimeSeries { get { return _mLoadTimeSeries; } }
+        public Dictionary<int,IStorage> Storages { get; set; }
+        public List<IGenerator> Generators { get; set; }
         public List<IMeasureable> Measureables
         {
             get
             {
                 var result = new List<IMeasureable>();
-                result.AddRange(PowerGenerators);
+                result.AddRange(Generators);
                 result.AddRange(Storages.Values);
                 return result;
             }
@@ -30,6 +32,9 @@ namespace SimpleNetwork
         {
             CountryName = name;
             _mLoadTimeSeries = loadTimeSeries;
+
+            Generators = new List<IGenerator>();
+            Storages = new Dictionary<int, IStorage>();
         }
 
         public List<ITimeSeries> CollectTimeSeries()
@@ -39,7 +44,7 @@ namespace SimpleNetwork
 
         public double GetDelta(int tick)
         {
-            return (double) (PowerGenerators.Sum(generator => generator.GetProduction(tick)) - GetLoad(tick));
+            return Generators.Sum(generator => generator.GetProduction(tick)) - GetLoad(tick);
         }
 
         private double GetLoad(int tick)

@@ -1,6 +1,8 @@
 ﻿using System;
 using DataItems;
+using DataItems.TimeSeries;
 using SimpleNetwork.Interfaces;
+using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
 
 namespace SimpleNetwork.Generators
 {

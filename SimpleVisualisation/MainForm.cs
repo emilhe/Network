@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
@@ -9,7 +10,8 @@ using OxyPlot.WindowsForms;
 using SimpleImporter;
 using SimpleNetwork;
 using SimpleNetwork.ExportStrategies;
-using SimpleNetwork.ExportStrategies.FlowStrategy;
+using SimpleNetwork.ExportStrategies.DistributionStrategies;
+using SimpleNetwork.Interfaces;
 
 namespace SimpleVisualisation
 {
@@ -24,14 +26,54 @@ namespace SimpleVisualisation
         {
             InitializeComponent();
 
-            // COMMIT TEST
-            //CsvImporter.ResetDb();
-
             // Time manger start/interval MUST match time series!
             TimeManager.Instance().StartTime = new DateTime(2000, 1, 1);
             TimeManager.Instance().Interval = 60;
             var watch = new Stopwatch();
             watch.Start();
+
+            // First do ISET data.
+            var nodes0 = ConfigurationUtils.CreateNodes(TsSource.ISET);
+            var model0 = new NetworkModel(nodes0, new CooperativeExportStrategy(), new BottomUpStrategy());
+            var simulation0 = new Simulation(model0);
+            var mCtrl0 = new MixController(nodes0);
+
+            var nodes1 = ConfigurationUtils.CreateNodes(TsSource.VE);
+            var model1 = new NetworkModel(nodes1, new CooperativeExportStrategy(), new BottomUpStrategy());
+            var simulation1 = new Simulation(model1);
+            var mCtrl1 = new MixController(nodes1);
+
+            var gridParams = new GridScanParameters
+            {
+                MixingFrom = 0.45,
+                MixingTo = 0.85,
+                MixingSteps = 20, //24
+                PenetrationFrom = 1.00,
+                PenetrationTo = 1.15,
+                PenetrationSteps = 15//15
+            };
+
+            DisplayContourOxy();
+
+            var gridISET = DoGridScan(gridParams, simulation0, mCtrl0);
+            var gridVE = DoGridScan(gridParams, simulation1, mCtrl1);
+            contourControlOxy.AddData(gridParams.Rows, gridParams.Columns, MapGrids(new List<bool[,]> {gridISET, gridVE}));
+
+            //ContourStuff(simulation, mCtrl);
+
+            // RUN CONFIGURATION HERE //
+            //var simulation = Configurations.Optimization(nodes, mCtrl);
+
+            //ConfigurationUtils.SetupNodes(nodes);
+            //var model = new NetworkModel(nodes, new CooperativeExportStrategy(), new BottomUpStrategy());
+            //var simulation = new Simulation(model);
+            //mCtrl.SetPenetration(1.033);
+            //mCtrl.SetMix(0.6);
+            //mCtrl.Execute();
+
+            // CHOOSE VIEW HERE //
+            //TsStuff(simulation, mCtrl);
+            //ContourStuff(system, noCol);
 
             //var data = ProtoStore.LoadEcnData();
 
@@ -45,7 +87,8 @@ namespace SimpleVisualisation
 
             //Console.WriteLine("Time to load all parameters {0} from ECN data.", watch.ElapsedMilliseconds);
 
-            var client = new AccessClient();
+            //var client = new AccessClient();
+            //var nodes = client.GetAllCountryData(TsSource.ISET);
 
             //var opt = new MixOptimizer(client.GetAllCountryData(TsSource.ISET));
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
@@ -57,7 +100,7 @@ namespace SimpleVisualisation
             //var edges = new EdgeSet(nodes.Count);
             //// For now, connect the nodes in a straight line.
             //for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
-            //var system = new NetworkSystem(nodes, edges);
+            //var system = new Simulation(nodes, edges);
             //for (var pen = 1.02; pen <= 1.10; pen += 0.0025)
             //{
             //    opt.SetPenetration(pen);
@@ -66,10 +109,9 @@ namespace SimpleVisualisation
             //}
             //DisplayTs(system.Output);
 
+            //var edges = new EdgeSet(nodes.Count);
+            //var mCtrl = new MixController(nodes);
 
-            var noCol = new NodeCollection(client.GetAllCountryData(TsSource.ISET));
-            var nodes = noCol.Nodes;
-            var edges = new EdgeSet(nodes.Count);
             //var data = ProtoStore.LoadEcnData();
             //Utils.SetupNodesFromEcnData(nodes, data);
             //var allBio =
@@ -88,56 +130,60 @@ namespace SimpleVisualisation
             //        .Select(item => item.Capacity)
             //        .Sum();
             // For now, connect the nodes in a straight line.
-            for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
-            var system = new NetworkSystem(new CooperativeExportStrategy(nodes, new MinimalFlowStrategy(edges)));
-            Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
+            //for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
+            //var config = new NetworkModel(nodes, new CooperativeExportStrategy(), new BottomUpStrategy());
+            //var system = new Simulation(config);
+            //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
-            //ContourStuff(system, noCol);
-            TsStuff(system, noCol);
         }
 
-        public void TsStuff(NetworkSystem sys, NodeCollection noCol)
+        public void TsStuff(Simulation sys, MixController mCtrl)
         {
             var watch = new Stopwatch();
             watch.Start();
-            noCol.Penetration = 1.032;
-            noCol.Mixing = 0.66;
+            mCtrl.SetPenetration(1.033);
+            mCtrl.SetMix(0.66);
+            mCtrl.Execute();
             sys.Simulate(24*365);
-            Console.WriteLine("Mix " + noCol.Mixing + "; Penetation " + noCol.Penetration + ": " +
+            Console.WriteLine("Mix " + 0.66 + "; Penetation " + 1.033 + ": " +
                   watch.ElapsedMilliseconds + ", " + (sys.Output.Success ? "SUCCESS" : "FAIL"));
             DisplayTs(sys.Output);
         }
 
-        public void ContourStuff(NetworkSystem sys, NodeCollection noCol)
+        public void ContourStuff(Simulation sys, MixController mCtrl)
         {
+            DisplayContourOxy();
+
             var gridParams = new GridScanParameters
             {
-                MixingFrom = 0.55,
-                MixingTo = 0.75,
-                MixingSteps = 20, //24
-                PenetrationFrom = 1.00,
-                PenetrationTo = 1.10,
-                PenetrationSteps = 100//15
+                MixingFrom = 0.45,
+                MixingTo = 0.85,
+                MixingSteps = 40, //24
+                PenetrationFrom = 1.50,
+                PenetrationTo = 1.60,
+                PenetrationSteps = 10//15
             };
 
-            var grid = DoGridScan(gridParams, sys, noCol);
-            DisplayContourOxy(gridParams.Rows, gridParams.Columns, grid);
-            
+            var grid = DoGridScan(gridParams, sys, mCtrl);
+            //contourControlOxy.AddData(gridParams.Rows, gridParams.Columns, MapGrid(grid));            
         }
 
-        public bool[,] DoGridScan(GridScanParameters gridParams, NetworkSystem sys, NodeCollection noCol)
+        public bool[,] DoGridScan(GridScanParameters gridParams, Simulation sys, MixController mCtrl)
         {
             var watch = new Stopwatch();
             // Eval grid.
             return GridEvaluator.EvalSparse(delegate(int[] idxs)
             {
-                noCol.Penetration = gridParams.PenetrationFrom + gridParams.PenetrationStep*idxs[0];
-                noCol.Mixing = gridParams.MixingFrom + gridParams.MixingStep*idxs[1];
+                var pen = gridParams.PenetrationFrom + gridParams.PenetrationStep*idxs[0];
+                var mix = gridParams.MixingFrom + gridParams.MixingStep*idxs[1];
+                mCtrl.SetMix(mix);
+                mCtrl.SetPenetration(pen);
+                mCtrl.Execute();
                 // Do simulation.
                 watch.Restart();
                 sys.Simulate(24*7*52, false);
-                Console.WriteLine("Mix " + noCol.Mixing + "; Penetation " + noCol.Penetration + ": " +
+                Console.WriteLine("Mix " + mix + "; Penetation " + pen + ": " +
                                   watch.ElapsedMilliseconds + ", " + (sys.Output.Success ? "SUCCESS" : "FAIL"));
                 return sys.Output.Success;
             }, new[] {gridParams.PenetrationSteps, gridParams.MixingSteps});
@@ -155,14 +201,12 @@ namespace SimpleVisualisation
         //    contourControl.SetData(grid);
         //}
 
-        private void DisplayContourOxy(double[] rows, double[] columns, bool[,] grid)
+        private void DisplayContourOxy()
         {
             if (contourControlOxy == null) InitializeContourControlOxy();
             contourControlOxy.Visible = true;
             if (timeSeriesControl != null) timeSeriesControl.Visible = false;
             if (contourControl != null) contourControl.Visible = false;
-
-            contourControlOxy.SetData(rows, columns, MapGrid(grid));
         }
 
         private void InitializeContourControlOxy()
@@ -176,15 +220,20 @@ namespace SimpleVisualisation
             panel1.Controls.Add(contourControlOxy);
         }
 
-        private double[,] MapGrid(bool[,] grid)
+        /// <summary>
+        /// It is assumed that the grid are the same size.
+        /// </summary>
+        private double[,] MapGrids(List<bool[,]> grid, double value = 1)
         {
-            var result = new double[grid.GetLength(0), grid.GetLength(1)];
-            for (int i = 0; i < grid.GetLength(0); i++)
+            var result = new double[grid[0].GetLength(0), grid[0].GetLength(1)];
+            for (int i = 0; i < grid[0].GetLength(0); i++)
             {
-                for (int j = 0; j < grid.GetLength(1); j++)
+                for (int j = 0; j < grid[0].GetLength(1); j++)
                 {
-                    if (grid[i, j]) result[i, j] = 1;
-                    else result[i, j] = 0;
+                    for (int k = 0; k < grid.Count; k++)
+                    {
+                        if (grid[k][i, j]) result[i, j] = k+1;                        
+                    }
                 }
             }
             return result;

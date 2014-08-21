@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using ProtoBuf;
 
@@ -143,7 +144,12 @@ namespace SimpleImporter
 
     public enum TsType : byte
     {
-        Load = 1, Wind = 2, Solar = 3
+        [Description("Load")]
+        Load = 1,
+        [Description("Wind Generation")]
+        Wind = 2,
+        [Description("Solar Generation")]
+        Solar = 3
     }
 
 }

@@ -1,89 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SimpleNetwork.Interfaces;
 
 namespace SimpleNetwork
 {
     public class NoExportStrategy : IExportStrategy
     {
-        private const double Tolerance = 0;
-
-        public List<Node> Nodes { get; private set; }
-
-        private readonly int _mMaximumStorageLevel = -1;
-
-        #region Current iteration fields
-
-        public double Mismatch { get; private set; }
-        public double Curtailment { get; private set; }
-        public bool Failure { get; private set; }
-
-        private readonly double[] _mMismatches;
+        private List<Node> _mNodes;
+        private double[] _mMismatches;
+        private int _mMaximumStorageLevel = -1;
         private int _mStorageLevel;
-        private int _mTick;
 
-        #endregion
-
-        private bool OutOfStorage
+        public void Bind(List<Node> nodes, double[] mismatches, double tolerance = 0)
         {
-            get { return _mStorageLevel > _mMaximumStorageLevel; }
-        }
+            _mNodes = nodes;
+            _mMismatches = mismatches;
 
-        public NoExportStrategy(List<Node> nodes)
-        {
-            // Auto detect the maximum storage level.
-            Nodes = nodes;
-            _mMaximumStorageLevel = Nodes.SelectMany(item => item.Storages.Keys).Max();
-            _mMismatches = new double[Nodes.Count];
-        }
-
-        public void Respond(int tick)
-        {
-            _mTick = tick;
-
-            CalculateMismatches();
-            TraverseStorageLevels();
-            CurtailExcessEnergy();
+            if (!_mNodes.SelectMany(item => item.Storages).Any()) return;
+            _mMaximumStorageLevel = _mNodes.SelectMany(item => item.Storages.Keys).Max();
         }
 
         /// <summary>
-        /// Determine system response; charge or discharge.
+        /// Charge all nodes individually until all energy is used or the storage is full.
         /// </summary>
-        private void CalculateMismatches()
-        {
-            for (int i = 0; i < Nodes.Count; i++) _mMismatches[i] = Nodes[i].GetDelta(_mTick);
-            Mismatch = _mMismatches.Sum();
-        }
-
-        /// <summary>
-        /// Detmine the storage level at which the flow optimisation is to take place. Restore/drain all lower levels.
-        /// </summary>
-        private void TraverseStorageLevels()
+        public int TraverseStorageLevels(int tick)
         {
             _mStorageLevel = 0;
-            while (InsufficientStorageAtCurrentLevel())
+
+            while (_mStorageLevel <= _mMaximumStorageLevel && InsufficientStorageAtCurrentLevel())
             {
                 // Charge the lower storage level.
-                for (int index = 0; index < Nodes.Count; index++)
+                for (int index = 0; index < _mNodes.Count; index++)
                 {
-                    _mMismatches[index] = Nodes[index].Storages[_mStorageLevel].Inject(_mTick, _mMismatches[index]);
+                    _mMismatches[index] = _mNodes[index].Storages[_mStorageLevel].Inject(tick, _mMismatches[index]);
                 }
                 // Go to the next storage level.
                 _mStorageLevel++;
-                if (OutOfStorage) return;
             }
-        }
 
-        /// <summary>
-        /// Curtail all exess energy and report any negative curtailment (success = false).
-        /// </summary>
-        private void CurtailExcessEnergy()
-        {
-            Curtailment = _mMismatches.Sum();
-            Failure = Curtailment < -_mMismatches.Length * Tolerance;
+            return _mStorageLevel;
         }
 
         /// <summary>
@@ -94,6 +49,5 @@ namespace SimpleNetwork
         {
             return _mMismatches.Where(item => item != 0).Any();
         }
-
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DataItems;
 using SimpleNetwork.Interfaces;
+using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
 
 namespace SimpleNetwork.Storages
 {

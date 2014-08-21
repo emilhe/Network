@@ -2,9 +2,9 @@
 using System.Linq;
 using SimpleNetwork.Interfaces;
 
-namespace SimpleNetwork.ExportStrategies.FlowStrategy
+namespace SimpleNetwork.ExportStrategies.DistributionStrategies
 {
-    public class MinimalFlowStrategy : IFlowStrategy
+    public class MinimalFlowStrategy : IDistributionStrategy
     {
         public double Tolerance { get { return 1e-4; } }
 

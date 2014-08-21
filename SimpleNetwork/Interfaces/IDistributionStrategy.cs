@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace SimpleNetwork.ExportStrategies.FlowStrategy
+namespace SimpleNetwork.Interfaces
 {
-    public interface IFlowStrategy
+    public interface IDistributionStrategy
     {
             
         /// <summary>
