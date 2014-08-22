@@ -30,7 +30,7 @@ namespace SimpleVisualisation
             TimeManager.Instance().StartTime = new DateTime(2000, 1, 1);
             TimeManager.Instance().Interval = 60;
 
-            Configurations.ShowEcnTimeSeris(this);
+            Configurations.TryEcnData(this);
 
             //var client = new AccessClient();
             //var nodes = client.GetAllCountryData(TsSource.ISET);

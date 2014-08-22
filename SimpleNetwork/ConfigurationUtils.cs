@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using SimpleImporter;
 using SimpleNetwork.Generators;
 using SimpleNetwork.Interfaces;
@@ -45,10 +46,12 @@ namespace SimpleNetwork
             return nodes;
         }
 
-        public static List<Node> CreateNodes(TsSource source = TsSource.ISET)
+        public static List<Node> CreateNodes(TsSource source = TsSource.ISET, bool battery = false)
         {
             var client = new AccessClient();
             var nodes = client.GetAllCountryData(source);
+
+            if (!battery) return nodes;
 
             foreach (var node in nodes)
             {
