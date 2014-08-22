@@ -45,6 +45,7 @@ namespace SimpleNetwork.ExportStrategies
                 // Restore the lower storage level.
                 for (int index = 0; index < _mNodes.Count; index++)
                 {
+                    if (!_mNodes[index].StorageCollection.Contains(_mStorageMap[_mStorageLevel])) continue;
                     _mMismatches[index] += _mNodes[index].StorageCollection.Get(_mStorageMap[_mStorageLevel])
                         .Restore(tick, _mSystemResponse);
                 }
@@ -61,6 +62,7 @@ namespace SimpleNetwork.ExportStrategies
         {
             var storage =
                 _mNodes.Select(item => item.StorageCollection)
+                    .Where(item => item.Contains(_mStorageMap[_mStorageLevel]))
                     .Select(item => item.Get(_mStorageMap[_mStorageLevel]).RemainingCapacity(_mSystemResponse))
                     .Sum();
 

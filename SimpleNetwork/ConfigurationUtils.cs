@@ -27,7 +27,7 @@ namespace SimpleNetwork
 
         #region Node setup
 
-        public static List<Node> CreateNodes(TsSource source = TsSource.ISET)
+        public static List<Node> CreateNodesWithBackup(TsSource source = TsSource.ISET)
         {
             var client = new AccessClient();
             var nodes = client.GetAllCountryData(source);
@@ -39,8 +39,23 @@ namespace SimpleNetwork
 
                 node.StorageCollection.Add(new BatteryStorage(6 * avgLoad)); // Fixed for now
                 node.StorageCollection.Add(new HydrogenStorage(68.18 * avgLoad)); //  25TWh*(6hourLoad/2.2TWh) = 68.18; To be country dependent
-                node.StorageCollection.Add(new BasicBackup("Hydro", 209.09 * avgLoad));  // 150TWh*(6hourLoad/2.2TWh) = 409.09; To be country dependent
-                node.StorageCollection.Add(new BasicBackup("Bio", 200.00 * avgLoad));  // 150TWh*(6hourLoad/2.2TWh) = 409.09; To be country dependent                   
+                node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", 409.09 * avgLoad));  // 150TWh*(6hourLoad/2.2TWh) = 409.09; To be country dependent           
+            }
+
+            return nodes;
+        }
+
+        public static List<Node> CreateNodes(TsSource source = TsSource.ISET)
+        {
+            var client = new AccessClient();
+            var nodes = client.GetAllCountryData(source);
+
+            foreach (var node in nodes)
+            {
+                var load = node.LoadTimeSeries;
+                var avgLoad = load.GetAverage();
+
+                node.StorageCollection.Add(new BatteryStorage(6 * avgLoad)); // Fixed for now                 
             }
 
             return nodes;
@@ -53,9 +68,9 @@ namespace SimpleNetwork
         /// <param name="data"> the data from which the generators are to be constructed </param>
         public static void SetupNodesFromEcnData(List<Node> nodes, List<EcnDataRow> data)
         {
+            AddStorages(nodes, data, "Pumped storage hydropower");
             AddBackups(nodes, data, "Biomass");
-            AddBackups(nodes, data, "Pumped storage hydropower");
-            AddBackups(nodes, data, "Hydropower");
+            AddGenerators(nodes, data, "Hydropower");
         }
 
         /// <summary>
@@ -98,8 +113,7 @@ namespace SimpleNetwork
                 var match = relevantData.SingleOrDefault(item => item.Country.Equals(node.CountryName));
                 if (match == null) continue;
                 // We have a match, let's add the backup.
-                // TODO: FIX
-                //node.StorageCollection.Add(node.StorageCollection.Keys.Max()+1, new BasicBackup(type, match.Value));
+                node.StorageCollection.Add(new BasicBackup(type, match.Value));
             }
         }
 
@@ -110,7 +124,7 @@ namespace SimpleNetwork
         /// <param name="data"> the data from which the storages are to be constructed </param>
         /// <param name="type"> which parameter (this method is generic) </param>
         /// <param name="efficiency"> the efficiency of the storage (one way) </param>
-        public static void AddStorages(List<Node> nodes, List<EcnDataRow> data, string type, double efficiency = 1)
+        public static void AddStorages(List<Node> nodes, List<EcnDataRow> data, string type, double efficiency = 0.6)
         {
             var hydroData = data.Where(item =>
                 item.RowHeader.Equals(type) &&
@@ -122,8 +136,7 @@ namespace SimpleNetwork
                 var match = hydroData.SingleOrDefault(item => item.Country.Equals(node.CountryName));
                 if (match == null) continue;
                 // We have a match, let's add the storage.
-                // TODO: FIX
-                //node.StorageCollection.Add(node.StorageCollection.Keys.Max() + 1, new BasicBackup(type, match.Value));
+                node.StorageCollection.Add(new BasicStorage(type, efficiency, match.Value));
             }
         }
 

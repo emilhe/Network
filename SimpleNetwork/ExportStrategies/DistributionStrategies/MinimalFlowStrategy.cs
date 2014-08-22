@@ -24,13 +24,18 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
         public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency, int tick)
         {
             // Setup limits.
-            var idx = 0;
-            foreach (var storage in nodes.Select(item => item.StorageCollection).Select(item => item.Get(efficiency)))
+            for (int idx = 0; idx < nodes.Count; idx++)
             {
-                // IMPORTANT: Since storages might be losse, it is only legal to charge OR discharge, BOTH (energy dissipates).
-                _mLoLims[idx] = (mismatches.Sum() > 0)? 0 : storage.RemainingCapacity(Response.Discharge);
-                _mHiLims[idx] = (mismatches.Sum() > 0)? storage.RemainingCapacity(Response.Charge) : 0;
-                idx++;
+                if (!nodes[idx].StorageCollection.Contains(efficiency))
+                {
+                    _mLoLims[idx] = 0;
+                    _mHiLims[idx] = 0;
+                    continue;
+                }
+                var storage = nodes[idx].StorageCollection.Get(efficiency);
+                // IMPORTANT: Since storagnodes[idx].StorageCollection.es might be losse, it is only legal to charge OR discharge, BOTH (energy dissipates).
+                _mLoLims[idx] = (mismatches.Sum() > 0) ? 0 : storage.RemainingCapacity(Response.Discharge);
+                _mHiLims[idx] = (mismatches.Sum() > 0) ? storage.RemainingCapacity(Response.Charge) : 0;
             }
 
             // Determine FLOWS using Gurobi optimization.
@@ -40,6 +45,11 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
             // Charge based on flow optimization results.
             for (int index = 0; index < nodes.Count; index++)
             {
+                if (!nodes[index].StorageCollection.Contains(efficiency))
+                {
+                    mismatches[index] = _flowOptimizer.NodeOptimum[index];
+                    continue;
+                }
                 mismatches[index] = nodes[index].StorageCollection.Get(efficiency).Inject(tick, _flowOptimizer.NodeOptimum[index]);
             }
         }

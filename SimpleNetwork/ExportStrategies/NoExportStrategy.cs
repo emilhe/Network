@@ -30,12 +30,13 @@ namespace SimpleNetwork
         {
             _mStorageLevel = 0;
 
-            // Restore lower levels if possible.
+            // Charge lower levels if possible.
             for (_mStorageLevel = 0; _mStorageLevel < _mStorageMap.Length; _mStorageLevel++)
             {
-                // Restore the lower storage level.
+                // Charge the lower storage level.
                 for (int index = 0; index < _mNodes.Count; index++)
                 {
+                    if (!_mNodes[index].StorageCollection.Contains(_mStorageMap[_mStorageLevel])) continue;
                     _mMismatches[index] = _mNodes[index].StorageCollection.Get(_mStorageMap[_mStorageLevel]).Inject(tick, _mMismatches[index]);
                 }
 

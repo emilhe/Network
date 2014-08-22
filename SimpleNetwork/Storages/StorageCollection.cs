@@ -32,6 +32,11 @@ namespace SimpleNetwork.Storages
             composite.AddStorage(storage);
         }
 
+        public bool Contains(double efficiency)
+        {
+            return _mStorageMap.ContainsKey(efficiency);
+        }
+
         public IStorage Get(double efficiency)
         {
             return _mStorageMap[efficiency];

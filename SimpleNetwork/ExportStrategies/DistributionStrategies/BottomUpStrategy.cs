@@ -12,14 +12,17 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
         {
             // Inject remaining charge "randomly" (here we just start with node 0).
             var toInject = mismatches.Sum();
-            for (int index = 0; index < nodes.Count; index++)
+            for (int idx = 0; idx < nodes.Count; idx++)
             {
-                toInject = nodes[index].StorageCollection.Get(efficiency).Inject(tick, toInject);
-                // This should be true after all "transfers complete".
-                mismatches[index] = 0;
+                if (!nodes[idx].StorageCollection.Contains(efficiency)) continue;
+                toInject = nodes[idx].StorageCollection.Get(efficiency).Inject(tick, toInject);
             }
-            // Inject any remaining mismatch in node 0; since flows are not considered, it does not matter.
-            mismatches[0] = toInject;
+            // Distribute the remaining mismatches "randomly" if any.
+            for (int idx = 0; idx < nodes.Count; idx++)
+            {
+                mismatches[idx] = 0;
+                if (idx == 0) mismatches[idx] = toInject;
+            }
         }
 
     }

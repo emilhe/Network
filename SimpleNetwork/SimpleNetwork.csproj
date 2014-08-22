@@ -109,6 +109,7 @@
     <Compile Include="TimeSeries\SparseTimeSeries.cs" />
     <Compile Include="TimeSeries\TickTimeSeriesItem.cs" />
     <Compile Include="ConfigurationUtils.cs" />
+    <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
