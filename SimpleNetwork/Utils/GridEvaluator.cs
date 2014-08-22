@@ -1,14 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace SimpleNetwork
+namespace SimpleNetwork.Utils
 {
     public class GridEvaluator
     {
+
+        #region Specific functionality
+
+        public static bool[,] EvalSimulation(GridScanParameters gridParams, Simulation simulation, MixController mCtrl)
+        {
+            var watch = new Stopwatch();
+            // Eval grid.
+            return EvalSparse(delegate(int[] idxs)
+            {
+                var pen = gridParams.PenetrationFrom + gridParams.PenetrationStep * idxs[0];
+                var mix = gridParams.MixingFrom + gridParams.MixingStep * idxs[1];
+                mCtrl.SetMix(mix);
+                mCtrl.SetPenetration(pen);
+                mCtrl.Execute();
+                // Do simulation.
+                watch.Restart();
+                simulation.Simulate(24 * 7 * 52, false);
+                Console.WriteLine("Mix " + mix + "; Penetation " + pen + ": " +
+                                  watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
+                return simulation.Output.Success;
+            }, new[] { gridParams.PenetrationSteps, gridParams.MixingSteps });
+        }
+
+        #endregion
+
+        #region Genetic functionality
 
         /// <summary>
         /// Evaluated all points on the grid. Expensive, but solid.
@@ -75,5 +97,52 @@ namespace SimpleNetwork
             return grid;
         }
 
+        #endregion
+
     }
+
+    public class GridScanParameters
+    {
+        public double MixingFrom { get; set; }
+        public double MixingTo { get; set; }
+        public int MixingSteps { get; set; }
+        public double MixingStep
+        {
+            get { return (MixingTo - MixingFrom) / MixingSteps; }
+        }
+
+        public double[] Rows
+        {
+            get
+            {
+                var result = new double[MixingSteps];
+                for (int i = 0; i < MixingSteps; i++)
+                {
+                    result[i] = MixingFrom + MixingStep * i;
+                }
+                return result;
+            }
+        }
+        public double[] Columns
+        {
+            get
+            {
+                var result = new double[PenetrationSteps];
+                for (int i = 0; i < PenetrationSteps; i++)
+                {
+                    result[i] = PenetrationFrom + PenetrationStep * i;
+                }
+                return result;
+            }
+        }
+
+        public double PenetrationTo { get; set; }
+        public double PenetrationFrom { get; set; }
+        public int PenetrationSteps { get; set; }
+        public double PenetrationStep
+        {
+            get { return (PenetrationTo - PenetrationFrom) / PenetrationSteps; }
+        }
+    }
+
 }

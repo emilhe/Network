@@ -6,7 +6,7 @@ namespace SimpleNetwork.Interfaces
     {
 
         void Bind(List<Node> nodes, double[] mismatches, double tolerance = 0);
-        int TraverseStorageLevels(int tick);
+        double TraverseStorageLevels(int tick);
 
     }
 }

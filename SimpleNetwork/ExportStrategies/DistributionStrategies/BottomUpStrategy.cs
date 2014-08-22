@@ -8,13 +8,13 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
     {
         public double Tolerance { get { return 0; } }
 
-        public void DistributePower(List<Node> nodes, double[] mismatches, int storageLevel, int tick)
+        public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency, int tick)
         {
             // Inject remaining charge "randomly" (here we just start with node 0).
             var toInject = mismatches.Sum();
             for (int index = 0; index < nodes.Count; index++)
             {
-                toInject = nodes[index].Storages[storageLevel].Inject(tick, toInject);
+                toInject = nodes[index].Storages.Single(item => item.Efficiency.Equals(efficiency)).Inject(tick, toInject);
                 // This should be true after all "transfers complete".
                 mismatches[index] = 0;
             }

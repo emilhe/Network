@@ -48,7 +48,8 @@ namespace SimpleNetwork.Storages
 
         public double Efficiency
         {
-            get { return _mCore.Efficiency; }
+            // A backup cannot be charged.
+            get { return 0; }
         }
 
         public double Capacity

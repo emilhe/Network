@@ -21,11 +21,11 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
             _mHiLims = new double[edges.NodeCount];
         }
 
-        public void DistributePower(List<Node> nodes, double[] mismatches, int storageLevel, int tick)
+        public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency, int tick)
         {
             // Setup limits.
             var idx = 0;
-            foreach (var storage in nodes.Select(item => item.Storages[storageLevel]))
+            foreach (var storage in nodes.SelectMany(item => item.Storages.Where(s => s.Efficiency.Equals(efficiency))))
             {
                 // IMPORTANT: Since storages might be losse, it is only legal to charge OR discharge, BOTH (energy dissipates).
                 _mLoLims[idx] = (mismatches.Sum() > 0)? 0 : storage.RemainingCapacity(Response.Discharge);
@@ -40,7 +40,7 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
             // Charge based on flow optimization results.
             for (int index = 0; index < nodes.Count; index++)
             {
-                mismatches[index] = nodes[index].Storages[storageLevel].Inject(tick, _flowOptimizer.NodeOptimum[index]);
+                mismatches[index] = nodes[index].Storages.Single(item => item.Efficiency.Equals(efficiency)).Inject(tick, _flowOptimizer.NodeOptimum[index]);
             }
         }
 

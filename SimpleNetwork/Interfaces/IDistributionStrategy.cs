@@ -14,7 +14,7 @@ namespace SimpleNetwork.Interfaces
         /// When it is determined HOW the power should be distrubuted, call this method to it DO IT. Depending on implementation,
         /// the flow might be calculated, minimized, traced, etc.
         /// </summary>
-        void DistributePower(List<Node> nodes, double[] mismatches, int storageLevel, int tick);
+        void DistributePower(List<Node> nodes, double[] mismatches, double efficiency, int tick);
         
     }
 }

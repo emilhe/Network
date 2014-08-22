@@ -37,11 +37,11 @@ namespace SimpleNetwork
                 var load = node.LoadTimeSeries;
                 var avgLoad = load.GetAverage();
 
-                node.Storages = new Dictionary<int, IStorage>
+                node.Storages = new List<IStorage>
                 {
-                    {0, new BatteryStorage(6*avgLoad)}, // Fixed for now
-                    {1, new HydrogenStorage(68.18*avgLoad)}, //  25TWh*(6hourLoad/2.2TWh) = 68.18; To be country dependent
-                    {2, new BasicBackup("Hydro-biomass backup", 409.09*avgLoad)} // 150TWh*(6hourLoad/2.2TWh) = 409.09; To be country dependent
+                    new BatteryStorage(6*avgLoad), // Fixed for now
+                    new HydrogenStorage(68.18*avgLoad), //  25TWh*(6hourLoad/2.2TWh) = 68.18; To be country dependent
+                    new BasicBackup("Hydro-biomass backup", 409.09*avgLoad) // 150TWh*(6hourLoad/2.2TWh) = 409.09; To be country dependent
                 };
             }
 
@@ -100,7 +100,8 @@ namespace SimpleNetwork
                 var match = relevantData.SingleOrDefault(item => item.Country.Equals(node.CountryName));
                 if (match == null) continue;
                 // We have a match, let's add the backup.
-                node.Storages.Add(node.Storages.Keys.Max()+1, new BasicBackup(type, match.Value));
+                // TODO: FIX
+                //node.Storages.Add(node.Storages.Keys.Max()+1, new BasicBackup(type, match.Value));
             }
         }
 
@@ -123,8 +124,8 @@ namespace SimpleNetwork
                 var match = hydroData.SingleOrDefault(item => item.Country.Equals(node.CountryName));
                 if (match == null) continue;
                 // We have a match, let's add the storage.
-                // TODO: Find the right index. MAYBE; remove storage priority, instead generate priority (backups in the end, others sorted by eff)
-                node.Storages.Add(node.Storages.Keys.Max() + 1, new BasicBackup(type, match.Value));
+                // TODO: FIX
+                //node.Storages.Add(node.Storages.Keys.Max() + 1, new BasicBackup(type, match.Value));
             }
         }
 

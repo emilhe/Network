@@ -21,7 +21,7 @@ namespace SimpleNetwork.Interfaces
         public bool Failure { get; private set; }
 
         private readonly double[] _mMismatches;
-        private int _mStorageLevel;
+        private double _mEfficiency;
         private int _mTick;
 
         #endregion
@@ -35,8 +35,9 @@ namespace SimpleNetwork.Interfaces
             _mMismatches = new double[Nodes.Count];
             _mExportStrategy.Bind(Nodes, _mMismatches, _mDistributionStrategy.Tolerance);
 
-            if (!Nodes.SelectMany(item => item.Storages.Keys).Any()) return;
-            _mMaximumStorageLevel = Nodes.SelectMany(item => item.Storages.Keys).Max();
+            _mMaximumStorageLevel = Nodes.SelectMany(item => item.Storages)
+                .Select(item => item.Efficiency)
+                .Distinct().Count();
         }
 
         public void Respond(int tick)
@@ -50,9 +51,9 @@ namespace SimpleNetwork.Interfaces
 
         private void BalanceSystem()
         {
-            _mStorageLevel = _mExportStrategy.TraverseStorageLevels(_mTick);
-            if (_mStorageLevel > _mMaximumStorageLevel) return;
-            _mDistributionStrategy.DistributePower(Nodes, _mMismatches, _mStorageLevel, _mTick);
+            _mEfficiency = _mExportStrategy.TraverseStorageLevels(_mTick);
+            if (_mEfficiency == -1) return; // TODO: This is not very logic.
+            _mDistributionStrategy.DistributePower(Nodes, _mMismatches, _mEfficiency, _mTick);
         }
 
         /// <summary>

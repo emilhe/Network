@@ -15,7 +15,7 @@ namespace SimpleNetwork
         public string CountryName { get; set; }
 
         public ITimeSeries LoadTimeSeries { get { return _mLoadTimeSeries; } }
-        public Dictionary<int,IStorage> Storages { get; set; }
+        public List<IStorage> Storages { get; set; }
         public List<IGenerator> Generators { get; set; }
         public List<IMeasureable> Measureables
         {
@@ -23,7 +23,7 @@ namespace SimpleNetwork
             {
                 var result = new List<IMeasureable>();
                 result.AddRange(Generators);
-                result.AddRange(Storages.Values);
+                result.AddRange(Storages);
                 return result;
             }
         }
@@ -34,7 +34,7 @@ namespace SimpleNetwork
             _mLoadTimeSeries = loadTimeSeries;
 
             Generators = new List<IGenerator>();
-            Storages = new Dictionary<int, IStorage>();
+            Storages = new List<IStorage>();
         }
 
         public List<ITimeSeries> CollectTimeSeries()

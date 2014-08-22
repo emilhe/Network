@@ -14,7 +14,7 @@ namespace SimpleNetwork.ExportStrategies
             throw new NotImplementedException();
         }
 
-        public int TraverseStorageLevels(int tick)
+        public double TraverseStorageLevels(int tick)
         {
             throw new NotImplementedException();
         }

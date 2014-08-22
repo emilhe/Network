@@ -8,7 +8,7 @@ namespace SimpleNetwork
     {
         private List<Node> _mNodes;
         private double[] _mMismatches;
-        private int _mMaximumStorageLevel = -1;
+        private double[] _mStorageMap;
         private int _mStorageLevel;
 
         public void Bind(List<Node> nodes, double[] mismatches, double tolerance = 0)
@@ -16,38 +16,43 @@ namespace SimpleNetwork
             _mNodes = nodes;
             _mMismatches = mismatches;
 
-            if (!_mNodes.SelectMany(item => item.Storages).Any()) return;
-            _mMaximumStorageLevel = _mNodes.SelectMany(item => item.Storages.Keys).Max();
+            _mStorageMap =
+                _mNodes.SelectMany(item => item.Storages)
+                    .Select(item => item.Efficiency)
+                    .Distinct()
+                    .OrderByDescending(item => item)
+                    .ToArray();
         }
 
         /// <summary>
         /// Charge all nodes individually until all energy is used or the storage is full.
         /// </summary>
-        public int TraverseStorageLevels(int tick)
+        public double TraverseStorageLevels(int tick)
         {
             _mStorageLevel = 0;
 
-            while (_mStorageLevel <= _mMaximumStorageLevel && InsufficientStorageAtCurrentLevel())
+            // Restore lower levels if possible.
+            for (_mStorageLevel = 0; _mStorageLevel < _mStorageMap.Length; _mStorageLevel++)
             {
-                // Charge the lower storage level.
+                // Restore the lower storage level.
                 for (int index = 0; index < _mNodes.Count; index++)
                 {
-                    _mMismatches[index] = _mNodes[index].Storages[_mStorageLevel].Inject(tick, _mMismatches[index]);
+                    _mMismatches[index] = _mNodes[index].Storages.Single(item => item.Efficiency.Equals(_mStorageMap[_mStorageLevel])).Inject(tick, _mMismatches[index]);
                 }
-                // Go to the next storage level.
-                _mStorageLevel++;
+
+                if (SufficientStorageAtCurrentLevel()) return _mStorageMap[_mStorageLevel];
             }
 
-            return _mStorageLevel;
+            return -1;
         }
 
         /// <summary>
         /// Determine if sufficient storage is availble at the current level.
         /// </summary>
         /// <returns> false if there is </returns>
-        private bool InsufficientStorageAtCurrentLevel()
+        private bool SufficientStorageAtCurrentLevel()
         {
-            return _mMismatches.Where(item => item != 0).Any();
+            return _mMismatches.All(item => item == 0);
         }
     }
 }

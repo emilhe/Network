@@ -18,41 +18,29 @@ namespace SimpleVisualisation
     public partial class ContourControlOxy : UserControl
     {
 
-        private PlotView _mPlot;
-        private PlotModel _mModel;
+        private readonly PlotView _mPlot;
 
         public ContourControlOxy()
         {
             InitializeComponent();
 
-            _mModel = new PlotModel();
             _mPlot = new PlotView
             {
                 Dock = DockStyle.Fill,
                 Location = new Point(0, 0),
                 Name = "Oxy",
-                Model = _mModel,
             };
 
             // For now, just bind it.
             Controls.Add(_mPlot);
         }
 
-        public void AddData(double[] rows, double[] columns, double[,] grid)
+        public void SetHeatData(double[] rows, double[] columns, List<bool[,]> data)
         {
-            //var contourSeries = new ContourSeries
-            //{
-            //    Color = OxyColors.Black,
-            //    LabelBackground = OxyColors.White,
-            //    ColumnCoordinates = columns,
-            //    RowCoordinates = rows,
-            //    Data = grid,
-            //    ContourLevels = new double[] { 0, 1, 2},
-            //    ContourColors = new[] { OxyColor.FromRgb(255, 0, 0), OxyColor.FromRgb(0, 255, 0), OxyColor.FromRgb(0, 0, 255) },
+            var model = new PlotModel();
+            _mPlot.Model = model;
 
-            //};
-
-            _mModel.Axes.Add(new LinearColorAxis()
+            model.Axes.Add(new LinearColorAxis()
             {
                 Position = AxisPosition.Right,
                 Palette = OxyPalettes.Jet(500),
@@ -60,16 +48,33 @@ namespace SimpleVisualisation
                 LowColor = OxyColors.Black
             });
 
-            var contourSeries = new HeatMapSeries
+            model.Series.Add(new HeatMapSeries
             {
                 X0 = columns[0],
-                X1 = columns[columns.Length-1],
+                X1 = columns[columns.Length - 1],
                 Y0 = rows[0],
                 Y1 = rows[rows.Length - 1],
-                Data = grid,
-            };
+                Data = MapGrids(data),
+            });
+        }
 
-            _mModel.Series.Add(contourSeries);
+        /// <summary>
+        /// It is assumed that the grid are the same size.
+        /// </summary>
+        private double[,] MapGrids(List<bool[,]> grid, double value = 1)
+        {
+            var result = new double[grid[0].GetLength(0), grid[0].GetLength(1)];
+            for (int i = 0; i < grid[0].GetLength(0); i++)
+            {
+                for (int j = 0; j < grid[0].GetLength(1); j++)
+                {
+                    for (int k = 0; k < grid.Count; k++)
+                    {
+                        if (grid[k][i, j]) result[i, j] = k + 1;
+                    }
+                }
+            }
+            return result;
         }
 
     }
