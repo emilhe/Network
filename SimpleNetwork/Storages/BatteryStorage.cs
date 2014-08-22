@@ -52,6 +52,11 @@ namespace SimpleNetwork.Storages
             get { return _mCore.Efficiency; }
         }
 
+        public double InitialCapacity
+        {
+            get { return _mCore.InitialCapacity; }
+        }
+
         public double Capacity
         {
             get { return _mCore.Capacity; }

@@ -14,7 +14,7 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
             var toInject = mismatches.Sum();
             for (int index = 0; index < nodes.Count; index++)
             {
-                toInject = nodes[index].Storages.Single(item => item.Efficiency.Equals(efficiency)).Inject(tick, toInject);
+                toInject = nodes[index].StorageCollection.Get(efficiency).Inject(tick, toInject);
                 // This should be true after all "transfers complete".
                 mismatches[index] = 0;
             }

@@ -17,7 +17,6 @@ namespace SimpleNetwork.Storages
     {
         private bool _mMeasurering;
         private double _mRemainingCapacity;
-        private readonly double _mInitialCapacity;
 
         public bool Measurering
         {
@@ -28,6 +27,7 @@ namespace SimpleNetwork.Storages
 
         public string Name { get; private set; }
         public double Efficiency { get; private set; }
+        public double InitialCapacity { get; private set; }
         public double Capacity { get; private set; }
 
         public BasicStorage(string name, double efficiency, double capacity, double initialCapacity = 0)
@@ -35,9 +35,9 @@ namespace SimpleNetwork.Storages
             Name = name;
             Capacity = capacity;
             Efficiency = efficiency;
+            InitialCapacity = initialCapacity;
 
             _mRemainingCapacity = initialCapacity;
-            _mInitialCapacity = initialCapacity;
         }
 
         #region Capacity info
@@ -62,7 +62,7 @@ namespace SimpleNetwork.Storages
 
         public void ResetCapacity()
         {
-            _mRemainingCapacity = _mInitialCapacity;
+            _mRemainingCapacity = InitialCapacity;
         }
 
         private double EffectiveEnergyReleasedOnDrainEmpty()

@@ -147,7 +147,7 @@ namespace SimpleImporter
         [Description("Load")]
         Load = 1,
         [Description("Wind Generation")]
-        Wind = 2,
+            Wind = 2,
         [Description("Solar Generation")]
         Solar = 3
     }

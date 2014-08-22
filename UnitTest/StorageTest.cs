@@ -64,5 +64,18 @@ namespace UnitTest
             Assert.AreEqual(0, storage.Restore(0, Response.Charge));
             Assert.AreEqual(6, storage.Restore(0, Response.Discharge));
         }
+
+        [Test]
+        public void CompositeStorageTest()
+        {
+            var master = new BasicStorage("Master", 1, 10);
+            var composite = new CompositeStorage(master);
+            var slave = new BasicStorage("Slave", 1, 10);
+            composite.AddStorage(slave);
+            // Restore
+            Assert.AreEqual(20, composite.Capacity);
+            Assert.AreEqual(1, composite.Efficiency);
+            Assert.AreEqual(0, composite.InitialCapacity);
+        }
     }
 }

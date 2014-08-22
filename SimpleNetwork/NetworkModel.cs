@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SimpleNetwork.Interfaces;
 
-namespace SimpleNetwork.Interfaces
+namespace SimpleNetwork
 {
     public class NetworkModel
     {
         public List<Node> Nodes { get; private set; }
 
-        private readonly int _mMaximumStorageLevel = -1;
         private readonly IDistributionStrategy _mDistributionStrategy;
         private readonly IExportStrategy _mExportStrategy;
 
@@ -34,10 +31,6 @@ namespace SimpleNetwork.Interfaces
 
             _mMismatches = new double[Nodes.Count];
             _mExportStrategy.Bind(Nodes, _mMismatches, _mDistributionStrategy.Tolerance);
-
-            _mMaximumStorageLevel = Nodes.SelectMany(item => item.Storages)
-                .Select(item => item.Efficiency)
-                .Distinct().Count();
         }
 
         public void Respond(int tick)

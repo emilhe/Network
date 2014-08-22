@@ -17,8 +17,7 @@ namespace SimpleNetwork
             _mMismatches = mismatches;
 
             _mStorageMap =
-                _mNodes.SelectMany(item => item.Storages)
-                    .Select(item => item.Efficiency)
+                _mNodes.SelectMany(item => item.StorageCollection.Efficiencies())
                     .Distinct()
                     .OrderByDescending(item => item)
                     .ToArray();
@@ -37,7 +36,7 @@ namespace SimpleNetwork
                 // Restore the lower storage level.
                 for (int index = 0; index < _mNodes.Count; index++)
                 {
-                    _mMismatches[index] = _mNodes[index].Storages.Single(item => item.Efficiency.Equals(_mStorageMap[_mStorageLevel])).Inject(tick, _mMismatches[index]);
+                    _mMismatches[index] = _mNodes[index].StorageCollection.Get(_mStorageMap[_mStorageLevel]).Inject(tick, _mMismatches[index]);
                 }
 
                 if (SufficientStorageAtCurrentLevel()) return _mStorageMap[_mStorageLevel];

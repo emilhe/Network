@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using DataItems;
+using SimpleNetwork;
 using SimpleNetwork.Interfaces;
 
 namespace SimpleVisualisation
@@ -18,6 +19,20 @@ namespace SimpleVisualisation
             ChartUtils.EnableZooming(chart);
 
             seriesListView.ItemSelectionChanged += seriesListView_ItemSelectionChanged;
+        }
+
+        public void SetData(SimulationOutput output)
+        {
+            var allTs = output.SystemTimeSeries.ToList().Select(item => item.Value).ToList();
+            foreach (var item in output.CountryTimeSeriesMap)
+            {
+                foreach (var ts in item.Value)
+                {
+                    ts.Name = item.Key + ", " + ts.Name;
+                    allTs.Add(ts);
+                }
+            }
+            SetData(allTs);
         }
 
         public void SetData(List<ITimeSeries> timeSeries)

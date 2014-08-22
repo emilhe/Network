@@ -89,7 +89,7 @@ namespace SimpleNetwork
         /// </summary>
         private void ResetStorages()
         {
-            foreach (var storage in Nodes.SelectMany(item => item.Storages)) storage.ResetCapacity();
+            foreach (var storage in Nodes.SelectMany(item => item.StorageCollection.Storages())) storage.ResetCapacity();
         }
 
         /// <summary>

@@ -25,6 +25,11 @@ namespace SimpleNetwork.Interfaces
         double Efficiency { get; }
 
         /// <summary>
+        /// Initial capacity of the storage.
+        /// </summary>
+        double InitialCapacity { get; }
+
+        /// <summary>
         /// Nominal capacity of the storage.
         /// </summary>
         double Capacity { get; }

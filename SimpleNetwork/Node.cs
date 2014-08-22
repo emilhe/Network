@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using DataItems;
 using SimpleNetwork.Interfaces;
+using SimpleNetwork.Storages;
 using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
 
 namespace SimpleNetwork
@@ -15,7 +14,7 @@ namespace SimpleNetwork
         public string CountryName { get; set; }
 
         public ITimeSeries LoadTimeSeries { get { return _mLoadTimeSeries; } }
-        public List<IStorage> Storages { get; set; }
+        public StorageCollection StorageCollection { get; set; }
         public List<IGenerator> Generators { get; set; }
         public List<IMeasureable> Measureables
         {
@@ -23,7 +22,7 @@ namespace SimpleNetwork
             {
                 var result = new List<IMeasureable>();
                 result.AddRange(Generators);
-                result.AddRange(Storages);
+                result.AddRange(StorageCollection.Storages());
                 return result;
             }
         }
@@ -34,7 +33,7 @@ namespace SimpleNetwork
             _mLoadTimeSeries = loadTimeSeries;
 
             Generators = new List<IGenerator>();
-            Storages = new List<IStorage>();
+            StorageCollection = new StorageCollection();
         }
 
         public List<ITimeSeries> CollectTimeSeries()

@@ -30,7 +30,7 @@ namespace SimpleVisualisation
             TimeManager.Instance().StartTime = new DateTime(2000, 1, 1);
             TimeManager.Instance().Interval = 60;
 
-            Configurations.CompareSources(this);
+            Configurations.ShowTimeSeris(this);
 
             //var client = new AccessClient();
             //var nodes = client.GetAllCountryData(TsSource.ISET);
@@ -52,7 +52,7 @@ namespace SimpleVisualisation
             //    system.Simulate(24 * 7 * 52);
             //    Console.WriteLine("Penetation " + pen + ", " + (system.Output.Success ? "SUCCESS" : "FAIL"));
             //}
-            //DisplayTs(system.Output);
+            //DisplayTimeSeries(system.Output);
 
             //var edges = new EdgeSet(nodes.Count);
             //var mCtrl = new MixController(nodes);
@@ -60,17 +60,17 @@ namespace SimpleVisualisation
             //var data = ProtoStore.LoadEcnData();
             //Utils.SetupNodesFromEcnData(nodes, data);
             //var allBio =
-            //    nodes.SelectMany(item => item.Storages.Values)
+            //    nodes.SelectMany(item => item.StorageCollection.Values)
             //        .Where(item => item.Name.Equals("Biomass"))
             //        .Select(item => item.Capacity)
             //        .Sum();
             //var allHydroPump =
-            //    nodes.SelectMany(item => item.Storages.Values)
+            //    nodes.SelectMany(item => item.StorageCollection.Values)
             //        .Where(item => item.Name.Equals("Pumped storage hydropower"))
             //        .Select(item => item.Capacity)
             //        .Sum();
             //var allHydro =
-            //    nodes.SelectMany(item => item.Storages.Values)
+            //    nodes.SelectMany(item => item.StorageCollection.Values)
             //        .Where(item => item.Name.Equals("Hydropower"))
             //        .Select(item => item.Capacity)
             //        .Sum();
@@ -93,7 +93,8 @@ namespace SimpleVisualisation
             sys.Simulate(24*365);
             Console.WriteLine("Mix " + 0.66 + "; Penetation " + 1.033 + ": " +
                   watch.ElapsedMilliseconds + ", " + (sys.Output.Success ? "SUCCESS" : "FAIL"));
-            DisplayTs(sys.Output);
+            var view = DisplayTimeSeries();
+            view.SetData(sys.Output);
         }
 
         #region Contour view
@@ -122,22 +123,13 @@ namespace SimpleVisualisation
 
         #region Ts GUI mapping
 
-        private void DisplayTs(SimulationOutput output)
+        public TimeSeriesControl DisplayTimeSeries()
         {
             if(timeSeriesControl == null) InitializeTsControl();
             timeSeriesControl.Visible = true;
             if (contourControl != null) contourControl.Visible = false;
 
-            var allTs = output.SystemTimeSeries.ToList().Select(item => item.Value).ToList();
-            foreach (var item in output.CountryTimeSeriesMap)
-            {
-                foreach (var ts in item.Value)
-                {
-                    ts.Name = item.Key + ", " + ts.Name;
-                    allTs.Add(ts);
-                }
-            }
-            timeSeriesControl.SetData(allTs);
+            return timeSeriesControl;
         }
 
         private void InitializeTsControl()

@@ -24,8 +24,7 @@ namespace SimpleNetwork.ExportStrategies
             _mMismatches = mismatches;
 
             _mStorageMap =
-                _mNodes.SelectMany(item => item.Storages)
-                    .Select(item => item.Efficiency)
+                _mNodes.SelectMany(item => item.StorageCollection.Efficiencies())
                     .Distinct()
                     .OrderByDescending(item => item)
                     .ToArray();
@@ -46,9 +45,8 @@ namespace SimpleNetwork.ExportStrategies
                 // Restore the lower storage level.
                 for (int index = 0; index < _mNodes.Count; index++)
                 {
-                    _mMismatches[index] +=
-                        _mNodes[index].Storages.Single(item => item.Efficiency.Equals(_mStorageMap[_mStorageLevel]))
-                            .Restore(tick, _mSystemResponse);
+                    _mMismatches[index] += _mNodes[index].StorageCollection.Get(_mStorageMap[_mStorageLevel])
+                        .Restore(tick, _mSystemResponse);
                 }
             }
 
@@ -61,8 +59,9 @@ namespace SimpleNetwork.ExportStrategies
         /// <returns> true if there is </returns>
         private bool SufficientStorageAtCurrentLevel()
         {
-            var storage = _mNodes.SelectMany(item => item.Storages.Where(s => s.Efficiency.Equals(_mStorageMap[_mStorageLevel])))
-                    .Select(item => item.RemainingCapacity(_mSystemResponse))
+            var storage =
+                _mNodes.Select(item => item.StorageCollection)
+                    .Select(item => item.Get(_mStorageMap[_mStorageLevel]).RemainingCapacity(_mSystemResponse))
                     .Sum();
 
             switch (_mSystemResponse)

@@ -79,6 +79,8 @@
     <Compile Include="ExportStrategies\DistributionStrategies\BottomUpStrategy.cs" />
     <Compile Include="ExportStrategies\SelfishExportStrategy.cs" />
     <Compile Include="MixController.cs" />
+    <Compile Include="Storages\CompositeStorage.cs" />
+    <Compile Include="Storages\StorageCollection.cs" />
     <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Generators\ConstantGenerator.cs" />
     <Compile Include="Generators\RandomGenerator.cs" />
