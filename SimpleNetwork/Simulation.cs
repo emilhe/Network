@@ -69,13 +69,16 @@ namespace SimpleNetwork
             // Simulation main loop.
             _mTick = 0;
             _mSuccess = true;
-            while (_mTick <= ticks)
+            while (_mTick < ticks)
             {
                 if (_mDebug) _mWatch.Restart();
                 _mModel.Respond(_mTick);
                 if (log) _mSystemTimeSeries["Mismatch"].AddData(_mTick, _mModel.Mismatch);
                 if (log) _mSystemTimeSeries["Curtailment"].AddData(_mTick, _mModel.Curtailment);
-                if (_mModel.Failure) _mSuccess = false;
+                if (_mModel.Failure)
+                {
+                    _mSuccess = false;
+                }
                 if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
                 _mTick++;
                 if (!log && _mModel.Failure) break;

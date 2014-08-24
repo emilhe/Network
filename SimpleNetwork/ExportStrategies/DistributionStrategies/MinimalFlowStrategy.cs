@@ -33,7 +33,7 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
                     continue;
                 }
                 var storage = nodes[idx].StorageCollection.Get(efficiency);
-                // IMPORTANT: Since storagnodes[idx].StorageCollection.es might be losse, it is only legal to charge OR discharge, BOTH (energy dissipates).
+                // IMPORTANT: Since storages might be losse, it is only legal to charge OR discharge, otherwise energy dissipates.
                 _mLoLims[idx] = (mismatches.Sum() > 0) ? 0 : storage.RemainingCapacity(Response.Discharge);
                 _mHiLims[idx] = (mismatches.Sum() > 0) ? storage.RemainingCapacity(Response.Charge) : 0;
             }

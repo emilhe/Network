@@ -29,7 +29,7 @@ namespace SimpleNetwork.ExportStrategies
                     .OrderByDescending(item => item)
                     .ToArray();
         }
-
+        
         /// <summary>
         /// Detmine the storage level at which the flow optimisation is to take place. Restore/drain all lower levels.
         /// </summary>
@@ -41,7 +41,7 @@ namespace SimpleNetwork.ExportStrategies
             for (_mStorageLevel = 0; _mStorageLevel < _mStorageMap.Length; _mStorageLevel++)
             {
                 if (SufficientStorageAtCurrentLevel()) return _mStorageMap[_mStorageLevel];
-
+                    
                 // Restore the lower storage level.
                 for (int index = 0; index < _mNodes.Count; index++)
                 {

@@ -45,7 +45,7 @@ namespace SimpleNetwork
         private void BalanceSystem()
         {
             _mEfficiency = _mExportStrategy.TraverseStorageLevels(_mTick);
-            if (_mEfficiency == -1) return; // TODO: This is not very logic.
+            //if (_mEfficiency == -1) return; // TODO: This is not very logic.
             _mDistributionStrategy.DistributePower(Nodes, _mMismatches, _mEfficiency, _mTick);
         }
 
@@ -64,7 +64,7 @@ namespace SimpleNetwork
         private void CurtailExcessEnergy()
         {
             Curtailment = _mMismatches.Sum();
-            Failure = Curtailment < -_mMismatches.Length * _mDistributionStrategy.Tolerance;
+            Failure = _mMismatches.Any(item => item < -_mDistributionStrategy.Tolerance);
         }
 
     }

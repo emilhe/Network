@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using SimpleNetwork.Interfaces;
 
@@ -28,15 +29,23 @@ namespace SimpleNetwork
         /// </summary>
         public double TraverseStorageLevels(int tick)
         {
+            return TraverseStorageLevels(tick, i => true);
+        }
+
+        /// <summary>
+        /// Charge all nodes individually until all energy is used or the storage is full. A condition on when to skip nodes can be supplied.
+        /// </summary>
+        public double TraverseStorageLevels(int tick, Func<int, bool> condition)
+        {
             _mStorageLevel = 0;
 
             // Charge lower levels if possible.
             for (_mStorageLevel = 0; _mStorageLevel < _mStorageMap.Length; _mStorageLevel++)
             {
-                // Charge the lower storage level.
                 for (int index = 0; index < _mNodes.Count; index++)
                 {
                     if (!_mNodes[index].StorageCollection.Contains(_mStorageMap[_mStorageLevel])) continue;
+                    if(!condition(index)) continue;
                     _mMismatches[index] = _mNodes[index].StorageCollection.Get(_mStorageMap[_mStorageLevel]).Inject(tick, _mMismatches[index]);
                 }
 

@@ -40,7 +40,7 @@ namespace SimpleVisualisation
             var model = new PlotModel();
             _mPlot.Model = model;
 
-            model.Axes.Add(new LinearColorAxis()
+            model.Axes.Add(new LinearColorAxis
             {
                 Position = AxisPosition.Right,
                 Palette = OxyPalettes.Jet(500),
@@ -56,6 +56,9 @@ namespace SimpleVisualisation
                 Y1 = rows[rows.Length - 1],
                 Data = MapGrids(data),
             });
+
+            model.Axes.Add(new LinearAxis {Title = "Penetration", Position = AxisPosition.Bottom});
+            model.Axes.Add(new LinearAxis {Title = "Mixing Factor", Position = AxisPosition.Left});
         }
 
         /// <summary>
