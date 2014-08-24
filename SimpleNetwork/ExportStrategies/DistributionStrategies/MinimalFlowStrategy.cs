@@ -7,6 +7,7 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
     public class MinimalFlowStrategy : IDistributionStrategy
     {
         public double Tolerance { get { return 1e-4; } }
+        public bool ShareStorage { get; set; }
 
         private readonly FlowOptimizer _flowOptimizer;
         private readonly double[] _mLoLims;

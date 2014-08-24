@@ -17,9 +17,9 @@ namespace SimpleNetwork.Storages
 
         private readonly BasicStorage _mCore;
 
-        public HydrogenStorage(double capacity)
+        public HydrogenStorage(double capacity, double initalCapacity = 0)
         {
-            _mCore = new BasicStorage("Hydrogen storage", 0.6, capacity);
+            _mCore = new BasicStorage("Hydrogen storage", 0.6, capacity, initalCapacity);
         }
 
         public bool Measurering

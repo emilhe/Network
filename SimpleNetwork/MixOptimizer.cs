@@ -51,7 +51,7 @@ namespace SimpleNetwork
         /// </summary>
         public void OptimizeIndividually(double stepSize = 0.05)
         {
-            var model = new NetworkModel(new List<Node> {Nodes[0]}, new NoExportStrategy(), new BottomUpStrategy());
+            var model = new NetworkModel(new List<Node> {Nodes[0]}, new NoExportStrategy());
             var system = new Simulation(model);
             
             for (int i = 0; i < Nodes.Count; i++)

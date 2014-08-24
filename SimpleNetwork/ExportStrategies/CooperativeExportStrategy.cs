@@ -10,17 +10,24 @@ namespace SimpleNetwork.ExportStrategies
     public class CooperativeExportStrategy : IExportStrategy
     {
 
+        private readonly IDistributionStrategy _mDistributionStrategy;
         private List<Node> _mNodes;
-        private double[] _mMismatches;
-        private double _mTolerance;
         private Response _mSystemResponse;
+        private double[] _mMismatches;
         private double[] _mStorageMap;
         private int _mStorageLevel;
 
-        public void Bind(List<Node> nodes, double[] mismatches, double tolerance)
+        public double Tolerance { get { return _mDistributionStrategy.Tolerance; } }
+
+        public CooperativeExportStrategy(IDistributionStrategy distributionStrategy)
+        {
+            _mDistributionStrategy = distributionStrategy;
+            _mDistributionStrategy.ShareStorage = true;
+        }
+
+        public void Bind(List<Node> nodes, double[] mismatches)
         {
             _mNodes = nodes;
-            _mTolerance = tolerance;
             _mMismatches = mismatches;
 
             _mStorageMap =
@@ -31,17 +38,30 @@ namespace SimpleNetwork.ExportStrategies
         }
         
         /// <summary>
+        /// Balance the system utilizing the storages of all nodes.
+        /// </summary>
+        public void BalanceSystem(int tick)
+        {
+            TraverseStorageLevels(tick);
+
+            // TODO: NOT correct; flow results are wrong, fail/succes is correct; if fix is not used, gurobi fucks due to power overflow.
+            if (_mStorageLevel == _mStorageMap.Length) return;
+
+            _mDistributionStrategy.DistributePower(_mNodes, _mMismatches, _mStorageMap[_mStorageLevel], tick);
+        }
+
+        /// <summary>
         /// Detmine the storage level at which the flow optimisation is to take place. Restore/drain all lower levels.
         /// </summary>
-        public double TraverseStorageLevels(int tick)
+        private void TraverseStorageLevels(int tick)
         {
             _mSystemResponse = (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge;
 
             // Restore lower levels if possible.
             for (_mStorageLevel = 0; _mStorageLevel < _mStorageMap.Length; _mStorageLevel++)
             {
-                if (SufficientStorageAtCurrentLevel()) return _mStorageMap[_mStorageLevel];
-                    
+                if (SufficientStorageAtCurrentLevel()) return;
+
                 // Restore the lower storage level.
                 for (int index = 0; index < _mNodes.Count; index++)
                 {
@@ -50,8 +70,6 @@ namespace SimpleNetwork.ExportStrategies
                         .Restore(tick, _mSystemResponse);
                 }
             }
-
-            return -1;
         }
 
         /// <summary>
@@ -69,13 +87,14 @@ namespace SimpleNetwork.ExportStrategies
             switch (_mSystemResponse)
             {
                 case Response.Charge:
-                    return storage >= (_mMismatches.Sum() + _mMismatches.Length * _mTolerance);
+                    return storage >= (_mMismatches.Sum() + _mMismatches.Length * _mDistributionStrategy.Tolerance);
                 case Response.Discharge:
                     // Flip sign signs; the numbers are negative.
-                    return storage <= (_mMismatches.Sum() - _mMismatches.Length * _mTolerance);
+                    return storage <= (_mMismatches.Sum() - _mMismatches.Length * _mDistributionStrategy.Tolerance);
                 default:
                     throw new ArgumentException("Illegal Response.");
             }
         }
+
     }
 }

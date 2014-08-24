@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using SimpleNetwork.ExportStrategies;
 using SimpleNetwork.Interfaces;
 
 namespace SimpleNetwork
@@ -8,7 +9,6 @@ namespace SimpleNetwork
     {
         public List<Node> Nodes { get; private set; }
 
-        private readonly IDistributionStrategy _mDistributionStrategy;
         private readonly IExportStrategy _mExportStrategy;
 
         #region Current iteration fields
@@ -18,19 +18,16 @@ namespace SimpleNetwork
         public bool Failure { get; private set; }
 
         private readonly double[] _mMismatches;
-        private double _mEfficiency;
         private int _mTick;
 
         #endregion
 
-        public NetworkModel(List<Node> nodes, IExportStrategy exportStrategy, IDistributionStrategy distributionStrategy)
+        public NetworkModel(List<Node> nodes, IExportStrategy exportStrategy)
         {
             Nodes = nodes;
-            _mDistributionStrategy = distributionStrategy;
             _mExportStrategy = exportStrategy;
-
             _mMismatches = new double[Nodes.Count];
-            _mExportStrategy.Bind(Nodes, _mMismatches, _mDistributionStrategy.Tolerance);
+            _mExportStrategy.Bind(Nodes, _mMismatches);
         }
 
         public void Respond(int tick)
@@ -44,9 +41,7 @@ namespace SimpleNetwork
 
         private void BalanceSystem()
         {
-            _mEfficiency = _mExportStrategy.TraverseStorageLevels(_mTick);
-            //if (_mEfficiency == -1) return; // TODO: This is not very logic.
-            _mDistributionStrategy.DistributePower(Nodes, _mMismatches, _mEfficiency, _mTick);
+            _mExportStrategy.BalanceSystem(_mTick);
         }
 
         /// <summary>
@@ -64,7 +59,14 @@ namespace SimpleNetwork
         private void CurtailExcessEnergy()
         {
             Curtailment = _mMismatches.Sum();
-            Failure = _mMismatches.Any(item => item < -_mDistributionStrategy.Tolerance);
+            if (_mExportStrategy as NoExportStrategy != null)
+            {
+                Failure = _mMismatches.Any(item => item < -_mExportStrategy.Tolerance);
+            }
+            else
+            {
+                Failure = _mMismatches.Sum() < -_mExportStrategy.Tolerance*_mMismatches.Length;                
+            }
         }
 
     }

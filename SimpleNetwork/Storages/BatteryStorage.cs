@@ -17,9 +17,9 @@ namespace SimpleNetwork.Storages
 
         private readonly BasicStorage _mCore;
 
-        public BatteryStorage(double capacity)
+        public BatteryStorage(double capacity, double initialCapacity = 0)
         {
-            _mCore = new BasicStorage("Battery storage", 1, capacity);
+            _mCore = new BasicStorage("Battery storage", 1, capacity, initialCapacity);
         }
 
         public bool Measurering

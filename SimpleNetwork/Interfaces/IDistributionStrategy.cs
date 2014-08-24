@@ -11,6 +11,11 @@ namespace SimpleNetwork.Interfaces
         double Tolerance { get; }
 
         /// <summary>
+        /// Are the nodes supposed to share storage?
+        /// </summary>
+        bool ShareStorage { get; set; }
+
+        /// <summary>
         /// When it is determined HOW the power should be distrubuted, call this method to it DO IT. Depending on implementation,
         /// the flow might be calculated, minimized, traced, etc.
         /// </summary>

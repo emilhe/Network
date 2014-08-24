@@ -35,7 +35,7 @@ namespace SimpleVisualisation
             //var client = new AccessClient();
             //var nodes = client.GetAllCountryData(TsSource.ISET);
 
-            //var opt = new MixOptimizer(client.GetAllCountryData(TsSource.ISET));
+            //var opt = new MixOptimizer(client.GetAllCountryData(TsSource.ISET));  
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
             //opt.OptimizeIndividually();
@@ -81,20 +81,6 @@ namespace SimpleVisualisation
             //var system = new Simulation(config);
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
-        }
-
-        public void TsStuff(Simulation sys, MixController mCtrl)
-        {
-            var watch = new Stopwatch();
-            watch.Start();
-            mCtrl.SetPenetration(1.033);
-            mCtrl.SetMix(0.66);
-            mCtrl.Execute();
-            sys.Simulate(24*365);
-            Console.WriteLine("Mix " + 0.66 + "; Penetation " + 1.033 + ": " +
-                  watch.ElapsedMilliseconds + ", " + (sys.Output.Success ? "SUCCESS" : "FAIL"));
-            var view = DisplayTimeSeries();
-            view.SetData(sys.Output);
         }
 
         #region Contour view
@@ -144,7 +130,6 @@ namespace SimpleVisualisation
         }
 
         #endregion
-
 
     }
 }
