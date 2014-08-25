@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SimpleNetwork.ExportStrategies;
 
 namespace SimpleNetwork.Interfaces
 {
@@ -6,8 +7,7 @@ namespace SimpleNetwork.Interfaces
     {
 
         void Bind(List<Node> nodes, double[] mismatches);
-        void BalanceSystem(int tick);
-        double Tolerance { get; }
+        BalanceResult BalanceSystem(int tick);
 
     }
 }

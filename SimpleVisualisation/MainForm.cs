@@ -31,24 +31,24 @@ namespace SimpleVisualisation
             TimeManager.Instance().StartTime = new DateTime(2000, 1, 1);
             TimeManager.Instance().Interval = 60;
 
-            //Configurations.TryEcnData(this);
+            Configurations.CompareExportSchemes(this);
 
-            var data = ProtoStore.LoadEcnData();
-            var allBio = data.Where(item =>
-                item.RowHeader.Equals("Biomass") &&
-                item.ColumnHeader.Equals("Gross electricity generation") &&
-                item.Year.Equals(2010)).Select(item => item.Value).Sum();
-            var allHydro = data.Where(item =>
-                item.RowHeader.Equals("Hydropower") &&
-                item.ColumnHeader.Equals("Gross electricity generation") &&
-                item.Year.Equals(2010)).Select(item => item.Value).Sum();
-            var allHydroPump =
-                data.Where(item =>
-                item.RowHeader.Equals("Pumped storage hydropower") &&
-                item.ColumnHeader.Equals("Gross electricity generation") &&
-                item.Year.Equals(2010)).Select(item => item.Value).Sum(); 
+            //var data = ProtoStore.LoadEcnData();
+            //var allBio = data.Where(item =>
+            //    item.RowHeader.Equals("Biomass") &&
+            //    item.ColumnHeader.Equals("Gross electricity generation") &&
+            //    item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            //var allHydro = data.Where(item =>
+            //    item.RowHeader.Equals("Hydropower") &&
+            //    item.ColumnHeader.Equals("Gross electricity generation") &&
+            //    item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            //var allHydroPump =
+            //    data.Where(item =>
+            //    item.RowHeader.Equals("Pumped storage hydropower") &&
+            //    item.ColumnHeader.Equals("Gross electricity generation") &&
+            //    item.Year.Equals(2010)).Select(item => item.Value).Sum(); 
 
-            var hest = 0;
+            //var hest = 0;
 
             //var opt = new MixOptimizer(client.GetAllCountryData(TsSource.ISET));  
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);

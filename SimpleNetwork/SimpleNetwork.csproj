@@ -76,6 +76,7 @@
   <ItemGroup>
     <Compile Include="AccessClient.cs" />
     <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
+    <Compile Include="ExportStrategies\ExportHelper.cs" />
     <Compile Include="ExportStrategies\SelfishExportStrategy.cs" />
     <Compile Include="Interfaces\IDistributionStrategy.cs" />
     <Compile Include="ExportStrategies\DistributionStrategies\MinimalFlowStrategy.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="ExportStrategies\DistributionStrategies\BottomUpStrategy.cs" />
     <Compile Include="MixController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />
+    <Compile Include="Storages\Curtailment.cs" />
     <Compile Include="Storages\StorageCollection.cs" />
     <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Generators\ConstantGenerator.cs" />

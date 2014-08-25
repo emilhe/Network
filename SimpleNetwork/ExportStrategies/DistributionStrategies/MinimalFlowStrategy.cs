@@ -55,5 +55,9 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
             }
         }
 
+        public void EqualizePower(double[] mismatches)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

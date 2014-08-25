@@ -79,7 +79,7 @@ namespace SimpleNetwork
         ///// <summary>
         ///// Local optimization of the mixing factor: The mixing factor of each node will be varied individually starting from the initial values.
         ///// </summary>
-        //public void OptimizeLocally(double stepSize = 0.05)
+        //public void BalanceLocally(double stepSize = 0.05)
         //{
         //    var edges = new EdgeSet(Nodes.Count);
         //    for (int i = 0; i < Nodes.Count - 1; i++) edges.AddEdge(i, i + 1);

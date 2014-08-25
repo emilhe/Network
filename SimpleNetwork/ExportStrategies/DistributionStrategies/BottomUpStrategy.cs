@@ -1,24 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms.VisualStyles;
 using SimpleNetwork.Interfaces;
 
 namespace SimpleNetwork.ExportStrategies.DistributionStrategies
 {
     public class BottomUpStrategy : IDistributionStrategy
     {
-        public double Tolerance { get { return 1e-6; } }
+        // Tolerance due to finite double precision.
+        public double Tolerance { get { return 1e-10; } }
 
-        public bool ShareStorage { get; set; }
-
+        /// <summary>
+        /// Distribute the power. After distribution, all mismatches will be covered by storage.
+        /// </summary>
         public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency, int tick)
         {
-            // First, try equalising the power so that we only apply storage when needed.
-            var toInject = EqualizePower(mismatches);
-            if (!ShareStorage && toInject <= 0) return;
+            var toInject = mismatches.Sum();
 
-            // Inject remaining charge "randomly" (here we just start with node 0).
+            // Inject the charge "randomly" (here we just start with node 0).
             for (int idx = 0; idx < nodes.Count; idx++)
             {
                 if (!nodes[idx].StorageCollection.Contains(efficiency)) continue;
@@ -32,67 +30,68 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
             }
         }
 
-        private double EqualizePower(double[] mismatches)
+        /// <summary>
+        /// Equalize energy. After call, all entrances will be positive or negative.
+        /// </summary>
+        public void EqualizePower(double[] mismatches)
         {
-            var originalMismatch = mismatches.Sum();
-            var mismatch = originalMismatch;
-
-            for (int i = 0; i < mismatches.Length; i++)
+            double pos = 0;
+            double neg = 0;
+            foreach (var mismatch in mismatches)
             {
-                if (originalMismatch > 0)
-                {
-                    if (mismatches[i] < 0) mismatches[i] = 0;
-                    else if (mismatches[i] < mismatch) mismatch -= mismatches[i];
-                    else
-                    {
-                        mismatches[i] -= mismatch;
-                        mismatch = 0;
-                    }
-                }
-                else if (originalMismatch < 0)
-                {
-                    if (mismatches[i] > 0) mismatches[i] = 0;
-                    else if (mismatches[i] > mismatch) mismatch -= mismatches[i];
-                    else
-                    {
-                        mismatches[i] -= mismatch;
-                        mismatch = 0;
-                    }
-                }
+                if (mismatch > 0) pos += mismatch;
+                else neg += mismatch;
             }
-
-            return originalMismatch;
+            var originalMismatch = pos + neg;
+            if (originalMismatch > 0) EqualizePos(mismatches, -neg);
+            else EqualizeNeg(mismatches, pos);
         }
 
+        /// <summary>
+        /// Subtract the negative contributions from the positive; set all negative elements to 0.
+        /// </summary>
+        /// <param name="mismatches"> target </param>
+        /// <param name="toSubtrack"> neg contributions to subtract </param>
+        private void EqualizePos(double[] mismatches, double toSubtrack)
+        {
+            for (var i = 0; i < mismatches.Length; i++)
+            {
+                if (mismatches[i] < 0) mismatches[i] = 0;
+                else if (mismatches[i] < toSubtrack)
+                {
+                    toSubtrack -= mismatches[i];
+                    mismatches[i] = 0;
+                }
+                else
+                {
+                    mismatches[i] -= toSubtrack;
+                    toSubtrack = 0;
+                }
+            }
+        }
 
-        //private double EqualizePower(double[] mismatches)
-        //{
-        //    // Collect the power that is to be distributed.
-        //    double toInject = 0;
-        //    for (int i = 0; i < mismatches.Length; i++)
-        //    {
-        //        if (mismatches[i] <= 0) continue;
-        //        toInject += mismatches[i];
-        //        mismatches[i] = 0;
-        //    }
-        //    // Distribute it (only negative mismatches "are left").
-        //    for (int i = 0; i < mismatches.Length; i++)
-        //    {
-        //        if (mismatches[i] >= 0) continue;
-        //        if (Math.Abs(mismatches[i]) <= toInject)
-        //        {
-        //            toInject += mismatches[i];
-        //            mismatches[i] = 0;
-        //        }
-        //        else
-        //        {
-        //            mismatches[i] += toInject;
-        //            toInject = 0;
-        //            break;
-        //        }
-        //    }
-        //    return toInject;
-        //}
+        /// <summary>
+        /// Add the positive contributions to the negative; set all positive elements to 0.
+        /// </summary>
+        /// <param name="mismatches"> target </param>
+        /// <param name="toAdd"> pos contributions to add </param>
+        private void EqualizeNeg(double[] mismatches, double toAdd)
+        {
+            for (var i = 0; i < mismatches.Length; i++)
+            {
+                if (mismatches[i] > 0) mismatches[i] = 0;
+                else if (-mismatches[i] < toAdd)
+                {
+                    toAdd += mismatches[i];
+                    mismatches[i] = 0;
+                }
+                else
+                {
+                    mismatches[i] += toAdd;
+                    toAdd = 0;
+                }
+            }
+        }
 
     }
 }

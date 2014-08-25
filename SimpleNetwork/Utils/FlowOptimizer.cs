@@ -106,16 +106,6 @@ namespace SimpleNetwork
             ExtractResultsFromModel();
         }
 
-        //public void AutoTuneModel(double seconds)
-        //{
-        //    _mEnv.Set(GRB.DoubleParam.TuneTimeLimit, seconds);
-        //    _mModel.Update();
-        //    _mModel.Tune();
-        //    _mModel.GetTuneResult(0);
-        //    _mModel.Update();
-        //    _mModel.Write(@"C:\Users\xXx\Documents\data\model.prm");
-        //}
-
         public void Dispose()
         {
             _mEnv.Dispose(); 

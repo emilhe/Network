@@ -8,19 +8,13 @@ namespace SimpleNetwork
     public class NetworkModel
     {
         public List<Node> Nodes { get; private set; }
+        public double Mismatch { get; private set; }
+        public double Curtailment { get { return _mBalanceResult.Curtailment; } }
+        public bool Failure { get { return _mBalanceResult.Failure; } }
 
         private readonly IExportStrategy _mExportStrategy;
-
-        #region Current iteration fields
-
-        public double Mismatch { get; private set; }
-        public double Curtailment { get; private set; }
-        public bool Failure { get; private set; }
-
         private readonly double[] _mMismatches;
-        private int _mTick;
-
-        #endregion
+        private BalanceResult _mBalanceResult;
 
         public NetworkModel(List<Node> nodes, IExportStrategy exportStrategy)
         {
@@ -32,41 +26,11 @@ namespace SimpleNetwork
 
         public void Respond(int tick)
         {
-            _mTick = tick;
-
-            CalculateMismatches();
-            BalanceSystem();
-            CurtailExcessEnergy();
-        }
-
-        private void BalanceSystem()
-        {
-            _mExportStrategy.BalanceSystem(_mTick);
-        }
-
-        /// <summary>
-        /// Determine system response; charge or discharge.
-        /// </summary>
-        private void CalculateMismatches()
-        {
-            for (int i = 0; i < Nodes.Count; i++) _mMismatches[i] = Nodes[i].GetDelta(_mTick);
+            // Calculate mismatches.
+            for (int i = 0; i < Nodes.Count; i++) _mMismatches[i] = Nodes[i].GetDelta(tick);
             Mismatch = _mMismatches.Sum();
-        }
-
-        /// <summary>
-        /// Curtail all exess energy and report any negative curtailment (success = false).
-        /// </summary>
-        private void CurtailExcessEnergy()
-        {
-            Curtailment = _mMismatches.Sum();
-            if (_mExportStrategy as NoExportStrategy != null)
-            {
-                Failure = _mMismatches.Any(item => item < -_mExportStrategy.Tolerance);
-            }
-            else
-            {
-                Failure = _mMismatches.Sum() < -_mExportStrategy.Tolerance*_mMismatches.Length;                
-            }
+            // Delegate balancing to the export strategy.
+            _mBalanceResult = _mExportStrategy.BalanceSystem(tick);
         }
 
     }

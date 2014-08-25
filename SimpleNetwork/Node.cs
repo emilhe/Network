@@ -34,6 +34,7 @@ namespace SimpleNetwork
 
             Generators = new List<IGenerator>();
             StorageCollection = new StorageCollection();
+            StorageCollection.Add(new Curtailment());
         }
 
         public List<ITimeSeries> CollectTimeSeries()
