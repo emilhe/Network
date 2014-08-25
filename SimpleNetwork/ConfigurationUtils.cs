@@ -38,9 +38,11 @@ namespace SimpleNetwork
                 var load = node.LoadTimeSeries;
                 var avgLoad = load.GetAverage();
 
-                node.StorageCollection.Add(new BatteryStorage(6 * avgLoad)); // Fixed for now
-                node.StorageCollection.Add(new HydrogenStorage(68.18 * avgLoad)); //  25TWh*(6hourLoad/2.2TWh) = 68.18; To be country dependent
-                node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", 409.09 * avgLoad));  // 150TWh*(6hourLoad/2.2TWh) = 409.09; To be country dependent           
+                node.StorageCollection.Add(new BatteryStorage(6*avgLoad)); // Fixed for now
+                node.StorageCollection.Add(new HydrogenStorage(68.18*avgLoad));
+                    //  25TWh*(6hourLoad/2.2TWh) = 68.18; To be country dependent
+                node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", 409.09*avgLoad));
+                    // 150TWh*(6hourLoad/2.2TWh) = 409.09; To be country dependent           
             }
 
             return nodes;
@@ -58,7 +60,7 @@ namespace SimpleNetwork
                 var load = node.LoadTimeSeries;
                 var avgLoad = load.GetAverage();
 
-                node.StorageCollection.Add(new BatteryStorage(6 * avgLoad)); // Fixed for now                 
+                node.StorageCollection.Add(new BatteryStorage(6*avgLoad)); // Fixed for now                 
             }
 
             return nodes;
@@ -72,8 +74,8 @@ namespace SimpleNetwork
         public static void SetupNodesFromEcnData(List<Node> nodes, List<EcnDataRow> data)
         {
             AddStorages(nodes, data, "Pumped storage hydropower");
+            AddBackups(nodes, data, "Hydropower");
             AddBackups(nodes, data, "Biomass");
-            AddGenerators(nodes, data, "Hydropower");
         }
 
         /// <summary>
@@ -85,9 +87,9 @@ namespace SimpleNetwork
         public static void AddGenerators(List<Node> nodes, List<EcnDataRow> data, string type)
         {
             var relevantData = data.Where(item =>
-                item.RowHeader.Equals(type) && 
+                item.RowHeader.Equals(type) &&
                 item.ColumnHeader.Equals("Gross electricity generation") &&
-                item.Year.Equals(Year)).ToArray(); 
+                item.Year.Equals(Year)).ToArray();
 
             foreach (var node in nodes)
             {

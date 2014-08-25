@@ -12,6 +12,7 @@ using SimpleNetwork;
 using SimpleNetwork.ExportStrategies;
 using SimpleNetwork.ExportStrategies.DistributionStrategies;
 using SimpleNetwork.Interfaces;
+using SimpleNetwork.Utils;
 
 namespace SimpleVisualisation
 {
@@ -30,10 +31,24 @@ namespace SimpleVisualisation
             TimeManager.Instance().StartTime = new DateTime(2000, 1, 1);
             TimeManager.Instance().Interval = 60;
 
-            Configurations.CompareExportSchemes(this);
+            //Configurations.TryEcnData(this);
 
-            //var client = new AccessClient();
-            //var nodes = client.GetAllCountryData(TsSource.ISET);
+            var data = ProtoStore.LoadEcnData();
+            var allBio = data.Where(item =>
+                item.RowHeader.Equals("Biomass") &&
+                item.ColumnHeader.Equals("Gross electricity generation") &&
+                item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            var allHydro = data.Where(item =>
+                item.RowHeader.Equals("Hydropower") &&
+                item.ColumnHeader.Equals("Gross electricity generation") &&
+                item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            var allHydroPump =
+                data.Where(item =>
+                item.RowHeader.Equals("Pumped storage hydropower") &&
+                item.ColumnHeader.Equals("Gross electricity generation") &&
+                item.Year.Equals(2010)).Select(item => item.Value).Sum(); 
+
+            var hest = 0;
 
             //var opt = new MixOptimizer(client.GetAllCountryData(TsSource.ISET));  
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
@@ -56,24 +71,6 @@ namespace SimpleVisualisation
 
             //var edges = new EdgeSet(nodes.Count);
             //var mCtrl = new MixController(nodes);
-
-            //var data = ProtoStore.LoadEcnData();
-            //Utils.SetupNodesFromEcnData(nodes, data);
-            //var allBio =
-            //    nodes.SelectMany(item => item.StorageCollection.Values)
-            //        .Where(item => item.Name.Equals("Biomass"))
-            //        .Select(item => item.Capacity)
-            //        .Sum();
-            //var allHydroPump =
-            //    nodes.SelectMany(item => item.StorageCollection.Values)
-            //        .Where(item => item.Name.Equals("Pumped storage hydropower"))
-            //        .Select(item => item.Capacity)
-            //        .Sum();
-            //var allHydro =
-            //    nodes.SelectMany(item => item.StorageCollection.Values)
-            //        .Where(item => item.Name.Equals("Hydropower"))
-            //        .Select(item => item.Capacity)
-            //        .Sum();
             // For now, connect the nodes in a straight line.
 
             //for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);

@@ -44,7 +44,7 @@ namespace SimpleNetwork.Generators
         public double GetProduction(int tick)
         {
             // For now, the hyrdo energy production is "linear".
-            var prod = _mGeneration/(365.25*24);
+            var prod = _mGeneration/(8766);
             if (_mMeasurering) TimeSeries.AddData(tick, prod);
             return prod;
         }
