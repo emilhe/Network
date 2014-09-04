@@ -1,7 +1,4 @@
-﻿using System;
-using DataItems;
-
-namespace SimpleNetwork.Interfaces
+﻿namespace BusinessLogic.Interfaces
 {
     public enum Response
     {
@@ -12,7 +9,7 @@ namespace SimpleNetwork.Interfaces
     /// <summary>
     /// Storage abstraction.
     /// </summary>
-    public interface IStorage : IMeasureable
+    public interface IStorage : IMeasureableLeaf
     {
         /// <summary>
         /// Name/description of the storage.

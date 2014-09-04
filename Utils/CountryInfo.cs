@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace SimpleImporter
+namespace Utils
 {
     public class CountryInfo
     {
@@ -85,13 +82,60 @@ namespace SimpleImporter
             {"MLT", "Malta"},
         };
 
+        private static readonly Dictionary<string, string> CountryCodeMapName = new Dictionary<string, string>
+        {
+            {"Sweden", "SWE"},
+            {"Slovenia", "SVN"},
+            {"Slovakia", "SVK"},
+            {"Serbia", "SRB"},
+            {"Romania", "ROU"},
+            {"Portugal", "PRT"},
+            {"Poland", "POL"},
+            {"Norway", "NOR"},
+            {"Netherlands", "NLD"},
+            {"Latvia", "LVA"},
+            {"Luxemborg", "LUX"},
+            {"Lithuania", "LTU"},
+            {"Italy", "ITA"},
+            {"Ireland", "IRL"},
+            {"Hungary", "HUN"},
+            {"Croatia", "HRV"},
+            {"Greece", "GRC"},
+            {"Great Britain", "GBR"},
+            {"France", "FRA"},
+            {"Finland", "FIN"},
+            {"Estonia", "EST"},
+            {"Spain", "ESP"},
+            {"Denmark", "DNK"},
+            {"Germany", "DEU"},
+            {"Czech Republic", "CZE"},
+            {"Switzerland", "CHE"},
+            {"Bosnia", "BIH"},
+            {"Bulgaria", "BGR"},
+            {"Belgium", "BEL"},
+            {"Austria", "AUT"},
+            {"Cyprus", "CYP"},
+            {"Malta", "MLT"},
+        };
+
         #endregion
 
+        /// <summary>
+        /// Get the country name from the three or two letter abbreviation.
+        /// </summary>
         public static string GetName(string abbrevation)
         {
             if (abbrevation.Length == 2) return CountryCodeMap2[abbrevation];
             if (abbrevation.Length == 3) return CountryCodeMap3[abbrevation];
             throw new ArgumentException("Wrong abbrev");
+        }
+
+        /// <summary>
+        /// Get three letter abbreviation. Don't ever use the two letter - it's confusing.
+        /// </summary>
+        public static string GetAbbrev(string name)
+        {
+            return CountryCodeMapName[name];
         }
 
     }

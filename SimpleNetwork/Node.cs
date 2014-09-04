@@ -1,36 +1,24 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using SimpleNetwork.Interfaces;
-using SimpleNetwork.Storages;
-using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
+using BusinessLogic.Interfaces;
+using BusinessLogic.Storages;
+using Utils;
 
-namespace SimpleNetwork
+namespace BusinessLogic
 {
 
-    public class Node
+    public class Node : IMeasureableNode
     {
-        private readonly ITimeSeries _mLoadTimeSeries;
-
         public string CountryName { get; set; }
-
-        public ITimeSeries LoadTimeSeries { get { return _mLoadTimeSeries; } }
+        public string Abbreviation { get { return CountryInfo.GetAbbrev(CountryName); } }
+        public ITimeSeries LoadTimeSeries { get; private set; }
         public StorageCollection StorageCollection { get; set; }
         public List<IGenerator> Generators { get; set; }
-        public List<IMeasureable> Measureables
-        {
-            get
-            {
-                var result = new List<IMeasureable>();
-                result.AddRange(Generators);
-                result.AddRange(StorageCollection.Storages());
-                return result;
-            }
-        }
 
         public Node(string name, ITimeSeries loadTimeSeries)
         {
             CountryName = name;
-            _mLoadTimeSeries = loadTimeSeries;
+            LoadTimeSeries = loadTimeSeries;
 
             Generators = new List<IGenerator>();
             StorageCollection = new StorageCollection();
@@ -39,7 +27,12 @@ namespace SimpleNetwork
 
         public List<ITimeSeries> CollectTimeSeries()
         {
-            return (from measureable in Measureables where measureable.Measurering select measureable.TimeSeries).ToList();
+            var result = new List<ITimeSeries>();
+            result.AddRange(Generators.Select(item => item.TimeSeries));
+            result.AddRange(StorageCollection.Storages().Select(item => item.TimeSeries));
+            // Bind country dependence.
+            foreach (var ts in result) ts.Properties.Add("Country", CountryName);
+            return result;
         }
 
         public double GetDelta(int tick)
@@ -49,8 +42,31 @@ namespace SimpleNetwork
 
         private double GetLoad(int tick)
         {
-            return _mLoadTimeSeries.GetValue(tick);
-        }   
+            return LoadTimeSeries.GetValue(tick);
+        }
+
+        public void StartMeasurement()
+        {
+            foreach (var gen in Generators) gen.StartMeasurement();
+            foreach (var sto in StorageCollection.Storages()) sto.StartMeasurement();
+        }
+
+        public void Reset()
+        {
+            foreach (var gen in Generators) gen.Reset();
+            foreach (var sto in StorageCollection.Storages()) sto.Reset();
+        }
+
+        public bool Measurering
+        {
+            get
+            {
+                if (Generators.Any()) return Generators[0].Measurering;
+                if (StorageCollection.Storages().Any()) return StorageCollection.Storages().First().Measurering;
+
+                return false;
+            }
+        }
 
     }
 

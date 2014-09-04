@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using BusinessLogic.Generators;
+using BusinessLogic.Storages;
 using SimpleImporter;
-using SimpleNetwork.Generators;
-using SimpleNetwork.Interfaces;
-using SimpleNetwork.Storages;
-using SimpleNetwork.TimeSeries;
 
-namespace SimpleNetwork
+namespace BusinessLogic
 {
     public class ConfigurationUtils
     {
@@ -20,18 +14,27 @@ namespace SimpleNetwork
         public static EdgeSet GetEuropeEdges(List<Node> nodes)
         {
             var result = new EdgeSet(nodes.Count);
-
-            // TODO: Draw edges...
+            // Create mapping between countryname and index.
+            var idxMap = new Dictionary<string, int>();
+            for (int i = 0; i < nodes.Count; i++) idxMap.Add(nodes[i].CountryName, i);
+            // Connect the countries.
+            var ntcData = ProtoStore.LoadNtcData();
+            foreach (var row in ntcData)
+            {
+                if(row.LinkCapacity == 0) continue;
+                if (row.CountryFrom.Equals(row.CountryTo)) continue;
+                result.AddEdge(idxMap[row.CountryFrom], idxMap[row.CountryTo]); // For now, don't add the capacity.
+            }
 
             return result;
         }
 
         #region Node setup
 
-        public static List<Node> CreateNodesWithBackup(TsSource source = TsSource.ISET)
+        public static List<Node> CreateNodesWithBackup(TsSource source = TsSource.ISET, int years = 1, int offset = 0)
         {
             var client = new AccessClient();
-            var nodes = client.GetAllCountryData(source);
+            var nodes = client.GetAllCountryData(source, offset);
 
             foreach (var node in nodes)
             {
@@ -41,7 +44,7 @@ namespace SimpleNetwork
                 node.StorageCollection.Add(new BatteryStorage(6*avgLoad)); // Fixed for now
                 node.StorageCollection.Add(new HydrogenStorage(68.18*avgLoad));
                     //  25TWh*(6hourLoad/2.2TWh) = 68.18; To be country dependent
-                node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", 409.09*avgLoad));
+                node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", 409.09*avgLoad*years));
                     // 150TWh*(6hourLoad/2.2TWh) = 409.09; To be country dependent           
             }
 
@@ -74,8 +77,8 @@ namespace SimpleNetwork
         public static void SetupNodesFromEcnData(List<Node> nodes, List<EcnDataRow> data)
         {
             AddStorages(nodes, data, "Pumped storage hydropower");
-            AddBackups(nodes, data, "Hydropower");
             AddBackups(nodes, data, "Biomass");
+            AddGenerators(nodes, data, "Hydropower");
         }
 
         /// <summary>
@@ -129,7 +132,7 @@ namespace SimpleNetwork
         /// <param name="data"> the data from which the storages are to be constructed </param>
         /// <param name="type"> which parameter (this method is generic) </param>
         /// <param name="efficiency"> the efficiency of the storage (one way) </param>
-        public static void AddStorages(List<Node> nodes, List<EcnDataRow> data, string type, double efficiency = 0.6)
+        public static void AddStorages(List<Node> nodes, List<EcnDataRow> data, string type, double efficiency = 0.9)
         {
             var hydroData = data.Where(item =>
                 item.RowHeader.Equals(type) &&

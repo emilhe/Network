@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using SimpleNetwork.Interfaces;
+using BusinessLogic.Interfaces;
 
-namespace SimpleNetwork.Storages
+namespace BusinessLogic.Storages
 {
     public class StorageCollection
     {

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SimpleNetwork.ExportStrategies;
-using SimpleNetwork.ExportStrategies.DistributionStrategies;
+﻿using System.Collections.Generic;
 
-namespace SimpleNetwork.Utils
+namespace BusinessLogic.Utils
 {
     public class Utils
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SimpleNetwork
+namespace BusinessLogic
 {
     public class TimeManager
     {

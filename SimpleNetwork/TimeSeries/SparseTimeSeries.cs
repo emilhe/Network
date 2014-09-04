@@ -2,25 +2,30 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SimpleNetwork.Interfaces;
-using SimpleNetwork.TimeSeries;
+using BusinessLogic.Interfaces;
+using SimpleImporter;
+using Utils;
 
-namespace DataItems.TimeSeries
+namespace BusinessLogic.TimeSeries
 {
     /// <summary>
     /// Implementation of a non continious time series.
     /// </summary>
-    public class SparseTimeSeries : SimpleNetwork.Interfaces.ITimeSeries
+    public class SparseTimeSeries : ITimeSeries
     {
-        public string Name { get; set; }
+        
         private readonly Dictionary<int, double> _mValues;
 
         public SparseTimeSeries(string name, int capacity = 100)
         {
-            Name = name;
+            _mCore.Properties.Add("Name", name);
             _mValues = new Dictionary<int, double>(capacity);
+        }
+
+        public SparseTimeSeries(TimeSeriesDal source)
+        {
+            _mCore.Properties = source.Properties;
+            _mValues = source.DataIndices.Zip(source.Data, (k,v) => new {k,v}).ToDictionary(x => x.k, x => x.v);
         }
 
         public void AddData(int tick, double value)
@@ -63,9 +68,36 @@ namespace DataItems.TimeSeries
             throw new NotImplementedException("Cannot append data to sparse time series.");
         }
 
-        public object Clone()
+        #region Data extraction
+
+        public List<double> GetAllValues()
         {
-            throw new NotImplementedException();
+            return _mValues.Select(item => item.Value).ToList();
         }
+
+        public List<int> GetAllIndices()
+        {
+            return _mValues.Select(item => item.Key).ToList();
+        }
+
+        #endregion
+
+        #region Delegation
+
+        private readonly BasicTimeSeries _mCore = new BasicTimeSeries();
+
+        public string Name
+        {
+            get { return (Properties.ContainsKey("Country") ? Properties["Country"] + ", " : "") + _mCore.Name; }
+            set { _mCore.Name = value; }
+        }
+
+        public Dictionary<string, string> Properties
+        {
+            get { return _mCore.Properties; }
+        }
+
+        #endregion
+
     }
 }

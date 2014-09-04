@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SimpleNetwork.Interfaces
+namespace BusinessLogic.Interfaces
 {
     /// <summary>
     /// Data point abstraction.

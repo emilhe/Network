@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Gurobi;
 
-namespace SimpleNetwork
+namespace BusinessLogic
 {
     public class FlowOptimizer : IDisposable
     {
@@ -249,6 +249,7 @@ namespace SimpleNetwork
         public void AddEdge(int i, int j, double cost = 1)
         {
             if (i == j) throw new ArgumentException("Cannot connect a node to itself.");
+            if (EdgeExists(i, j)) return;
 
             // The connection matric is to be constructed screw symmetric; we wan't positive on top.
             _mEdges.Add(i + j * _mNodeCount, cost);

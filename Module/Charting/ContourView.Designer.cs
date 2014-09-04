@@ -1,8 +1,8 @@
 ﻿using System.Windows.Forms.DataVisualization.Charting;
 
-namespace SimpleVisualisation
+namespace Controls.Charting
 {
-    partial class ContourControl
+    partial class ContourView
     {
         /// <summary> 
         /// Required designer variable.
@@ -54,20 +54,21 @@ namespace SimpleVisualisation
             this.chart.TabIndex = 0;
             this.chart.Text = "chart";
             // 
-            // ContourControl
+            // ContourView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.chart);
-            this.Name = "ContourControl";
+            this.Name = "ContourView";
             this.Size = new System.Drawing.Size(553, 254);
             ((System.ComponentModel.ISupportInitialize)(this.chart)).EndInit();
             this.ResumeLayout(false);
 
         }
 
+        private Chart chart;
+
         #endregion
 
-        private Chart chart;
     }
 }

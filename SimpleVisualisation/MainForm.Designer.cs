@@ -1,4 +1,4 @@
-﻿namespace SimpleVisualisation
+﻿namespace Main
 {
     partial class MainForm
     {

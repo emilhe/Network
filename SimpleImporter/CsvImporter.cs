@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Utils;
 
 namespace SimpleImporter
 {
@@ -33,7 +34,10 @@ namespace SimpleImporter
                 var name = GetTsName(file, source);
                 // For now, t time series are unimportant.
                 if (name.Equals("t")) continue;
-                ProtoStore.SaveTimeSeries(Parse(file, country, name, source));
+                var ts = Parse(file, country, name, source);
+                ProtoStore.SaveTimeSeriesInRoot(ts,
+                    GenerateFileKey(ts.Properties["Name"], (TsType) byte.Parse(ts.Properties["Type"]),
+                        (TsSource) byte.Parse(ts.Properties["Source"])));
                 if (countries.Contains(country)) continue;
                 countries.Add(country);
             }
@@ -41,15 +45,23 @@ namespace SimpleImporter
             ProtoStore.SaveCountries(countries);
         }
 
-        private static TimeSeriesItemDal Parse(string file, string country, string name, TsSource source)
+        public static string GenerateFileKey(string country, TsType type, TsSource source)
+        {
+            return string.Format("Ts-{0}-{1}-{2}", country, type, source);
+        }
+
+        private static TimeSeriesDal Parse(string file, string country, string name, TsSource source)
         {
             var lines = File.ReadAllLines(file);
-            var ts = new TimeSeriesItemDal
+            var ts = new TimeSeriesDal
             {
                 Data = new List<double>(),
-                Country = country,
-                Source = source,
-                Type = GetTsType(name)
+                Properties = new Dictionary<string, string>
+                {
+                    {"Name", country},
+                    {"Source", ((byte)source).ToString()},
+                    {"Type", ((byte)GetTsType(name)).ToString()}
+                }
             };
 
             foreach (var line in lines)

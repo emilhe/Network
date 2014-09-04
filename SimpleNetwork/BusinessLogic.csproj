@@ -7,8 +7,8 @@
     <ProjectGuid>{E92F9D65-C0FD-4BF0-8713-56A0CE8B6E4B}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SimpleNetwork</RootNamespace>
-    <AssemblyName>SimpleNetwork</AssemblyName>
+    <RootNamespace>BusinessLogic</RootNamespace>
+    <AssemblyName>BusinessLogic</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -78,28 +78,30 @@
     <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
     <Compile Include="ExportStrategies\ExportHelper.cs" />
     <Compile Include="ExportStrategies\SelfishExportStrategy.cs" />
+    <Compile Include="Interfaces\IMeasureable.cs" />
     <Compile Include="Interfaces\IDistributionStrategy.cs" />
     <Compile Include="ExportStrategies\DistributionStrategies\MinimalFlowStrategy.cs" />
     <Compile Include="ExportStrategies\NoExportStrategy.cs" />
-    <Compile Include="ExportStrategies\DistributionStrategies\BottomUpStrategy.cs" />
+    <Compile Include="ExportStrategies\DistributionStrategies\SkipFlowStrategy.cs" />
+    <Compile Include="Interfaces\IMeasureableNode.cs" />
     <Compile Include="MixController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />
     <Compile Include="Storages\Curtailment.cs" />
     <Compile Include="Storages\StorageCollection.cs" />
-    <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Generators\ConstantGenerator.cs" />
     <Compile Include="Generators\RandomGenerator.cs" />
     <Compile Include="Generators\TimeSeriesGenerator.cs" />
-    <Compile Include="Utils\GridEvaluator.cs" />
     <Compile Include="Interfaces\ITimeSeries.cs" />
     <Compile Include="Interfaces\ITimeSeriesItem.cs" />
     <Compile Include="NetworkModel.cs" />
     <Compile Include="Interfaces\IExportStrategy.cs" />
     <Compile Include="MixOptimizer.cs" />
     <Compile Include="Node.cs" />
+    <Compile Include="TimeSeries\BasicTimeSeries.cs" />
+    <Compile Include="TimeSeries\Mapping.cs" />
     <Compile Include="Utils\FlowOptimizer.cs" />
     <Compile Include="Interfaces\IGenerator.cs" />
-    <Compile Include="Interfaces\IMeasureable.cs" />
+    <Compile Include="Interfaces\IMeasureableLeaf.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -114,6 +116,8 @@
     <Compile Include="TimeSeries\SparseTimeSeries.cs" />
     <Compile Include="TimeSeries\TickTimeSeriesItem.cs" />
     <Compile Include="ConfigurationUtils.cs" />
+    <Compile Include="Utils\GridEvaluator.cs" />
+    <Compile Include="Utils\LineEvaluator.cs" />
     <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -121,9 +125,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SimpleImporter\SimpleImporter.csproj">
+    <ProjectReference Include="..\SimpleImporter\ProtoLogic.csproj">
       <Project>{DD96E036-C8E4-42D4-AD91-12F9F21CA795}</Project>
-      <Name>SimpleImporter</Name>
+      <Name>ProtoLogic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Utils\Utils.csproj">
+      <Project>{BC999A95-FD60-44D5-8E34-3A2FA7E74667}</Project>
+      <Name>Utils</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

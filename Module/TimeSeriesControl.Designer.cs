@@ -1,6 +1,4 @@
-﻿using System.Windows.Forms.DataVisualization.Charting;
-
-namespace SimpleVisualisation
+﻿namespace Controls
 {
     partial class TimeSeriesControl
     {
@@ -30,33 +28,10 @@ namespace SimpleVisualisation
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            this.chart = new Chart();
             this.seriesListView = new System.Windows.Forms.ListView();
-            ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
+            this.mainPanel = new System.Windows.Forms.Panel();
+            this.cbxView = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
-            // 
-            // chart
-            // 
-            this.chart.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.chart.BorderlineColor = System.Drawing.Color.Black;
-            chartArea1.Name = "ChartArea1";
-            this.chart.ChartAreas.Add(chartArea1);
-            legend1.Name = "Legend1";
-            this.chart.Legends.Add(legend1);
-            this.chart.Location = new System.Drawing.Point(0, 0);
-            this.chart.Name = "chart";
-            series1.ChartArea = "ChartArea1";
-            series1.Legend = "Legend1";
-            series1.Name = "Series1";
-            this.chart.Series.Add(series1);
-            this.chart.Size = new System.Drawing.Size(954, 316);
-            this.chart.TabIndex = 1;
-            this.chart.Text = "chart";
             // 
             // seriesListView
             // 
@@ -64,28 +39,49 @@ namespace SimpleVisualisation
             | System.Windows.Forms.AnchorStyles.Right)));
             this.seriesListView.Location = new System.Drawing.Point(960, 0);
             this.seriesListView.Name = "seriesListView";
-            this.seriesListView.Size = new System.Drawing.Size(158, 316);
+            this.seriesListView.Size = new System.Drawing.Size(158, 292);
             this.seriesListView.TabIndex = 2;
             this.seriesListView.UseCompatibleStateImageBehavior = false;
             this.seriesListView.View = System.Windows.Forms.View.List;
+            // 
+            // mainPanel
+            // 
+            this.mainPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.mainPanel.Location = new System.Drawing.Point(0, 0);
+            this.mainPanel.Name = "mainPanel";
+            this.mainPanel.Size = new System.Drawing.Size(954, 319);
+            this.mainPanel.TabIndex = 3;
+            // 
+            // cbxView
+            // 
+            this.cbxView.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbxView.FormattingEnabled = true;
+            this.cbxView.Location = new System.Drawing.Point(960, 298);
+            this.cbxView.Name = "cbxView";
+            this.cbxView.Size = new System.Drawing.Size(158, 21);
+            this.cbxView.TabIndex = 4;
+            this.cbxView.SelectedIndexChanged += new System.EventHandler(this.cbxView_SelectedIndexChanged);
             // 
             // TimeSeriesControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.cbxView);
+            this.Controls.Add(this.mainPanel);
             this.Controls.Add(this.seriesListView);
-            this.Controls.Add(this.chart);
             this.Name = "TimeSeriesControl";
             this.Size = new System.Drawing.Size(1118, 319);
-            ((System.ComponentModel.ISupportInitialize)(this.chart)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private Chart chart;
         private System.Windows.Forms.ListView seriesListView;
+        private System.Windows.Forms.Panel mainPanel;
+        private System.Windows.Forms.ComboBox cbxView;
 
     }
 }

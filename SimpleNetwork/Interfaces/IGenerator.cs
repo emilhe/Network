@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DataItems;
-
-namespace SimpleNetwork.Interfaces
+﻿namespace BusinessLogic.Interfaces
 {
     /// <summary>
     /// Power generation abstraction.
     /// </summary>
-    public interface IGenerator : IMeasureable
+    public interface IGenerator : IMeasureableLeaf
     {
         string Name { get; }
         double GetProduction(int tick);

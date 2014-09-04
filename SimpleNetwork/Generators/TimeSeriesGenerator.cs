@@ -1,35 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
-using DataItems;
-using DataItems.TimeSeries;
-using SimpleNetwork.Interfaces;
-using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
+﻿using BusinessLogic.Interfaces;
+using BusinessLogic.TimeSeries;
+using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
 
-namespace SimpleNetwork.Generators
+namespace BusinessLogic.Generators
 {
     /// <summary>
     /// Generator which an amount of energy specified by a time series.
     /// </summary>
     public class TimeSeriesGenerator : IGenerator
     {
-        private readonly ITimeSeries _mTimeSeries;
+        private readonly Interfaces.ITimeSeries _mTimeSeries;
 
-        private bool _mMeasurering;
-        public bool Measurering
-        {
-            get { return _mMeasurering; }
-        }
+        public bool Measurering { get; private set; }
 
-        public ITimeSeries TimeSeries { get; private set; }
-        public ITimeSeries UnderlyingTimeSeries { get { return _mTimeSeries; } }
+        public Interfaces.ITimeSeries TimeSeries { get; private set; }
+        public Interfaces.ITimeSeries UnderlyingTimeSeries { get { return _mTimeSeries; } }
 
         public string Name { get; private set; }
 
-        public TimeSeriesGenerator(string name, ITimeSeries ts)
+        public TimeSeriesGenerator(string name, Interfaces.ITimeSeries ts)
         {
             Name = name;
             _mTimeSeries = ts;
@@ -38,20 +27,20 @@ namespace SimpleNetwork.Generators
         public double GetProduction(int tick)
         {
             var prod = _mTimeSeries.GetValue(tick);
-            if (_mMeasurering) TimeSeries.AddData(tick, prod);
+            if (Measurering) TimeSeries.AddData(tick, prod);
             return prod;
         }
 
         public void StartMeasurement()
         {
             TimeSeries = new SparseTimeSeries(Name);
-            _mMeasurering = true;
+            Measurering = true;
         }
 
         public void Reset()
         {
             TimeSeries = null;
-            _mMeasurering = false;
+            Measurering = false;
         }
     }
 }

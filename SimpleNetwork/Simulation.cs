@@ -2,17 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
-using DataItems;
-using DataItems.TimeSeries;
-using SimpleNetwork.Interfaces;
-using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
+using System.Net.Configuration;
+using BusinessLogic.TimeSeries;
+using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
 
-namespace SimpleNetwork
+namespace BusinessLogic
 {
     public class Simulation
     {
@@ -21,7 +15,6 @@ namespace SimpleNetwork
 
         // System fields.
         private Dictionary<string, ITimeSeries> _mSystemTimeSeries;
-        private readonly NetworkModel _mModel;
         private readonly Stopwatch _mWatch;
         private readonly bool _mDebug;
         private bool _mSuccess;
@@ -31,10 +24,7 @@ namespace SimpleNetwork
 
         #endregion
 
-        /// <summary>
-        /// The list of simulation nodes; each node represents a geographic entity.
-        /// </summary>
-        public List<Node> Nodes { get; set; }
+        public NetworkModel Model { get; set; }
 
         /// <summary>
         /// The latest simulation output (if any).
@@ -49,8 +39,7 @@ namespace SimpleNetwork
         public Simulation(NetworkModel model, bool debug = false)
         {
             _mDebug = debug;
-            _mModel = model;
-            Nodes = _mModel.Nodes;
+            Model = model;
 
             if (_mDebug) {_mWatch = new Stopwatch();}
         }
@@ -72,19 +61,19 @@ namespace SimpleNetwork
             while (_mTick < ticks)
             {
                 if (_mDebug) _mWatch.Restart();
-                _mModel.Respond(_mTick);
-                if (log) _mSystemTimeSeries["Mismatch"].AddData(_mTick, _mModel.Mismatch);
-                if (log) _mSystemTimeSeries["Curtailment"].AddData(_mTick, _mModel.Curtailment);
-                if (_mModel.Failure)
+                Model.Evaluate(_mTick);
+                if (log) _mSystemTimeSeries["Mismatch"].AddData(_mTick, Model.Mismatch);
+                if (log) _mSystemTimeSeries["Curtailment"].AddData(_mTick, Model.Curtailment);
+                if (Model.Failure)
                 {
                     _mSuccess = false;
                 }
                 if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
                 _mTick++;
-                if (!log && _mModel.Failure) break;
+                if (!log && Model.Failure) break;
             }
 
-            CreateOutput();
+            CreateOutput(log);
         }
 
         /// <summary>
@@ -92,7 +81,8 @@ namespace SimpleNetwork
         /// </summary>
         private void ResetStorages()
         {
-            foreach (var storage in Nodes.SelectMany(item => item.StorageCollection.Storages())) storage.ResetCapacity();
+            foreach (var storage in Model.Nodes.SelectMany(item => item.StorageCollection.Storages()))
+                storage.ResetCapacity();
         }
 
         /// <summary>
@@ -103,10 +93,9 @@ namespace SimpleNetwork
             _mSystemTimeSeries = null;
 
             // Reset node time series.
-            foreach (var measureable in Nodes.SelectMany(item => item.Measureables))
-            {
-                measureable.Reset();
-            }
+            foreach (var node in Model.Nodes) node.Reset();
+            // Reset edge time series.
+            Model.ExportStrategy.Reset();
         }
 
         /// <summary>
@@ -123,42 +112,37 @@ namespace SimpleNetwork
             _mSystemTimeSeries = systemTimeSeries.ToDictionary(item => item.Name, item => item);
 
             // Node time series setup.
-            foreach (var measureable in Nodes.SelectMany(item => item.Measureables))
-            {
-                measureable.StartMeasurement();
-            }
+            foreach (var node in Model.Nodes) node.StartMeasurement();
+            // Reset edge time series.
+            Model.ExportStrategy.StartMeasurement();
         }
 
         /// <summary>
         /// Wrap output data.
         /// </summary>
-        private void CreateOutput()
+        private void CreateOutput(bool log)
         {
+            var ts = new List<ITimeSeries>();
+            if(log) ts.AddRange(_mSystemTimeSeries.Values);
+            if (log) ts.AddRange(Model.ExportStrategy.CollectTimeSeries());
+            if (log) ts.AddRange(Model.Nodes.SelectMany(item => item.CollectTimeSeries()));
+
             Output = new SimulationOutput
             {
-                SystemTimeSeries = _mSystemTimeSeries,
-                CountryTimeSeriesMap = new Dictionary<string, List<ITimeSeries>>(),
+                TimeSeries = ts,
                 Success = _mSuccess
             };
-            foreach (var node in Nodes)
-            {
-                Output.CountryTimeSeriesMap.Add(node.CountryName, node.CollectTimeSeries());
-            }
         }
 
     }
 
     public class SimulationOutput
     {
-        /// <summary>
-        /// Time series for the complete system.
-        /// </summary>
-        public Dictionary<string, ITimeSeries> SystemTimeSeries { get; set; }
 
         /// <summary>
-        /// Time series for each node in the system.
+        /// All times series data collected during the simulation.
         /// </summary>
-        public Dictionary<string, List<ITimeSeries>> CountryTimeSeriesMap { get; set; }
+        public List<ITimeSeries> TimeSeries { get; set; }
 
         /// <summary>
         /// Did the system work; false if the backup system was exhausted.

@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using SimpleNetwork.ExportStrategies;
+using BusinessLogic.ExportStrategies;
 
-namespace SimpleNetwork.Interfaces
+namespace BusinessLogic.Interfaces
 {
-    public interface IExportStrategy
+    public interface IExportStrategy : IMeasureableNode
     {
 
         void Bind(List<Node> nodes, double[] mismatches);

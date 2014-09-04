@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
-using SimpleNetwork.Interfaces;
-using SimpleNetwork.Storages;
+using BusinessLogic.Interfaces;
+using BusinessLogic.Storages;
 
 namespace UnitTest
 {

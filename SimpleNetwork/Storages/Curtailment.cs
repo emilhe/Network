@@ -1,8 +1,8 @@
 ﻿using System;
-using DataItems.TimeSeries;
-using SimpleNetwork.Interfaces;
+using BusinessLogic.Interfaces;
+using BusinessLogic.TimeSeries;
 
-namespace SimpleNetwork.Storages
+namespace BusinessLogic.Storages
 {
     public class Curtailment : IStorage
     {

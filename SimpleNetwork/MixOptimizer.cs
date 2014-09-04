@@ -1,17 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DataItems;
-using SimpleNetwork.ExportStrategies;
-using SimpleNetwork.ExportStrategies.DistributionStrategies;
-using SimpleNetwork.Generators;
-using SimpleNetwork.Interfaces;
-using SimpleNetwork.Storages;
-using SimpleNetwork.TimeSeries;
+using BusinessLogic.ExportStrategies;
 
-namespace SimpleNetwork
+namespace BusinessLogic
 {
     public class MixOptimizer
     {
@@ -49,22 +41,22 @@ namespace SimpleNetwork
         /// <summary>
         /// Individual optimization of the mixing factor: The mixing factor will be optimal for each node considered in isolation.
         /// </summary>
-        public void OptimizeIndividually(double stepSize = 0.05)
+        public void OptimizeIndividually(double stepSize = 0.05, int years = 1)
         {
             var model = new NetworkModel(new List<Node> {Nodes[0]}, new NoExportStrategy());
             var system = new Simulation(model);
             
             for (int i = 0; i < Nodes.Count; i++)
             {
-                var best = 0.0  ;
-                for (double mix = 0.3; mix < 0.9; mix += stepSize)
+                var best = double.MaxValue;
+                for (double mix = 0.3; mix <= 0.9; mix += stepSize)
                 {
                     _mMixController.Mixes[i] = mix;
                     _mMixController.Execute();
-                    system.Nodes = new List<Node> { Nodes[i] };
-                    system.Simulate(8766); // One year.
-                    var result = -system.Output.SystemTimeSeries["Curtailment"].Last().Value;
-                    if(result < best) continue;
+                    system.Model = new NetworkModel(new List<Node> { Nodes[i] }, new NoExportStrategy());
+                    system.Simulate(8765*years); // One year.
+                    var result = system.Output.TimeSeries.Single(item => item.Name.Equals("Curtailment")).Select(item => -item.Value).Sum();
+                    if(result > best) continue;
                     // Wee have a new optimum, let's save it.
                     best = result;
                     OptimalMix[i] = mix;
@@ -121,14 +113,14 @@ namespace SimpleNetwork
         //    }
         //}
 
-        private double Try(Simulation system, int i, double mix)
-        {
-            _mMixController.Mixes[i] = mix;
-            _mMixController.Execute();
-            system.Simulate(8766);
-            return system.Output.CountryTimeSeriesMap[Nodes[i].CountryName].Single(
-                item => item.Name.Equals("Test backup")).Last().Value;
-        }
+        //private double Try(Simulation system, int i, double mix)
+        //{
+        //    _mMixController.Mixes[i] = mix;
+        //    _mMixController.Execute();
+        //    system.Simulate(8766);
+        //    return system.Output.CountryTimeSeries[Nodes[i].CountryName].Single(
+        //        item => item.Name.Equals("Test backup")).Last().Value;
+        //}
 
     }
 }

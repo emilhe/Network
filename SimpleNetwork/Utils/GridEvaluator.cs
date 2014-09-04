@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
+using Utils;
 
-namespace SimpleNetwork.Utils
+namespace BusinessLogic.Utils
 {
     public class GridEvaluator
     {
 
         #region Specific functionality
 
-        public static bool[,] EvalSimulation(GridScanParameters gridParams, Simulation simulation, MixController mCtrl)
+        public static bool[,] EvalSimulation(GridScanParameters gridParams, Simulation simulation, MixController mCtrl, int years = 1)
         {
             var watch = new Stopwatch();
             // Eval grid.
@@ -21,7 +22,7 @@ namespace SimpleNetwork.Utils
                 mCtrl.Execute();
                 // Do simulation.
                 watch.Restart();
-                simulation.Simulate(24 * 7 * 52, false);
+                simulation.Simulate(8765*years, false);
                 Console.WriteLine("Mix " + mix + "; Penetation " + pen + ": " +
                                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
                 return simulation.Output.Success;
@@ -40,17 +41,9 @@ namespace SimpleNetwork.Utils
         /// <returns> grid values </returns>
         public static T[,] EvalDense<T>(Func<int[], T> func, int[] dims)
         {
-            // TODO: Generic dimension (currently only 2D)
             var grid = new T[dims[0], dims[1]]; 
-            var temp = new int[dims.Length];
 
-            for (temp[0] = 0; temp[0] < grid.GetLength(0); temp[0]++)
-            {
-                for (temp[1] = 0; temp[1] < grid.GetLength(1); temp[1]++)
-                {
-                    grid[temp[0], temp[1]] = func(temp);
-                }
-            }
+            grid.MultiLoop(indices => grid[indices[0], indices[1]] = func(indices));
 
             return grid;
         }
@@ -123,7 +116,7 @@ namespace SimpleNetwork.Utils
                 return result;
             }
         }
-        public double[] Columns
+        public double[] Cols
         {
             get
             {

@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DataItems;
-using ProtoBuf;
-using ProtoBuf.Meta;
-using SimpleImporter;
+﻿using SimpleImporter;
 
-namespace SimpleNetwork
+namespace BusinessLogic
 {
     internal class Program
     {
@@ -20,7 +11,9 @@ namespace SimpleNetwork
         /// <param name="args"></param>
         private static void Main(string[] args)
         {
-            EcnImporter.Parse();
+            //EcnImporter.Parse();
+            //CsvImporter.Parse(TsSource.VE);
+            //NtcImporter.Parse();
         }
 
     }

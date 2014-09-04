@@ -1,13 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using SimpleNetwork.Interfaces;
+using BusinessLogic.Interfaces;
 
-namespace SimpleNetwork.ExportStrategies.DistributionStrategies
+namespace BusinessLogic.ExportStrategies.DistributionStrategies
 {
-    public class BottomUpStrategy : IDistributionStrategy
+    public class SkipFlowStrategy : IDistributionStrategy
     {
         // Tolerance due to finite double precision.
-        public double Tolerance { get { return 1e-10; } }
+        public double Tolerance
+        {
+            get { return 1e-10; }
+        }
 
         /// <summary>
         /// Distribute the power. After distribution, all mismatches will be covered by storage.
@@ -92,6 +95,30 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
                 }
             }
         }
+
+        #region Measurement
+
+        public void StartMeasurement()
+        {
+            // Nothing to measure.
+        }
+
+        public void Reset()
+        {
+            // Nothing to measure.
+        }
+
+        public bool Measurering
+        {
+            get { return false; }
+        }
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            return new List<ITimeSeries>();
+        }
+
+        #endregion
 
     }
 }

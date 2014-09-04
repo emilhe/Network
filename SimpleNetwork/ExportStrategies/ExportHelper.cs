@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SimpleNetwork.Interfaces;
+using BusinessLogic.Interfaces;
+using BusinessLogic.ExportStrategies.DistributionStrategies;
 
-namespace SimpleNetwork.ExportStrategies
+namespace BusinessLogic.ExportStrategies
 {
-    class ExportHelper
+    class ExportHelper : IMeasureableNode
     {
         // Tolerance due to numeric roundings OR the distribution strategy chosen.
         public double Tolerance
@@ -13,13 +14,16 @@ namespace SimpleNetwork.ExportStrategies
             get { return DistributionStrategy != null ? DistributionStrategy.Tolerance : 1e-10; }
         }
 
+        /// <summary>
+        /// Distribution strategy used for evaluation.
+        /// </summary>
+        public IDistributionStrategy DistributionStrategy { get; set; }
+
         private List<Node> _mNodes;
         private Response _mSystemResponse;
         private double[] _mMismatches;
         private double[] _mStorageMap;
         private int _mStorageLevel;
-
-        public IDistributionStrategy DistributionStrategy { get; set; }
 
         public void Bind(List<Node> nodes, double[] mismatches)
         {
@@ -138,6 +142,36 @@ namespace SimpleNetwork.ExportStrategies
         public void EqualizePower()
         {
             DistributionStrategy.EqualizePower(_mMismatches);            
+        }
+
+        #endregion
+
+        #region Measurement
+
+        public void StartMeasurement()
+        {
+            if (DistributionStrategy == null) return;
+            DistributionStrategy.StartMeasurement();
+        }
+
+        public void Reset()
+        {
+            if (DistributionStrategy == null) return;
+            DistributionStrategy.Reset();
+        }
+
+        public bool Measurering
+        {
+            get
+            {
+                return DistributionStrategy != null && DistributionStrategy.Measurering;
+            }
+        }
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            if (DistributionStrategy == null) return new List<ITimeSeries>();
+            return DistributionStrategy.CollectTimeSeries();
         }
 
         #endregion

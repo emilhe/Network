@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SimpleNetwork.Interfaces;
+using BusinessLogic.Interfaces;
+using BusinessLogic.ExportStrategies.DistributionStrategies;
 
-namespace SimpleNetwork.ExportStrategies
+namespace BusinessLogic.ExportStrategies
 {
     public class CooperativeExportStrategy : IExportStrategy
     {
@@ -13,9 +14,9 @@ namespace SimpleNetwork.ExportStrategies
         private double[] _mMismatches;
         private readonly ExportHelper _mHelper = new ExportHelper();
 
-        public CooperativeExportStrategy(IDistributionStrategy distributionStrategy)
+        public CooperativeExportStrategy(IDistributionStrategy distributionStrategyStrategy)
         {
-            _mHelper.DistributionStrategy = distributionStrategy;
+            _mHelper.DistributionStrategy = distributionStrategyStrategy;
         }
 
         public void Bind(List<Node> nodes, double[] mismatches)
@@ -36,6 +37,33 @@ namespace SimpleNetwork.ExportStrategies
 
             return balanceResult;
         }
+
+        #region Measurement
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            var result = ((IMeasureableNode) _mHelper).CollectTimeSeries();
+            // Bind flow dependence.
+            foreach (var ts in result) ts.Properties.Add("Flow", "Cooperative");
+            return result;
+        }
+
+        public void StartMeasurement()
+        {
+            ((IMeasureable) _mHelper).StartMeasurement();
+        }
+
+        public void Reset()
+        {
+            ((IMeasureable) _mHelper).Reset();
+        }
+
+        public bool Measurering
+        {
+            get { return _mHelper.Measurering; }
+        }
+
+        #endregion
 
     }
 }

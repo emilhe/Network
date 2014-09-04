@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DataItems;
-using SimpleNetwork.Interfaces;
-using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
+﻿using BusinessLogic.Interfaces;
+using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
 
-namespace SimpleNetwork.Storages
+namespace BusinessLogic.Storages
 {
     /// <summary>
     /// Backup (non rechargeable).
@@ -26,19 +20,19 @@ namespace SimpleNetwork.Storages
             get { return _mCore.Measurering; }
         }
 
-        public ITimeSeries TimeSeries
+        public Interfaces.ITimeSeries TimeSeries
         {
             get { return _mCore.TimeSeries; }
         }
 
         public void StartMeasurement()
         {
-            ((IMeasureable)_mCore).StartMeasurement();
+            ((IMeasureableLeaf)_mCore).StartMeasurement();
         }
 
         public void Reset()
         {
-            ((IMeasureable)_mCore).Reset();
+            ((IMeasureableLeaf)_mCore).Reset();
         }
 
         public string Name

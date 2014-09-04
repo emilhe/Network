@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using SimpleNetwork.Interfaces;
+using BusinessLogic.Interfaces;
 
-namespace SimpleNetwork.ExportStrategies
+namespace BusinessLogic.ExportStrategies
 {
     public class NoExportStrategy : IExportStrategy
     {
@@ -19,6 +19,30 @@ namespace SimpleNetwork.ExportStrategies
         {
             return _mHelper.BalanceLocally(tick, i => true, true);
         }
+
+        #region Measurement
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            return ((IMeasureableNode)_mHelper).CollectTimeSeries();
+        }
+
+        public void StartMeasurement()
+        {
+            ((IMeasureable)_mHelper).StartMeasurement();
+        }
+
+        public void Reset()
+        {
+            ((IMeasureable)_mHelper).Reset();
+        }
+
+        public bool Measurering
+        {
+            get { return _mHelper.Measurering; }
+        }
+
+        #endregion
 
     }
 }

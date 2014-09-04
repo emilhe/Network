@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DataItems;
-using DataItems.TimeSeries;
-using SimpleNetwork.Interfaces;
-using ITimeSeries = SimpleNetwork.Interfaces.ITimeSeries;
+using BusinessLogic.Interfaces;
+using BusinessLogic.TimeSeries;
+using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
 
-namespace SimpleNetwork.Storages
+namespace BusinessLogic.Storages
 {
     /// <summary>
     /// Storage (rechargeable).
@@ -23,7 +18,7 @@ namespace SimpleNetwork.Storages
             get { return _mMeasurering; }
         }
 
-        public ITimeSeries TimeSeries { get; private set; }
+        public Interfaces.ITimeSeries TimeSeries { get; private set; }
 
         public string Name { get; private set; }
         public double Efficiency { get; private set; }

@@ -1,25 +1,33 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using SimpleNetwork.Interfaces;
+using BusinessLogic.Interfaces;
+using BusinessLogic.TimeSeries;
 
-namespace SimpleNetwork.ExportStrategies.DistributionStrategies
+namespace BusinessLogic.ExportStrategies.DistributionStrategies
 {
     public class MinimalFlowStrategy : IDistributionStrategy
     {
         public double Tolerance { get { return 1e-4; } }
-        public bool ShareStorage { get; set; }
 
         private readonly FlowOptimizer _flowOptimizer;
+        private readonly List<Node> _mNodes;
+        private readonly EdgeSet _mEdges;
         private readonly double[] _mLoLims;
         private readonly double[] _mHiLims;
 
-        public MinimalFlowStrategy(EdgeSet edges)
+        public MinimalFlowStrategy(List<Node> nodes, EdgeSet edges)
         {
-            _flowOptimizer = new FlowOptimizer(edges.NodeCount);
+            if (nodes.Count != edges.NodeCount) throw new ArgumentException("Nodes and edges do not match.");
+
+            _mNodes = nodes;
+            _mEdges = edges;
+
+            _flowOptimizer = new FlowOptimizer(nodes.Count);
             _flowOptimizer.SetEdges(edges);
 
-            _mLoLims = new double[edges.NodeCount];
-            _mHiLims = new double[edges.NodeCount];
+            _mLoLims = new double[nodes.Count];
+            _mHiLims = new double[nodes.Count];
         }
 
         public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency, int tick)
@@ -53,11 +61,64 @@ namespace SimpleNetwork.ExportStrategies.DistributionStrategies
                 }
                 mismatches[index] = nodes[index].StorageCollection.Get(efficiency).Inject(tick, _flowOptimizer.NodeOptimum[index]);
             }
+
+            // Record flows.
+            if (!Measurering) return;
+            for (int i = 0; i < _mNodes.Count; i++)
+            {
+                for (int j = i; j < _mNodes.Count; j++)
+                {
+                    if(!_mEdges.EdgeExists(i,j)) continue;
+                    _mFlowTimeSeriesMap[i + _mNodes.Count*j].AddData(tick,
+                        _flowOptimizer.Flows[i, j] - _flowOptimizer.Flows[j, i]);
+                }
+            }
         }
 
         public void EqualizePower(double[] mismatches)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
+
+        #region Measurement
+
+        public void StartMeasurement()
+        {
+            Measurering = true;
+            InitializeTimeSeriesFromEdges();
+        }
+
+        private void InitializeTimeSeriesFromEdges()
+        {
+            _mFlowTimeSeriesMap = new Dictionary<int, ITimeSeries>();
+
+            for (int i = 0; i < _mNodes.Count; i++)
+            {
+                for (int j = i; j < _mNodes.Count; j++)
+                {
+                    if (!_mEdges.EdgeExists(i, j)) continue;
+                    _mFlowTimeSeriesMap.Add(i + _mNodes.Count*j,
+                        new SparseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation));
+                }
+            }
+        }
+
+        public void Reset()
+        {
+            Measurering = false;
+            _mFlowTimeSeriesMap = null;
+        }
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            return _mFlowTimeSeriesMap.Values.ToList();
+        }
+
+        public bool Measurering { get; private set; }
+
+        private Dictionary<int, ITimeSeries> _mFlowTimeSeriesMap = new Dictionary<int, ITimeSeries>();
+
+        #endregion
+
     }
 }

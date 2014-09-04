@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SimpleNetwork.ExportStrategies.DistributionStrategies;
-using SimpleNetwork.Interfaces;
+using BusinessLogic.Interfaces;
+using BusinessLogic.ExportStrategies.DistributionStrategies;
 
-namespace SimpleNetwork.ExportStrategies
+namespace BusinessLogic.ExportStrategies
 {
     public class SelfishExportStrategy : IExportStrategy
     {
@@ -12,9 +12,9 @@ namespace SimpleNetwork.ExportStrategies
         private double[] _mMismatches;
         private readonly ExportHelper _mHelper = new ExportHelper();
 
-        public SelfishExportStrategy(IDistributionStrategy distributionStrategy)
+        public SelfishExportStrategy(IDistributionStrategy distributionStrategyStrategy)
         {
-            _mHelper.DistributionStrategy = distributionStrategy;
+            _mHelper.DistributionStrategy = distributionStrategyStrategy;
         }
 
         public void Bind(List<Node> nodes, double[] mismatches)
@@ -24,7 +24,7 @@ namespace SimpleNetwork.ExportStrategies
         }
 
         /// <summary>
-        /// TODO: Comment shit
+        /// Balance the system; first a node takes what it can use, then it shares.
         /// </summary>
         public BalanceResult BalanceSystem(int tick)
         {
@@ -35,6 +35,30 @@ namespace SimpleNetwork.ExportStrategies
 
             return _mHelper.BalanceLocally(tick, i => _mMismatches[i] < 0, true);
         }
+
+        #region Measurement
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            return ((IMeasureableNode)_mHelper).CollectTimeSeries();
+        }
+
+        public void StartMeasurement()
+        {
+            ((IMeasureable)_mHelper).StartMeasurement();
+        }
+
+        public void Reset()
+        {
+            ((IMeasureable)_mHelper).Reset();
+        }
+
+        public bool Measurering
+        {
+            get { return _mHelper.Measurering; }
+        }
+
+        #endregion
 
     }
 }

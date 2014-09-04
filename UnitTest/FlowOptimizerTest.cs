@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using SimpleNetwork;
+using BusinessLogic;
+using BusinessLogic.Utils;
 
 namespace UnitTest
 {

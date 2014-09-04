@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace SimpleNetwork.Interfaces
+namespace BusinessLogic.Interfaces
 {
-    public interface IDistributionStrategy
+    public interface IDistributionStrategy : IMeasureableNode
     {
             
         /// <summary>
@@ -19,6 +19,6 @@ namespace SimpleNetwork.Interfaces
         /// Equalize power. This does NOT include charging/discharging storage.
         /// </summary>
         void EqualizePower(double[] mismatches);
-        
+
     }
 }

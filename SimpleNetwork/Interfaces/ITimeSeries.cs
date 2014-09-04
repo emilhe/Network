@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SimpleNetwork.Interfaces
+namespace BusinessLogic.Interfaces
 {
     /// <summary>
     /// Time series abstraction.
     /// </summary>
-    public interface ITimeSeries : IEnumerable<ITimeSeriesItem>, ICloneable
+    public interface ITimeSeries : IEnumerable<ITimeSeriesItem>
     {
         /// <summary>
         /// Name/description of the time series.
@@ -36,14 +36,25 @@ namespace SimpleNetwork.Interfaces
         /// <summary>
         /// Calcualate average (expensive operation).
         /// </summary>
-        /// <returns></returns>
+        /// <returns> average </returns>
         double GetAverage();
 
         /// <summary>
         /// Scale all data by.
         /// </summary>
-        /// <returns></returns>
         void SetScale(double scale);
+
+        /// <summary>
+        /// Get all values from the time series (not matter the time stamp).
+        /// </summary>
+        /// <returns></returns>
+        List<double> GetAllValues();
+
+        /// <summary>
+        /// Properties; can be all kind of stuff.
+        /// </summary>
+        Dictionary<string, string> Properties { get; }
+
     }
 
 }

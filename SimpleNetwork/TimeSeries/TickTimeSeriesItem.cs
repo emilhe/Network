@@ -1,8 +1,7 @@
 ﻿using System;
-using DataItems;
-using SimpleNetwork.Interfaces;
+using BusinessLogic.Interfaces;
 
-namespace SimpleNetwork.TimeSeries
+namespace BusinessLogic.TimeSeries
 {
     /// <summary>
     /// Data point representation

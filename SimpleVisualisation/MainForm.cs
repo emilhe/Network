@@ -1,27 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
-using DataItems;
-using OxyPlot;
-using OxyPlot.Series;
-using OxyPlot.WindowsForms;
+using Controls;
+using Controls.Charting;
+using BusinessLogic;
 using SimpleImporter;
-using SimpleNetwork;
-using SimpleNetwork.ExportStrategies;
-using SimpleNetwork.ExportStrategies.DistributionStrategies;
-using SimpleNetwork.Interfaces;
-using SimpleNetwork.Utils;
 
-namespace SimpleVisualisation
+namespace Main
 {
     public partial class MainForm : Form
     {
 
-        private TimeSeriesControl timeSeriesControl;
-        private ContourControl contourControl;
-        private ContourControlOxy contourControlOxy;
+        private TimeSeriesControl _timeSeriesControl;
+        private GroupHistogramView _histogramView;
+        private ContourView _contourView;
 
         public MainForm()
         {
@@ -31,22 +23,80 @@ namespace SimpleVisualisation
             TimeManager.Instance().StartTime = new DateTime(2000, 1, 1);
             TimeManager.Instance().Interval = 60;
 
-            Configurations.CompareExportSchemes(this);
+            Configurations.CompareAverageAndYearlyBackup(this);
+            //ChartUtils.SaveChart(_contourView.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\AverageVsYearly.png");
 
-            //var data = ProtoStore.LoadEcnData();
-            //var allBio = data.Where(item =>
-            //    item.RowHeader.Equals("Biomass") &&
-            //    item.ColumnHeader.Equals("Gross electricity generation") &&
-            //    item.Year.Equals(2010)).Select(item => item.Value).Sum();
-            //var allHydro = data.Where(item =>
-            //    item.RowHeader.Equals("Hydropower") &&
-            //    item.ColumnHeader.Equals("Gross electricity generation") &&
-            //    item.Year.Equals(2010)).Select(item => item.Value).Sum();
-            //var allHydroPump =
-            //    data.Where(item =>
-            //    item.RowHeader.Equals("Pumped storage hydropower") &&
-            //    item.ColumnHeader.Equals("Gross electricity generation") &&
-            //    item.Year.Equals(2010)).Select(item => item.Value).Sum(); 
+            //var test = new MainSetupControl
+            //{
+            //    Dock = DockStyle.Fill,
+            //    Location = new System.Drawing.Point(0, 0),
+            //    Name = "setupControl",
+            //};
+            //test.RunSimulation += (sender, args) =>
+            //{
+            //    var parameters = test.ModelParameters;
+
+            //    var nodes = ConfigurationUtils.CreateNodesWithBackup(parameters.Source, parameters.Years);
+            //    var model = new NetworkModel(nodes, parameters.ExportStrategy);
+            //    var simulation = new Simulation(model);
+            //    var mCtrl = new MixController(nodes);
+            //    var watch = new Stopwatch();
+            //    watch.Start();
+            //    mCtrl.SetPenetration(1.032);
+            //    mCtrl.SetMix(0.66);
+            //    mCtrl.Execute();
+            //    simulation.Simulate(8765 * parameters.Years);
+            //    Console.WriteLine("Mix " + mCtrl.Mixes[0] + "; Penetation " + mCtrl.Penetrations[0] + ": " +
+            //          watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
+            //    test.MainPanel.Controls.Clear();
+            //    timeSeriesControl = new TimeSeriesControl
+            //    {
+            //        Dock = DockStyle.Fill,
+            //        Location = new System.Drawing.Point(0, 0),
+            //        Name = "timeSeriesControl",
+            //    };
+            //    timeSeriesControl.SetData(simulation.Output);
+            //    test.MainPanel.Controls.Add(timeSeriesControl);
+            //};
+            //panel1.Controls.Add(test);
+
+            //Configurations.ShowTimeSeris(this);
+
+            var data = ProtoStore.LoadEcnData();
+            var allBio = data.Where(item =>
+                item.RowHeader.Equals("Biomass") &&
+                item.ColumnHeader.Equals("Gross electricity generation") &&
+                item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            var allHydro = data.Where(item =>
+                item.RowHeader.Equals("Hydropower") &&
+                item.ColumnHeader.Equals("Gross electricity generation") &&
+                item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            var allHydroPump =
+                data.Where(item =>
+                item.RowHeader.Equals("Pumped storage hydropower") &&
+                item.ColumnHeader.Equals("Gross electricity generation") &&
+                item.Year.Equals(2010)).Select(item => item.Value).Sum();
+
+            foreach (var hydro in data.Where(item =>
+                item.RowHeader.Equals("Hydropower") &&
+                item.ColumnHeader.Equals("Gross electricity generation") &&
+                item.Year.Equals(2010)))
+            {
+                Console.WriteLine("{0} : {1}",hydro.Country, hydro.Value);
+            }
+
+            Console.WriteLine("Now to the significant ones..");
+
+            foreach (var hydro in data.Where(item =>
+    item.RowHeader.Equals("Hydropower") &&
+    item.ColumnHeader.Equals("Gross electricity generation") &&
+    item.Year.Equals(2010) && item.Value > data.Where(item0 =>
+    item0.RowHeader.Equals("Hydropower") &&
+    item0.ColumnHeader.Equals("Gross electricity generation") &&
+    item0.Year.Equals(2010)).Select(item1 => item1.Value).Max()*0.05))
+            {
+                Console.WriteLine("{0} : {1}", hydro.Country, hydro.Value);
+            }
 
             //var hest = 0;
 
@@ -74,7 +124,7 @@ namespace SimpleVisualisation
             // For now, connect the nodes in a straight line.
 
             //for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
-            //var config = new NetworkModel(nodes, new CooperativeExportStrategy(), new BottomUpStrategy());
+            //var config = new NetworkModel(nodes, new CooperativeExportStrategy(), new SkipFlowStrategy());
             //var system = new Simulation(config);
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
@@ -82,24 +132,24 @@ namespace SimpleVisualisation
 
         #region Contour view
 
-        public ContourControlOxy DisplayContourOxy()
+        public ContourView DisplayContour()
         {
-            if (contourControlOxy == null) InitializeContourControlOxy();
-            contourControlOxy.Visible = true;
-            if (timeSeriesControl != null) timeSeriesControl.Visible = false;
-            if (contourControl != null) contourControl.Visible = false;
-            return contourControlOxy;
+            if (_contourView == null) InitializeContourControl();
+            _contourView.Visible = true;
+            if (_timeSeriesControl != null) _timeSeriesControl.Visible = false;
+            if (_histogramView != null) _histogramView.Visible = false;
+            return _contourView;
         }
 
-        private void InitializeContourControlOxy()
+        private void InitializeContourControl()
         {
-            contourControlOxy = new ContourControlOxy
+            _contourView = new ContourView
             {
                 Dock = DockStyle.Fill,
                 Location = new System.Drawing.Point(0, 0),
-                Name = "contourControlOxy",
+                Name = "ContourView",
             };
-            panel1.Controls.Add(contourControlOxy);
+            panel1.Controls.Add(_contourView);
         }
 
         #endregion
@@ -108,22 +158,48 @@ namespace SimpleVisualisation
 
         public TimeSeriesControl DisplayTimeSeries()
         {
-            if(timeSeriesControl == null) InitializeTsControl();
-            timeSeriesControl.Visible = true;
-            if (contourControl != null) contourControl.Visible = false;
+            if(_timeSeriesControl == null) InitializeTsControl();
+            _timeSeriesControl.Visible = true;
+            if (_contourView != null) _contourView.Visible = false;
+            if (_histogramView != null) _histogramView.Visible = false;
 
-            return timeSeriesControl;
+            return _timeSeriesControl;
         }
 
         private void InitializeTsControl()
         {
-            timeSeriesControl = new TimeSeriesControl
+            _timeSeriesControl = new TimeSeriesControl
             {
                 Dock = DockStyle.Fill,
                 Location = new System.Drawing.Point(0, 0),
                 Name = "timeSeriesControl",
             };
-            panel1.Controls.Add(timeSeriesControl);
+            panel1.Controls.Add(_timeSeriesControl);
+        }
+
+        #endregion
+
+        #region Histogram GUI mapping
+
+        public GroupHistogramView DisplayHistogram()
+        {
+            if (_histogramView == null) InitializeHiControl();
+            _histogramView.Visible = true;
+            if (_timeSeriesControl != null) _timeSeriesControl.Visible = false;
+            if (_contourView != null) _contourView.Visible = false;
+
+            return _histogramView;
+        }
+
+        private void InitializeHiControl()
+        {
+            _histogramView = new GroupHistogramView
+            {
+                Dock = DockStyle.Fill,
+                Location = new System.Drawing.Point(0, 0),
+                Name = "histogramView",
+            };
+            panel1.Controls.Add(_histogramView);
         }
 
         #endregion
