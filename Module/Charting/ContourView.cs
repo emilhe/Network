@@ -1,4 +1,8 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 
@@ -9,7 +13,9 @@ namespace Controls.Charting
 
         public Chart MainChart { get { return chart; } }
 
-        private static readonly Color[] Colors =
+        //private readonly List<Color> _mColors = new List<Color>();
+
+        private static readonly Color[] _mColors =
         {
             Color.LightSkyBlue, Color.LightGreen, Color.LightCoral, Color.LightGoldenrodYellow
         };
@@ -21,6 +27,11 @@ namespace Controls.Charting
             ChartUtils.StyleChart(MainChart);
             ChartUtils.EnableZooming(MainChart);
 
+            //foreach (var colorValue in Enum.GetValues(typeof(KnownColor)))
+            //{
+            //    _mColors.Add(Color.FromKnownColor((KnownColor)colorValue));   
+            //}
+
             MainChart.Series.Clear();
         }
 
@@ -28,8 +39,8 @@ namespace Controls.Charting
         {
             var series = new Series(name)
             {
-                ChartType = SeriesChartType.FastLine, 
-                Color = Colors[MainChart.Series.Count],
+                ChartType = SeriesChartType.FastLine,
+                Color = _mColors[MainChart.Series.Count % _mColors.Count()],
                 BorderWidth = 5
             };
             MapData(data, rows, columns, series.Points);

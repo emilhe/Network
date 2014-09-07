@@ -38,7 +38,7 @@ namespace Controls.Charting
             MainChart.ChartAreas[0].AxisX.Maximum = labels.Count;
             MainChart.ChartAreas[0].AxisX.Interval = 1;
             MainChart.ChartAreas[0].AxisX.IntervalOffset = 1;
-            MainChart.ChartAreas[0].AxisX.LabelStyle.Font = new Font("Microsoft Sans Serif", 8F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            MainChart.ChartAreas[0].AxisX.LabelStyle.Font = new Font("Microsoft Sans Serif", 7F, FontStyle.Regular, GraphicsUnit.Point, 0);
             _mLabelCount = labels.Count;
         }
 

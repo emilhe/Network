@@ -71,6 +71,7 @@ namespace BusinessLogic
                 if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
                 _mTick++;
                 if (!log && Model.Failure) break;
+                //if(_mTick % 10000 == 0) Console.WriteLine("Progress: {0} of {1}",_mTick, ticks);
             }
 
             CreateOutput(log);

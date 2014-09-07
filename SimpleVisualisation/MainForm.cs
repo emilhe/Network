@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
+using BusinessLogic.ExportStrategies;
+using BusinessLogic.ExportStrategies.DistributionStrategies;
 using Controls;
 using Controls.Charting;
 using BusinessLogic;
@@ -22,8 +24,7 @@ namespace Main
             // Time manger start/interval MUST match time series!
             TimeManager.Instance().StartTime = new DateTime(2000, 1, 1);
             TimeManager.Instance().Interval = 60;
-
-            Configurations.CompareAverageAndYearlyBackup(this);
+            Configurations.CompareAverageAndYearlyBackupISET(this);
             //ChartUtils.SaveChart(_contourView.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\AverageVsYearly.png");
 
             //var test = new MainSetupControl

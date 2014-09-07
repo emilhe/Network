@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Generators;
 using BusinessLogic.Storages;
@@ -35,17 +36,16 @@ namespace BusinessLogic
         {
             var client = new AccessClient();
             var nodes = client.GetAllCountryData(source, offset);
+            var loads = nodes.ToDictionary( item => item.CountryName, item => item.LoadTimeSeries.GetAverage());
+            var loadSum = loads.Values.Sum();
 
             foreach (var node in nodes)
             {
-                var load = node.LoadTimeSeries;
-                var avgLoad = load.GetAverage();
+                var avgLoad = loads[node.CountryName];
 
-                node.StorageCollection.Add(new BatteryStorage(6*avgLoad)); // Fixed for now
-                node.StorageCollection.Add(new HydrogenStorage(68.18*avgLoad));
-                    //  25TWh*(6hourLoad/2.2TWh) = 68.18; To be country dependent
-                node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", 409.09*avgLoad*years));
-                    // 150TWh*(6hourLoad/2.2TWh) = 409.09; To be country dependent           
+                node.StorageCollection.Add(new BatteryStorage(6*avgLoad)); // Should this be in TWh too?
+                node.StorageCollection.Add(new HydrogenStorage(25000*avgLoad/loadSum));
+                node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", 150000 * avgLoad / loadSum * years));
             }
 
             return nodes;
@@ -67,6 +67,41 @@ namespace BusinessLogic
             }
 
             return nodes;
+        }
+
+        /// <summary>
+        /// Setup the nodes in some default way using the ECN data.
+        /// </summary>
+        /// <param name="nodes"> the nodes on which the generators are to be added </param>
+        /// <param name="data"> the data from which the generators are to be constructed </param>
+        public static void SetupHydroStuff(List<Node> nodes, List<EcnDataRow> data, int years = 1)
+        {
+            // STANDARD
+            var loads = nodes.ToDictionary(item => item.CountryName, item => item.LoadTimeSeries.GetAverage());
+            var loadSum = loads.Values.Sum();
+            foreach (var node in nodes)
+            {
+                var avgLoad = loads[node.CountryName];
+
+                node.StorageCollection.Add(new BatteryStorage(6 * avgLoad)); // Should this be in TWh too?
+                node.StorageCollection.Add(new HydrogenStorage(25000 * avgLoad / loadSum));
+            }
+            
+            // SPECIAL
+            var relevantCountries = new[] {"Finland", "Sweden", "Norway"};
+            var relevantData = data.Where(item =>
+                item.RowHeader.Equals("Hydropower") &&
+                item.ColumnHeader.Equals("Gross electricity generation") &&
+                item.Year.Equals(Year) && 
+                relevantCountries.Contains(item.Country)).ToDictionary(item => item.Country, item => item.Value);
+            var sum = relevantData.Select(item => item.Value).Sum();
+
+            foreach (var node in nodes)
+            {
+                if(!relevantCountries.Contains(node.CountryName)) continue;
+
+                node.StorageCollection.Add(new BasicBackup("Storage lakes", (150000*years/sum)*relevantData[node.CountryName]));
+            }
         }
 
         /// <summary>
