@@ -24,7 +24,7 @@ namespace Main
             // Time manger start/interval MUST match time series!
             TimeManager.Instance().StartTime = new DateTime(2000, 1, 1);
             TimeManager.Instance().Interval = 60;
-            Configurations.CompareAverageAndYearlyBackupISET(this);
+            Configurations.ShowTimeSeris(this);
             //ChartUtils.SaveChart(_contourView.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\AverageVsYearly.png");
 
             //var test = new MainSetupControl
