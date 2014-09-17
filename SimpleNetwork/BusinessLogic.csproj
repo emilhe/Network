@@ -97,6 +97,7 @@
     <Compile Include="AccessClient.cs" />
     <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
     <Compile Include="ExportStrategies\ExportHelper.cs" />
+    <Compile Include="ExportStrategies\ConstrainedFlowExportStrategy.cs" />
     <Compile Include="ExportStrategies\SelfishExportStrategy.cs" />
     <Compile Include="Interfaces\IMeasureable.cs" />
     <Compile Include="Interfaces\IDistributionStrategy.cs" />
@@ -137,7 +138,7 @@
     <Compile Include="TimeSeries\SparseTimeSeries.cs" />
     <Compile Include="TimeSeries\TickTimeSeriesItem.cs" />
     <Compile Include="ConfigurationUtils.cs" />
-    <Compile Include="Utils\FlowOptimizer2.cs" />
+    <Compile Include="Utils\ConstrainedFlowOptimizer.cs" />
     <Compile Include="Utils\GridEvaluator.cs" />
     <Compile Include="Utils\LineEvaluator.cs" />
     <Compile Include="Utils\MismatchOptimizer.cs" />

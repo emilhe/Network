@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic;
 using BusinessLogic.ExportStrategies;
@@ -42,6 +43,7 @@ namespace UnitTest
             tsTwoGen.AppendData(5);
             // Run model.
             RunModel(nodes, edges, 0, 2);
+            RunNewModel(nodes, edges, 0, 2);
 
             // Create fake data: 1 flow is needed.
             tsOneLoad.AppendData(5);
@@ -54,6 +56,7 @@ namespace UnitTest
             tsTwoGen.AppendData(6);
             // Run model.
             RunModel(nodes, edges, 1, 4);
+            RunNewModel(nodes, edges, 1, 4);
 
             // Create fake data: 5 flow is needed (not enough generation).
             tsOneLoad.AppendData(25);
@@ -66,6 +69,7 @@ namespace UnitTest
             tsTwoGen.AppendData(25);
             // Run model.
             RunModel(nodes, edges, 5, 6);
+            RunNewModel(nodes, edges, 5, 6);
 
             // Create fake data: 10 flow is needed (excess generation).
             tsOneLoad.AppendData(50);
@@ -78,6 +82,7 @@ namespace UnitTest
             tsTwoGen.AppendData(80);
             // Run model.
             RunModel(nodes, edges, 10, 8);
+            RunNewModel(nodes, edges, 10, 8);
         }
 
         private void RunModel(List<Node> nodes, EdgeSet edges, double expected, int steps)
@@ -88,6 +93,24 @@ namespace UnitTest
             var flowTs = simulation.Output.TimeSeries.First(item => item.Properties.ContainsKey("Flow"));
             var capacity = StatUtils.CalcCapacity(flowTs.GetAllValues().OrderBy(item => item).ToList());
             Assert.AreEqual(expected, capacity, 1e-6);
+        }
+
+        private void RunNewModel(List<Node> nodes, EdgeSet edges, double expected, int steps)
+        {
+            var model = new NetworkModel(nodes, new ConstrainedFlowExportStrategy(nodes, edges));
+            var simulation = new Simulation(model);
+            simulation.Simulate(steps);
+            var flowTs = simulation.Output.TimeSeries.First(item => item.Properties.ContainsKey("Flow"));
+            double capacity = 0;
+            try
+            {
+                capacity = StatUtils.CalcCapacity(flowTs.GetAllValues().OrderBy(item => item).ToList());
+            }
+            catch (Exception ex)
+            {
+                // So far, just ignore...
+            }
+            Assert.AreEqual(expected, capacity, 1e-4);
         }
 
     }

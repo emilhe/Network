@@ -50,7 +50,7 @@ namespace BusinessLogic
             return nodes;
         }
 
-        public static List<Node> CreateNodes(TsSource source = TsSource.ISET, double offset = 0)
+        public static List<Node>CreateNodes(TsSource source = TsSource.ISET, double offset = 0)
         {
             var client = new AccessClient();
             return client.GetAllCountryData(source, (int)(offset * Utils.Utils.HoursInYear));
