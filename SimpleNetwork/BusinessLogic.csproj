@@ -105,6 +105,7 @@
     <Compile Include="ExportStrategies\DistributionStrategies\SkipFlowStrategy.cs" />
     <Compile Include="Interfaces\IMeasureableNode.cs" />
     <Compile Include="MixController.cs" />
+    <Compile Include="SimulationController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />
     <Compile Include="Storages\Curtailment.cs" />
     <Compile Include="Storages\StorageCollection.cs" />
@@ -136,8 +137,10 @@
     <Compile Include="TimeSeries\SparseTimeSeries.cs" />
     <Compile Include="TimeSeries\TickTimeSeriesItem.cs" />
     <Compile Include="ConfigurationUtils.cs" />
+    <Compile Include="Utils\FlowOptimizer2.cs" />
     <Compile Include="Utils\GridEvaluator.cs" />
     <Compile Include="Utils\LineEvaluator.cs" />
+    <Compile Include="Utils\MismatchOptimizer.cs" />
     <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>

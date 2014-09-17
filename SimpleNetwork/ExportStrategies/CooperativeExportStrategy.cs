@@ -8,6 +8,7 @@ using BusinessLogic.ExportStrategies.DistributionStrategies;
 
 namespace BusinessLogic.ExportStrategies
 {
+
     public class CooperativeExportStrategy : IExportStrategy
     {
 

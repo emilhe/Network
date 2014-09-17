@@ -7,30 +7,6 @@ namespace BusinessLogic.Utils
     public class GridEvaluator
     {
 
-        #region Specific functionality
-
-        public static bool[,] EvalSimulation(GridScanParameters gridParams, Simulation simulation, MixController mCtrl, int years = 1)
-        {
-            var watch = new Stopwatch();
-            // Eval grid.
-            return EvalSparse(delegate(int[] idxs)
-            {
-                var pen = gridParams.PenetrationFrom + gridParams.PenetrationStep * idxs[0];
-                var mix = gridParams.MixingFrom + gridParams.MixingStep * idxs[1];
-                mCtrl.SetMix(mix);
-                mCtrl.SetPenetration(pen);
-                mCtrl.Execute();
-                // Do simulation.
-                watch.Restart();
-                simulation.Simulate(8765*years, false);
-                Console.WriteLine("Mix " + mix + "; Penetation " + pen + ": " +
-                                  watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
-                return simulation.Output.Success;
-            }, new[] { gridParams.PenetrationSteps, gridParams.MixingSteps });
-        }
-
-        #endregion
-
         #region Genetic functionality
 
         /// <summary>

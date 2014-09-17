@@ -148,7 +148,26 @@ namespace BusinessLogic
         /// <summary>
         /// Did the system work; false if the backup system was exhausted.
         /// </summary>
-        public bool Success { get; set; }
+        public bool Success
+        {
+            get
+            {
+                if (Properties == null) return false;
+                if (!Properties.ContainsKey("Success")) return false;
+                return Boolean.Parse(Properties["Success"]);
+            }
+            set
+            {
+                if (Properties == null) Properties = new Dictionary<string, string>();
+                if (!Properties.ContainsKey("Success")) Properties.Add("Success", "");
+                Properties["Success"] = value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Information about the simulation.
+        /// </summary>
+        public Dictionary<string, string> Properties { get; set; } 
 
     }
 

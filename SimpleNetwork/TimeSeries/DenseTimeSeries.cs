@@ -26,7 +26,7 @@ namespace BusinessLogic.TimeSeries
         public DenseTimeSeries(TimeSeriesDal source)
         {
             _mCore.Properties = source.Properties;
-            _mValues = source.Data;
+            _mValues = source.Data ?? new List<double>();
         }
 
         public DenseTimeSeries(string name, int capacity = 100)
@@ -86,7 +86,11 @@ namespace BusinessLogic.TimeSeries
         #region Delegation
 
         private readonly BasicTimeSeries _mCore = new BasicTimeSeries();
-        public string Name { get { return _mCore.Name; } set { _mCore.Name = value; } }
+        public string Name
+        {
+            get { return (Properties.ContainsKey("Country") ? Properties["Country"] + ", " : "") + _mCore.Name; }
+            set { _mCore.Name = value; }
+        }
 
         public Dictionary<string, string> Properties
         {

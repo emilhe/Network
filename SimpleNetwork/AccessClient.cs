@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms.VisualStyles;
 using BusinessLogic.Generators;
-using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
-using NUnit.Framework.Constraints;
 using SimpleImporter;
-using BusinessLogic.Utils;
 using Utils;
 
 namespace BusinessLogic
@@ -54,7 +49,7 @@ namespace BusinessLogic
             var dal = new SimulationOutputDal
             {
                 TimeSeriesKeys = output.TimeSeries.Select(item => ProtoStore.SaveTimeSeries(item.ToTimeSeriesDal(), key)).ToList(),
-                Properties = new Dictionary<string, string>{{"Success", output.Success.ToString()} }
+                Properties = output.Properties
             };
 
             // Then save the "meta data".
@@ -71,9 +66,26 @@ namespace BusinessLogic
             // The map it to the simulation output object.
             return new SimulationOutput
             {
-                Success = simDal.Properties["Success"].Equals("1"),
+                Properties = simDal.Properties,
                 TimeSeries = ts
             };
+        }
+
+        #endregion
+
+        #region Grid result
+
+        public static void SaveGridResult(GridResult output, string key)
+        {
+            ProtoStore.SaveGridResult(output.Grid, output.Rows, output.Columns, key);
+        }
+
+        public static GridResult LoadGridResult(string key)
+        {
+            var result = ProtoStore.LoadGridResult(key);
+            if (result == null) return null;
+
+            return new GridResult {Columns = result.Columns, Rows = result.Rows, Grid = (bool[,]) result.Grid.ToArray()};
         }
 
         #endregion

@@ -24,7 +24,7 @@ namespace Main
             // Time manger start/interval MUST match time series!
             TimeManager.Instance().StartTime = new DateTime(2000, 1, 1);
             TimeManager.Instance().Interval = 60;
-            Configurations.ShowTimeSeris(this);
+            Configurations.CompareExportSchemes(this);
             //ChartUtils.SaveChart(_contourView.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\AverageVsYearly.png");
 
             //var test = new MainSetupControl
@@ -45,7 +45,7 @@ namespace Main
             //    watch.Start();
             //    mCtrl.SetPenetration(1.032);
             //    mCtrl.SetMix(0.66);
-            //    mCtrl.Execute();
+            //    mCtrl.TimeSeriesExecution();
             //    simulation.Simulate(8765 * parameters.Years);
             //    Console.WriteLine("Mix " + mCtrl.Mixes[0] + "; Penetation " + mCtrl.Penetrations[0] + ": " +
             //          watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));

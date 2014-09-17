@@ -30,4 +30,12 @@ namespace SimpleImporter
         [Description("Cooperative")] Cooperative = 2
     }
 
+    public enum DistributionStrategy : byte
+    {
+        [Description("Skip Flow")]
+        SkipFlow = 0,
+        [Description("Minimal Flow")]
+        MinimalFlow = 1,
+    }
+
 }
