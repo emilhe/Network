@@ -27,21 +27,21 @@ namespace UnitTest
             opt.SetNodes(nodes, new[] { 0.0, 0.0 }, new[] { double.MaxValue, double.MaxValue });
             opt.Solve();
             AreAlmostEqual(1, opt.OptimalBalance, FlowDelta);
-            AreAlmostEqual(new double[,] { { 0,0.5 }, { -0.5, 0 } }, opt.Flows, FlowDelta);
+            AreAlmostEqual(new double[,] { { 0,1 }, { 0, 0 } }, opt.Flows, FlowDelta);
             AreAlmostEqual(new double[] { 1, 0 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);
             // Test that changing nodes changes solution.
             nodes = new double[] { 2, -2 };
             opt.SetNodes(nodes, new[] { 0.0, 0.0 }, new[] {0.0, 0.0 });
             opt.Solve();
             AreAlmostEqual(0, opt.OptimalBalance, FlowDelta);
-            AreAlmostEqual(new double[,] { { 0, 1 }, { -1, 0 } }, opt.Flows, FlowDelta);
+            AreAlmostEqual(new double[,] { { 0, 2 }, { 0, 0 } }, opt.Flows, FlowDelta);
             AreAlmostEqual(new double[] { 0, 0 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);
             // Test that charging capacity limits are respected
             nodes = new double[] { 2, -1 };
             opt.SetNodes(nodes, new double[] { 0, 0 }, new double[] { 0, 1 });
             opt.Solve();
             AreAlmostEqual(1, opt.OptimalBalance, FlowDelta);
-            AreAlmostEqual(new double[,] { { 0, 0.5 }, { -0.5, 0 } }, opt.Flows, FlowDelta);
+            AreAlmostEqual(new double[,] { { 0, 1 }, { 0, 0 } }, opt.Flows, FlowDelta);
             AreAlmostEqual(new double[] { 1, 0 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);
         }
 
@@ -100,7 +100,7 @@ namespace UnitTest
             opt.SetNodes(nodes, new double[] { 0, -1 }, new double[] { 0, 0 });
             opt.Solve();
             AreAlmostEqual(0, opt.OptimalBalance, FlowDelta * edges.NodeCount);
-            AreAlmostEqual(new double[,] { { 0, 1 }, { -1, 0 } }, opt.Flows, FlowDelta);
+            AreAlmostEqual(new double[,] { { 0, 2 }, { 0, 0 } }, opt.Flows, FlowDelta);
             AreAlmostEqual(new double[] { 0, 0 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);
         }
 
@@ -116,7 +116,7 @@ namespace UnitTest
             opt.SetNodes(nodes, new[] { 0 , 0.0}, new[] { 1, 0.0 });
             opt.Solve();
             AreAlmostEqual(0, opt.OptimalBalance, FlowDelta * edges.NodeCount);
-            AreAlmostEqual(new double[,] { { 0, 1.5 }, { -1.5, 0 } }, opt.Flows, FlowDelta * edges.NodeCount);
+            AreAlmostEqual(new double[,] { { 0, 3 }, { 0, 0 } }, opt.Flows, FlowDelta * edges.NodeCount);
             AreAlmostEqual(new double[] { 0, 0 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);
         }
 

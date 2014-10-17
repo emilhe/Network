@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Windows.Forms.VisualStyles;
 using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
 using Utils.Statistics;
@@ -50,13 +51,17 @@ namespace Controls.Charting
             MainChart.ChartAreas[0].AxisX.Interval = table.BinSize;
             MainChart.ChartAreas[0].AxisX.IntervalOffset = table.BinSize;
 
-            MainChart.ChartAreas[0].AxisY.Minimum = 0;
-            MainChart.ChartAreas[0].AxisY.Maximum =
-                MainChart.Series.SelectMany(item => item.Points).SelectMany(item => item.YValues).Max()*1.1;
-            if (MainChart.ChartAreas[0].AxisY.Maximum == 0) MainChart.ChartAreas[0].AxisY.Maximum = 1;
-            MainChart.ChartAreas[0].AxisY.Interval =
-                ChartUtils.CalcStepSize(
-                    MainChart.ChartAreas[0].AxisY.Maximum - MainChart.ChartAreas[0].AxisY.Minimum, 10);
+            var limits = ChartUtils.CalcAxis(table.Values, 0);
+            MainChart.ChartAreas[0].AxisY.Minimum = limits.Min;
+            MainChart.ChartAreas[0].AxisY.Maximum = limits.Max;
+            MainChart.ChartAreas[0].AxisY.Interval = limits.Tick;
+            //MainChart.ChartAreas[0].AxisY.Minimum = 0;
+            //MainChart.ChartAreas[0].AxisY.Maximum =
+            //    MainChart.Series.SelectMany(item => item.Points).SelectMany(item => item.YValues).Max()*1.1;
+            //if (MainChart.ChartAreas[0].AxisY.Maximum == 0) MainChart.ChartAreas[0].AxisY.Maximum = 1;
+            //MainChart.ChartAreas[0].AxisY.Interval =
+            //    ChartUtils.CalcStepSize(
+            //        MainChart.ChartAreas[0].AxisY.Maximum - MainChart.ChartAreas[0].AxisY.Minimum, 10);
         }
 
         /// <summary>

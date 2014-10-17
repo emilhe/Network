@@ -62,8 +62,8 @@ namespace BusinessLogic
             {
                 if (_mDebug) _mWatch.Restart();
                 Model.Evaluate(_mTick);
-                if (log) _mSystemTimeSeries["Mismatch"].AddData(_mTick, Model.Mismatch);
-                if (log) _mSystemTimeSeries["Curtailment"].AddData(_mTick, Model.Curtailment);
+                if (log) _mSystemTimeSeries["Mismatch"].AppendData(Model.Mismatch);
+                if (log) _mSystemTimeSeries["Curtailment"].AppendData(Model.Curtailment);
                 if (Model.Failure)
                 {
                     _mSuccess = false;
@@ -107,8 +107,8 @@ namespace BusinessLogic
             // System time series setup.
             var systemTimeSeries = new List<ITimeSeries>
             {
-                new SparseTimeSeries("Mismatch"),
-                new SparseTimeSeries("Curtailment")
+                new DenseTimeSeries("Mismatch"),
+                new DenseTimeSeries("Curtailment")
             };
             _mSystemTimeSeries = systemTimeSeries.ToDictionary(item => item.Name, item => item);
 

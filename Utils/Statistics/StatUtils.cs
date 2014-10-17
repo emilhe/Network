@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Utils.Statistics
 {
@@ -11,8 +12,10 @@ namespace Utils.Statistics
         /// </summary>
         public static double CalcCapacity(List<double> values)
         {
-            var min = Math.Abs(Percentile(values, 0.5));
-            var max = Math.Abs(Percentile(values, 99.5));
+            var orderedValues = values.OrderBy(item => item).ToList();
+
+            var min = Math.Abs(Percentile(orderedValues, 0.5));
+            var max = Math.Abs(Percentile(orderedValues, 99.5));
 
             return Math.Max(min, max);
         }

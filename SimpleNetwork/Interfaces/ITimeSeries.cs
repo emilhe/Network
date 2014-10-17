@@ -55,6 +55,11 @@ namespace BusinessLogic.Interfaces
         /// </summary>
         Dictionary<string, string> Properties { get; }
 
+        /// <summary>
+        /// Which properties (besides country) should be included in the name?
+        /// </summary>
+        List<string> DisplayProperties { get; }
+
     }
 
 }

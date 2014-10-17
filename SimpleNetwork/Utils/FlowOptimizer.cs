@@ -230,14 +230,14 @@ namespace BusinessLogic
         public int NodeCount { get { return _mNodeCount; } }
         public int EdgeCount { get { return _mEdgeCount; } }
 
-        private readonly Dictionary<int, double> _mEdges;
+        private readonly Dictionary<int, double[]> _mEdges;
         private readonly int _mNodeCount;
         private int _mEdgeCount;
 
         public EdgeSet(int nodeCount)
         {
             _mNodeCount = nodeCount;
-            _mEdges = new Dictionary<int, double>();
+            _mEdges = new Dictionary<int, double[]>();
             _mEdgeCount = 0;
         }
 
@@ -246,14 +246,14 @@ namespace BusinessLogic
         /// </summary>
         /// <param name="i"> index the nodes to connect </param>
         /// <param name="j"> index the nodes to connect </param>
-        public void AddEdge(int i, int j, double cost = 1)
+        public void AddEdge(int i, int j, double cost = 1, double capacity = double.PositiveInfinity)
         {
             if (i == j) throw new ArgumentException("Cannot connect a node to itself.");
             if (EdgeExists(i, j)) return;
 
             // The connection matric is to be constructed screw symmetric; we wan't positive on top.
-            _mEdges.Add(i + j * _mNodeCount, cost);
-            _mEdges.Add(j + i * _mNodeCount, cost);
+            _mEdges.Add(i + j * _mNodeCount, new[] { cost , capacity});
+            _mEdges.Add(j + i * _mNodeCount, new[] { cost, capacity });
             _mEdgeCount++;
         }
 
@@ -282,7 +282,38 @@ namespace BusinessLogic
             if (i == j) throw new ArgumentException("A node cannot be connected to itself.");
 
             // The connection matrix is screw symmetic.
-            return _mEdges[i + j*_mNodeCount];
+            return _mEdges[i + j*_mNodeCount][0];
+        }
+
+        /// <summary>
+        /// Get the cost of traversing an edge.
+        /// </summary>
+        /// <param name="i"> index the nodes to connect </param>
+        /// <param name="j"> index the nodes to connect </param>
+        /// <returns> the cost </returns>
+        public double GetEdgeCapacity(int i, int j)
+        {
+            if (i == j) throw new ArgumentException("A node cannot be connected to itself.");
+
+            // The connection matrix is screw symmetic.
+            return _mEdges[i + j * _mNodeCount][1];
+        }
+
+        /// <summary>
+        /// Get the cost of traversing an edge.
+        /// </summary>
+        /// <param name="i"> index the nodes to connect </param>
+        /// <param name="j"> index the nodes to connect </param>
+        /// <param name="capacity"> link capacity </param>
+        /// <returns> the cost </returns>
+        public double SetEdgeCapacity(int i, int j, double capacity)
+        {
+            if (!EdgeExists(i,j)) throw new ArgumentException("Edge does not exist.");
+
+            // The connection matrix is screw symmetic.
+            _mEdges[i + j*_mNodeCount][1] = capacity;
+            _mEdges[j + i*_mNodeCount][1] = capacity;
+            return _mEdges[i + j * _mNodeCount][1];
         }
 
     }

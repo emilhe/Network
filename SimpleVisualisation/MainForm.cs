@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Windows.Forms;
-using BusinessLogic.ExportStrategies;
-using BusinessLogic.ExportStrategies.DistributionStrategies;
+using BusinessLogic.Generators;
 using Controls;
 using Controls.Charting;
 using BusinessLogic;
@@ -22,9 +26,33 @@ namespace Main
             InitializeComponent();
 
             // Time manger start/interval MUST match time series!
-            TimeManager.Instance().StartTime = new DateTime(2000, 1, 1);
+            TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
-            Configurations.CompareExportSchemes(this);
+
+    //        var data = ProtoStore.LoadEcnData();
+    //        var allBio = data.Where(item =>
+    //            item.RowHeader.Equals("Biomass") &&
+    //            item.ColumnHeader.Equals("Gross electricity generation") &&
+    //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
+    //        var allHydro = data.Where(item =>
+    //            item.RowHeader.Equals("Hydropower") &&
+    //            item.ColumnHeader.Equals("Gross electricity generation") &&
+    //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
+    //        var allHydroPump =
+    //            data.Where(item =>
+    //            item.RowHeader.Equals("Pumped storage hydropower") &&
+    //            item.ColumnHeader.Equals("Gross electricity generation") &&
+    //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
+    //        var allHydroPump2 =
+    //data.Where(item =>
+    //item.RowHeader.Equals("Pumped storage hydropower") &&
+    //item.ColumnHeader.Equals("Installed capacity") &&
+    //item.Year.Equals(2010)).Select(item => item.Value).Sum();
+
+            Figures.ConstrainedFlowAnalysis(this);
+            //Configurations.NoStoragePlot(this);
+
+            //Figures.FlowAnalysis(this);
             //ChartUtils.SaveChart(_contourView.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\AverageVsYearly.png");
 
             //var test = new MainSetupControl
@@ -63,41 +91,42 @@ namespace Main
 
             //Configurations.ShowTimeSeris(this);
 
-            var data = ProtoStore.LoadEcnData();
-            var allBio = data.Where(item =>
-                item.RowHeader.Equals("Biomass") &&
-                item.ColumnHeader.Equals("Gross electricity generation") &&
-                item.Year.Equals(2010)).Select(item => item.Value).Sum();
-            var allHydro = data.Where(item =>
-                item.RowHeader.Equals("Hydropower") &&
-                item.ColumnHeader.Equals("Gross electricity generation") &&
-                item.Year.Equals(2010)).Select(item => item.Value).Sum();
-            var allHydroPump =
-                data.Where(item =>
-                item.RowHeader.Equals("Pumped storage hydropower") &&
-                item.ColumnHeader.Equals("Gross electricity generation") &&
-                item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            //       var data = ProtoStore.LoadEcnData();
 
-            foreach (var hydro in data.Where(item =>
-                item.RowHeader.Equals("Hydropower") &&
-                item.ColumnHeader.Equals("Gross electricity generation") &&
-                item.Year.Equals(2010)))
-            {
-                Console.WriteLine("{0} : {1}",hydro.Country, hydro.Value);
-            }
+            //        var allBio = data.Where(item =>
+            //            item.RowHeader.Equals("Biomass") &&
+            //            item.ColumnHeader.Equals("Gross electricity generation") &&
+            //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            //        var allHydro = data.Where(item =>
+            //            item.RowHeader.Equals("Hydropower") &&
+            //            item.ColumnHeader.Equals("Gross electricity generation") &&
+            //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            //        var allHydroPump =
+            //            data.Where(item =>
+            //            item.RowHeader.Equals("Pumped storage hydropower") &&
+            //            item.ColumnHeader.Equals("Gross electricity generation") &&
+            //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
 
-            Console.WriteLine("Now to the significant ones..");
+            //        foreach (var hydro in data.Where(item =>
+            //            item.RowHeader.Equals("Hydropower") &&
+            //            item.ColumnHeader.Equals("Gross electricity generation") &&
+            //            item.Year.Equals(2010)))
+            //        {
+            //            Console.WriteLine("{0} : {1}",hydro.Country, hydro.Value);
+            //        }
 
-            foreach (var hydro in data.Where(item =>
-    item.RowHeader.Equals("Hydropower") &&
-    item.ColumnHeader.Equals("Gross electricity generation") &&
-    item.Year.Equals(2010) && item.Value > data.Where(item0 =>
-    item0.RowHeader.Equals("Hydropower") &&
-    item0.ColumnHeader.Equals("Gross electricity generation") &&
-    item0.Year.Equals(2010)).Select(item1 => item1.Value).Max()*0.05))
-            {
-                Console.WriteLine("{0} : {1}", hydro.Country, hydro.Value);
-            }
+            //        Console.WriteLine("Now to the significant ones..");
+
+            //        foreach (var hydro in data.Where(item =>
+            //item.RowHeader.Equals("Hydropower") &&
+            //item.ColumnHeader.Equals("Gross electricity generation") &&
+            //item.Year.Equals(2010) && item.Value > data.Where(item0 =>
+            //item0.RowHeader.Equals("Hydropower") &&
+            //item0.ColumnHeader.Equals("Gross electricity generation") &&
+            //item0.Year.Equals(2010)).Select(item1 => item1.Value).Max()*0.05))
+            //        {
+            //            Console.WriteLine("{0} : {1}", hydro.Country, hydro.Value);
+            //        }
 
             //var hest = 0;
 

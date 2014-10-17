@@ -86,9 +86,21 @@ namespace BusinessLogic.TimeSeries
         #region Delegation
 
         private readonly BasicTimeSeries _mCore = new BasicTimeSeries();
+
         public string Name
         {
-            get { return (Properties.ContainsKey("Country") ? Properties["Country"] + ", " : "") + _mCore.Name; }
+            get
+            {
+                var baseString = (Properties.ContainsKey("Country") ? Properties["Country"] + ", " : "") + _mCore.Name;
+
+                if (!DisplayProperties.Any()) return baseString;
+
+                var propertyString =
+                    DisplayProperties.Where(property => Properties.ContainsKey(property))
+                        .Aggregate(": ", (current, property) => current + (Properties[property] + " "));
+
+                return baseString + propertyString;
+            }
             set { _mCore.Name = value; }
         }
 
@@ -96,6 +108,8 @@ namespace BusinessLogic.TimeSeries
         {
             get { return _mCore.Properties; }
         }
+
+        public List<string> DisplayProperties { get { return _mCore.DisplayProperties; } }
 
         #endregion
 

@@ -28,8 +28,8 @@ namespace BusinessLogic
         public List<ITimeSeries> CollectTimeSeries()
         {
             var result = new List<ITimeSeries>();
-            result.AddRange(Generators.Select(item => item.TimeSeries));
-            result.AddRange(StorageCollection.Storages().Select(item => item.TimeSeries));
+            result.AddRange(Generators.Where(item => item.Measurering).Select(item => item.TimeSeries));
+            result.AddRange(StorageCollection.Storages().Where(item => item.Measurering).Select(item => item.TimeSeries));
             // Bind country dependence.
             foreach (var ts in result) ts.Properties.Add("Country", CountryName);
             return result;
@@ -47,7 +47,7 @@ namespace BusinessLogic
 
         public void StartMeasurement()
         {
-            foreach (var gen in Generators) gen.StartMeasurement();
+            //foreach (var gen in Generators) gen.StartMeasurement(); TODO: MAYBE ADD A SWITCH?
             foreach (var sto in StorageCollection.Storages()) sto.StartMeasurement();
         }
 

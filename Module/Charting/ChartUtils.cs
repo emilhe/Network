@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using Cursor = System.Windows.Forms.DataVisualization.Charting.Cursor;
@@ -63,8 +67,10 @@ namespace Controls.Charting
             axis.MinorTickMark.LineColor = Color.FromArgb(127, 127, 127);
             axis.ScrollBar.Size = 15;
             axis.ScrollBar.ButtonStyle = ScrollBarButtonStyles.SmallScroll;
-            axis.TitleAlignment = StringAlignment.Far;
+            axis.TitleAlignment = StringAlignment.Center;
             axis.TitleForeColor = Color.Black;
+            axis.TitleFont = new Font("Microsoft Sans Serif", 14F,
+                FontStyle.Regular, GraphicsUnit.Point, 0);
         }
 
         private static void StyleLegend(Legend legend)
@@ -87,6 +93,24 @@ namespace Controls.Charting
         }
 
         #endregion
+
+        public static AxisRange CalcAxis(IEnumerable<double> data, double forceMin = double.PositiveInfinity)
+        {
+            var min = Math.Min(data.Min(), forceMin);
+            var max = data.Max();
+            var yRange = max - min;
+            // Add some extra space.
+            min = Math.Floor(min - Math.Abs(yRange) * 0.05);
+            max = Math.Ceiling(max + Math.Abs(yRange) * 0.05);
+            var tick = CalcStepSize(min - max, 10);
+
+            return new AxisRange
+            {
+                Min = Math.Floor(min/tick),
+                Max = Math.Ceiling(max / tick),
+                Tick = tick
+            };
+        }
 
         public static double CalcStepSize(double range, double targetSteps)
         {
@@ -146,5 +170,12 @@ namespace Controls.Charting
             control.Visible = true;
         }
 
+    }
+
+    public class AxisRange
+    {
+        public double Min { get; set; }
+        public double Max { get; set; }
+        public double Tick { get; set; }
     }
 }

@@ -5,7 +5,8 @@ namespace BusinessLogic.Utils
     public class Utils
     {
 
-        public static int HoursInYear = 8760;
+        public static int HoursInYear = 8766;
+        //public static int HoursInYear = 8760;
 
         public static EdgeSet StraightLine(List<Node> nodes)
         {

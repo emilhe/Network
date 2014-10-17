@@ -44,7 +44,7 @@ namespace BusinessLogic
 
             // Default way to construct nodes.
             NodeFuncs = new Dictionary<string, Func<TsSourceInput, List<Node>>>();
-            NodeFuncs.Add("6h batt (homogeneous), 25TWh hydrogen (homogeneous), 150 TWh hydro-bio (homogeneous)", s => ConfigurationUtils.CreateNodesWithBackup(s.Source, s.Length, s.Offset));
+            NodeFuncs.Add("6h batt (homo), 25TWh hydrogen (homo), 150 TWh hydro-bio (homo)", s => ConfigurationUtils.CreateNodesWithBackup(s.Source, s.Length, s.Offset));
             // Default way to construct edges.
             EdgeFuncs = new Dictionary<string, Func<List<Node>, EdgeSet>> { { "Europe edges", ConfigurationUtils.GetEuropeEdges } };
 
@@ -54,7 +54,7 @@ namespace BusinessLogic
 
         #region Execution
 
-        public List<SimulationOutput> ExecuteTs(double penetration, double mixing)
+        public List<SimulationOutput> EvaluateTs(double penetration, double mixing)
         {
             return Execute((update) =>
             {
@@ -183,6 +183,9 @@ namespace BusinessLogic
                     return new SelfishExportStrategy(MapFromEnum(input.DistributionStrategy));
                 case ExportStrategy.Cooperative:
                     return new CooperativeExportStrategy(MapFromEnum(input.DistributionStrategy));
+                // TODO: Only one edge function supported at the moment; more might be relevant later.
+                case ExportStrategy.ConstrainedFlow:
+                    return new ConstrainedFlowExportStrategy(_mNodes, EdgeFuncs.Values.First()(_mNodes));
             }
 
             throw new ArgumentException("No strategy matching {0}.", input.ExportStrategy.GetDescription());
@@ -196,7 +199,6 @@ namespace BusinessLogic
                     return new SkipFlowStrategy();
                 case DistributionStrategy.MinimalFlow:
                     // TODO: Only one edge function supported at the moment; more might be relevant later.
-                    _mEdgeTag = EdgeFuncs.Keys.First();
                     return new MinimalFlowStrategy(_mNodes, EdgeFuncs.Values.First()(_mNodes));
             }
 

@@ -17,7 +17,7 @@ namespace Controls.Charting
 
         private int _mLabelCount;
 
-        public GroupHistogramView()
+        public  GroupHistogramView()
         {
             InitializeComponent();
 
@@ -30,6 +30,8 @@ namespace Controls.Charting
 
         public void Setup(List<string> labels)
         {
+            MainChart.Series.Clear();
+            MainChart.ChartAreas[0].AxisX.CustomLabels.Clear();
             for (int i = 0; i < labels.Count; i++)
             {
                 MainChart.ChartAreas[0].AxisX.CustomLabels.Add(i, i+1, labels[i]);                

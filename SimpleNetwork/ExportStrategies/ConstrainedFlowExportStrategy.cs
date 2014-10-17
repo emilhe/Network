@@ -6,16 +6,18 @@ using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
 using BusinessLogic.Utils;
+using Utils;
 
 namespace BusinessLogic.ExportStrategies
 {
     public class ConstrainedFlowExportStrategy : IExportStrategy
     {
 
+        // Set > 0 to ensure termination. If lower than 1e-6 (with flow optimizer af 1e-10) it will crash.
         public double Tolerance { get { return 1e-4; } }
 
         private readonly EdgeSet _mEdges;
-        private readonly ConstrainedFlowOptimizer _constrainedFlowOptimizer;
+        private readonly ConstrainedFlowOptimizer _mConstrainedFlowOptimizer;
 
         private List<Node> _mNodes;
         private Response _mSystemResponse;
@@ -25,6 +27,7 @@ namespace BusinessLogic.ExportStrategies
 
         private readonly double[] _mLoLims;
         private readonly double[] _mHiLims;
+        private readonly double[,] _mFlows;
 
         public ConstrainedFlowExportStrategy(List<Node> nodes, EdgeSet edges)
         {
@@ -33,11 +36,12 @@ namespace BusinessLogic.ExportStrategies
             _mNodes = nodes;
             _mEdges = edges;
 
-            _constrainedFlowOptimizer = new ConstrainedFlowOptimizer(nodes.Count);
-            _constrainedFlowOptimizer.SetEdges(edges);
+            _mConstrainedFlowOptimizer = new ConstrainedFlowOptimizer(nodes.Count);
+            _mConstrainedFlowOptimizer.SetEdges(edges);
 
             _mLoLims = new double[nodes.Count];
             _mHiLims = new double[nodes.Count];
+            _mFlows = new double[nodes.Count,nodes.Count];
         }
 
         public void Bind(List<Node> nodes, double[] mismatches)
@@ -56,14 +60,14 @@ namespace BusinessLogic.ExportStrategies
         {
             var result = new BalanceResult {Curtailment = 0.0};
             _mSystemResponse = (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge;
+            _mFlows.MultiLoop(indices => _mFlows[indices[0], indices[1]] = 0);
 
             // Loop through levels.
             for (_mStorageLevel = 0; _mStorageLevel < _mStorageMap.Length; _mStorageLevel++)
             {
-                // TODO: Should it rather be the out commented line?
-                //if (_mMismatches.All(item => Math.Abs(item)  < Tolerance)) break;
-                if (Math.Abs(_mMismatches.Sum()) < _mNodes.Count * Tolerance) break;
-                // Add more smart stuff here (break earlier to enchance performance).
+                // Is the system balanced?
+                if (_mMismatches.All(item => Math.Abs(item) < Tolerance)) break;
+                // Is there any storage available?
                 var storage =
                     _mNodes.Select(item => item.StorageCollection)
                         .Where(item => item.Contains(_mStorageMap[_mStorageLevel]))
@@ -71,19 +75,20 @@ namespace BusinessLogic.ExportStrategies
                         .Sum();
                 if (Math.Abs(storage) < Tolerance) continue;
 
-                // Calculate curtailment.
+                // Record curtailment, if any.
                 if (_mStorageMap[_mStorageLevel] == -1) result.Curtailment = _mMismatches.Sum();
- 
+
                 DoFlowStuff(tick, _mStorageMap[_mStorageLevel]);
             }
 
-            result.Failure = (result.Curtailment < 0);
+            if (Measurering) RecordFlow();
+
+            result.Failure = (result.Curtailment < -_mNodes.Count*Tolerance);
             return result;
         }
 
         private void DoFlowStuff(int tick, double efficiency)
         {
-            // TODO: What about efficiency? ...
             // Setup limits.
             for (int idx = 0; idx < _mNodes.Count; idx++)
             {
@@ -99,41 +104,38 @@ namespace BusinessLogic.ExportStrategies
                 _mHiLims[idx] = (_mMismatches.Sum() > 0) ? 0 : -storage.RemainingCapacity(Response.Discharge);
             }
 
-            // TODO: What about flow capacity used in prior steps?
+            // TODO: Pass capacity used in prios steps to solver (recorded in _mFlow).
             // Determine FLOWS using Gurobi optimization.
-            _constrainedFlowOptimizer.SetNodes(_mMismatches, _mLoLims, _mHiLims);
-            try
-            {
-                _constrainedFlowOptimizer.Solve();
-            }
-            catch (Exception e)
-            {
-                var hest = 5;
-            }
+            _mConstrainedFlowOptimizer.SetNodes(_mMismatches, _mLoLims, _mHiLims);
+            _mConstrainedFlowOptimizer.Solve();
 
             // Charge based on flow optimization results.
             for (int index = 0; index < _mNodes.Count; index++)
             {
-                _mMismatches[index] = _constrainedFlowOptimizer.NodeOptimum[index];
+                _mMismatches[index] = _mConstrainedFlowOptimizer.NodeOptimum[index];
 
                 if (!_mNodes[index].StorageCollection.Contains(efficiency)) continue;
-                _mNodes[index].StorageCollection.Get(efficiency).Inject(tick, -_constrainedFlowOptimizer.StorageOptimum[index]);
+                _mNodes[index].StorageCollection.Get(efficiency).Inject(tick, -_mConstrainedFlowOptimizer.StorageOptimum[index]);
             }
 
-            // Record flows.
-            if (!Measurering) return;
+            // Save flow result temporarily.
+            _mFlows.MultiLoop(indices => _mFlows[indices[0], indices[1]] +=
+                _mConstrainedFlowOptimizer.Flows[indices[0], indices[1]]);
+        }
+
+        #region Measurement
+
+        private void RecordFlow()
+        {
             for (int i = 0; i < _mNodes.Count; i++)
             {
                 for (int j = i; j < _mNodes.Count; j++)
                 {
                     if (!_mEdges.EdgeExists(i, j)) continue;
-                    _mFlowTimeSeriesMap[i + _mNodes.Count * j].AddData(tick,
-                        _constrainedFlowOptimizer.Flows[i, j] - _constrainedFlowOptimizer.Flows[j, i]);
+                    _mFlowTimeSeriesMap[i + _mNodes.Count * j].AppendData(_mFlows[i, j] - _mFlows[j, i]);
                 }
             }
         }
-
-        #region Measurement
 
         public void StartMeasurement()
         {
@@ -151,7 +153,7 @@ namespace BusinessLogic.ExportStrategies
                 {
                     if (!_mEdges.EdgeExists(i, j)) continue;
                     _mFlowTimeSeriesMap.Add(i + _mNodes.Count * j,
-                        new SparseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation));
+                        new DenseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation));
                 }
             }
         }

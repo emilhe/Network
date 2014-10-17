@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Configuration;
 using BusinessLogic.Generators;
 using BusinessLogic.Storages;
 using SimpleImporter;
@@ -30,7 +31,7 @@ namespace BusinessLogic
             return result;
         }
 
-        #region Node setup
+        #region Basic node setup
 
         public static List<Node> CreateNodesWithBackup(TsSource source = TsSource.ISET, double years = 1, double offset = 0)
         {
@@ -56,7 +57,11 @@ namespace BusinessLogic
             return client.GetAllCountryData(source, (int)(offset * Utils.Utils.HoursInYear));
         }
 
-        public static void SetupHydroStuff(List<Node> nodes, int years)
+        #endregion
+
+        #region Storage/backup distribution
+
+        public static void SetupHomoStuff(List<Node> nodes, int years, bool bat, bool storage, bool backup)
         {
             // Standard
             var loads = nodes.ToDictionary(item => item.CountryName, item => item.LoadTimeSeries.GetAverage());
@@ -65,10 +70,14 @@ namespace BusinessLogic
             {
                 var avgLoad = loads[node.CountryName];
 
-                node.StorageCollection.Add(new BatteryStorage(6 * avgLoad)); // Should this be in TWh too?
-                node.StorageCollection.Add(new HydrogenStorage(25000 * avgLoad / loadSum));
+                if(bat) node.StorageCollection.Add(new BatteryStorage(6 * avgLoad)); // Should this be in TWh too?
+                if (storage) node.StorageCollection.Add(new HydrogenStorage(25000 * avgLoad / loadSum));
+                if (backup) node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", 150000 * avgLoad / loadSum * years));
             }
+        }
 
+        public static void SetupHeterogeneousBackup(List<Node> nodes, int years)
+        {
             // Note: All countries with below 10 TWh of hydro has been neglected. In addition romania has been neglected (primaryly run-of-river).
             var hydroCountries = new Dictionary<string, double>
             {
@@ -76,26 +85,37 @@ namespace BusinessLogic
                 {"Norway", 82.244},
                 {"Sweden", 33.675},
                 {"Finland", 5.530},
-                // Data source: "The impact of global change on the hydropower potential of Europe: a model-based analysis". 
-                // The total production is scaled by the resoir capacity (simple approach)
-                {"Austria", 42.2/(5.5 + 5.4)*5.4},
-                {"France", 66.9/(10.8 + 11.6 + 1.9)*11.6},
-                {"Germany", 23.6/(2.7 + 1.4 + 4.2)*1.4},
-                {"Italy", 50.3/(8.2 + 7.4 + 4.2)*7.4},
-                {"Portugal", 11.6/(2.1 + 2.1)*2.1},
-                {"Spain", 31.4/(6.1 + 7.7 + 2.5)*7.7},
-                {"Switzerland", 37.8/(4.0 + 9.5 + 0.3)*9.5},
-                {"Bosnia", 13.2/(1.9 + 2.0 + 0.7)*2.0}
+                // Data source: "Feix 2000"
+                {"Austria", 3.2},
+                {"France", 9.8},
+                {"Germany", 0.3},
+                {"Greece", 2.4},
+                {"Italy", 7.9},
+                {"Portugal", 2.6},
+                {"Spain", 18.4},
+                {"Switzerland", 8.4},
+                //{"Bosnia", 0.0}
             };
             var sum = hydroCountries.Select(item => item.Value).Sum();
 
             foreach (var node in nodes)
             {
-                if(!hydroCountries.Keys.Contains(node.CountryName)) continue;
+                if (!hydroCountries.Keys.Contains(node.CountryName)) continue;
 
-                node.StorageCollection.Add(new BasicBackup("Hydro reservoir", (150000*years/sum)*hydroCountries[node.CountryName]));
+                node.StorageCollection.Add(new BasicBackup("Hydro reservoir",
+                    (150000*years/sum)*hydroCountries[node.CountryName]));
             }
         }
+
+        public static void SetupHeterogeneousStorage(List<Node> nodes, int years)
+        {
+            var germany = nodes.Single(item => item.CountryName.Equals("Germany"));
+            germany.StorageCollection.Add(new HydrogenStorage(25000 * years));
+        }
+
+        #endregion
+
+        #region ECN data
 
         /// <summary>
         /// Setup the nodes in some default way using the ECN data.

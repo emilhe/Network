@@ -18,7 +18,7 @@ namespace BusinessLogic.Storages
             get { return _mMeasurering; }
         }
 
-        public Interfaces.ITimeSeries TimeSeries { get; private set; }
+        public ITimeSeries TimeSeries { get; private set; }
 
         public string Name { get; private set; }
         public double Efficiency { get; private set; }
@@ -155,6 +155,7 @@ namespace BusinessLogic.Storages
         public void StartMeasurement()
         {
             TimeSeries = new SparseTimeSeries(Name);
+            TimeSeries.AddData(0, _mRemainingCapacity);
             _mMeasurering = true;
         }
 

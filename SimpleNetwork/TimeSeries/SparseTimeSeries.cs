@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using BusinessLogic.Interfaces;
 using SimpleImporter;
 using Utils;
@@ -35,8 +36,15 @@ namespace BusinessLogic.TimeSeries
             else _mValues.Add(tick, value);
         }
 
+        public double GetLastValue(int tick)
+        {
+            var keys = _mValues.Keys.Where(item => item <= tick);
+            return !keys.Any() ? double.NaN : GetValue(keys.Last());
+        }
+
         public double GetValue(int tick)
         {
+            if (!_mValues.ContainsKey(tick)) return double.NaN;
             return _mValues[tick];
         }
 
@@ -88,7 +96,18 @@ namespace BusinessLogic.TimeSeries
 
         public string Name
         {
-            get { return (Properties.ContainsKey("Country") ? Properties["Country"] + ", " : "") + _mCore.Name; }
+            get
+            {
+                var baseString = (Properties.ContainsKey("Country") ? Properties["Country"] + ", " : "") + _mCore.Name;
+
+                if (!DisplayProperties.Any()) return baseString;
+
+                var propertyString =
+                    DisplayProperties.Where(property => Properties.ContainsKey(property))
+                        .Aggregate(": ", (current, property) => current + (Properties[property] + " "));
+
+                return baseString + propertyString;
+            }
             set { _mCore.Name = value; }
         }
 
@@ -96,6 +115,8 @@ namespace BusinessLogic.TimeSeries
         {
             get { return _mCore.Properties; }
         }
+
+        public List<string> DisplayProperties { get { return _mCore.DisplayProperties; } }
 
         #endregion
 

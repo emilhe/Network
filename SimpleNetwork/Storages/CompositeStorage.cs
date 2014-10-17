@@ -88,22 +88,22 @@ namespace BusinessLogic.Storages
 
         public double Inject(int tick, double amount)
         {
-            return ((IStorage) _mCompositeStorage).Inject(tick, amount);
+            return _mCompositeStorage.Inject(tick, amount);
         }
 
         public double Restore(int tick, Response response)
         {
-            return ((IStorage) _mCompositeStorage).Restore(tick, response);
+            return _mCompositeStorage.Restore(tick, response);
         }
 
         public double RemainingCapacity(Response response)
         {
-            return ((IStorage) _mCompositeStorage).RemainingCapacity(response);
+            return _mCompositeStorage.RemainingCapacity(response);
         }
 
         public void ResetCapacity()
         {
-            ((IStorage) _mCompositeStorage).ResetCapacity();
+            _mCompositeStorage.ResetCapacity();
         }
     }
 

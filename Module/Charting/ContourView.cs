@@ -51,8 +51,10 @@ namespace Controls.Charting
             MainChart.ChartAreas[0].AxisX.Interval = ChartUtils.CalcStepSize(columns[columns.Length - 1] - columns[0], 10);
             MainChart.ChartAreas[0].AxisY.Minimum = rows[0];
             MainChart.ChartAreas[0].AxisY.Maximum = rows[rows.Length - 1];
-            MainChart.ChartAreas[0].AxisY.Interval = ChartUtils.CalcStepSize(rows[rows.Length - 1] - rows[0], 5);
+            MainChart.ChartAreas[0].AxisY.Interval = ChartUtils.CalcStepSize(rows[rows.Length - 1] - rows[0], 10);
 
+            MainChart.ChartAreas[0].AxisY.IntervalOffset = MainChart.ChartAreas[0].AxisY.Interval;
+            MainChart.ChartAreas[0].AxisX.IntervalOffset = MainChart.ChartAreas[0].AxisX.Interval;
         }
 
         private void MapData(bool[,] data, double[] rows, double[] columns, DataPointCollection points)

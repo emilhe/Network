@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 using Controls.Charting;
 using BusinessLogic;
 using BusinessLogic.Interfaces;
@@ -12,6 +13,8 @@ namespace Controls
 {
     public partial class TimeSeriesControl : UserControl
     {
+
+        public ITimeSeriesView MainView { get { return _mView; } } 
 
         private Dictionary<string, ITimeSeries> _mTimeSeriesMap;
         private ITimeSeriesView _mView;
@@ -26,6 +29,10 @@ namespace Controls
             seriesListView.ItemSelectionChanged += seriesListView_ItemSelectionChanged;
             foreach (TimeSeriesViews value in Enum.GetValues(typeof(TimeSeriesViews)))
                 cbxView.Items.Add(value.GetDescription());
+
+            // Hack : http://stackoverflow.com/questions/2309046/making-list-view-scroll-in-vertical-direction
+            var header = new ColumnHeader { Text = "", Name = "col1", Width = seriesListView.Width-25};
+            seriesListView.Columns.Add(header);
         }
 
         private void BindView()

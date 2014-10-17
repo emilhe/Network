@@ -48,14 +48,10 @@ namespace Controls.Charting
             }
             else
             {
-                var xMin = x.Min();
-                var xMax = x.Max();
-                var xRange = xMax - xMin;
-                MainChart.ChartAreas[0].AxisX.Minimum = Math.Floor(xMin - Math.Abs(xRange) * 0.05);
-                MainChart.ChartAreas[0].AxisX.Maximum = Math.Ceiling(xMax + Math.Abs(xRange) * 0.05);
-                MainChart.ChartAreas[0].AxisX.Interval =
-                    ChartUtils.CalcStepSize(
-                        MainChart.ChartAreas[0].AxisX.Maximum - MainChart.ChartAreas[0].AxisX.Minimum, 10);   
+                var limits = ChartUtils.CalcAxis(x);
+                MainChart.ChartAreas[0].AxisX.Minimum = limits.Min;
+                MainChart.ChartAreas[0].AxisX.Maximum = limits.Max;
+                MainChart.ChartAreas[0].AxisX.Interval = limits.Tick;
             }
             if (!y.Any())
             {
@@ -65,15 +61,14 @@ namespace Controls.Charting
             }
             else
             {
-                var yMin = y.Min();
-                var yMax = y.Max();
-                var yRange = yMax - yMin;
-                MainChart.ChartAreas[0].AxisY.Minimum = Math.Floor(yMin - Math.Abs(yRange) * 0.05);
-                MainChart.ChartAreas[0].AxisY.Maximum = Math.Ceiling(yMax + Math.Abs(yRange) * 0.05);
-                MainChart.ChartAreas[0].AxisY.Interval =
-                    ChartUtils.CalcStepSize(
-                        MainChart.ChartAreas[0].AxisY.Maximum - MainChart.ChartAreas[0].AxisY.Minimum, 10);
+                var limits = ChartUtils.CalcAxis(y);
+                MainChart.ChartAreas[0].AxisY.Minimum = limits.Min;
+                MainChart.ChartAreas[0].AxisY.Maximum = limits.Max;
+                MainChart.ChartAreas[0].AxisY.Interval = limits.Tick;
             }
+
+            MainChart.ChartAreas[0].AxisY.IntervalOffset = MainChart.ChartAreas[0].AxisY.Interval;
+            MainChart.ChartAreas[0].AxisX.IntervalOffset = MainChart.ChartAreas[0].AxisX.Interval;
 
             // Fail safe.
             if (MainChart.ChartAreas[0].AxisY.Minimum == MainChart.ChartAreas[0].AxisY.Maximum)

@@ -37,12 +37,13 @@
             // 
             this.seriesListView.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.seriesListView.Location = new System.Drawing.Point(960, 0);
+            this.seriesListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.seriesListView.Location = new System.Drawing.Point(835, 0);
             this.seriesListView.Name = "seriesListView";
-            this.seriesListView.Size = new System.Drawing.Size(158, 292);
+            this.seriesListView.Size = new System.Drawing.Size(283, 292);
             this.seriesListView.TabIndex = 2;
             this.seriesListView.UseCompatibleStateImageBehavior = false;
-            this.seriesListView.View = System.Windows.Forms.View.List;
+            this.seriesListView.View = System.Windows.Forms.View.Details;
             // 
             // mainPanel
             // 
@@ -51,16 +52,16 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.mainPanel.Location = new System.Drawing.Point(0, 0);
             this.mainPanel.Name = "mainPanel";
-            this.mainPanel.Size = new System.Drawing.Size(954, 319);
+            this.mainPanel.Size = new System.Drawing.Size(829, 319);
             this.mainPanel.TabIndex = 3;
             // 
             // cbxView
             // 
             this.cbxView.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cbxView.FormattingEnabled = true;
-            this.cbxView.Location = new System.Drawing.Point(960, 298);
+            this.cbxView.Location = new System.Drawing.Point(835, 298);
             this.cbxView.Name = "cbxView";
-            this.cbxView.Size = new System.Drawing.Size(158, 21);
+            this.cbxView.Size = new System.Drawing.Size(283, 21);
             this.cbxView.TabIndex = 4;
             this.cbxView.SelectedIndexChanged += new System.EventHandler(this.cbxView_SelectedIndexChanged);
             // 

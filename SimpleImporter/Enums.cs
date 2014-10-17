@@ -27,7 +27,8 @@ namespace SimpleImporter
     {
         [Description("No Export")] None = 0,
         [Description("Selfish")] Selfish = 1,
-        [Description("Cooperative")] Cooperative = 2
+        [Description("Cooperative")] Cooperative = 2,
+        [Description("Constrained")] ConstrainedFlow = 3,
     }
 
     public enum DistributionStrategy : byte

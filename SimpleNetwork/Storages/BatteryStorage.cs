@@ -21,7 +21,7 @@ namespace BusinessLogic.Storages
             get { return _mCore.Measurering; }
         }
 
-        public Interfaces.ITimeSeries TimeSeries
+        public ITimeSeries TimeSeries
         {
             get { return _mCore.TimeSeries; }
         }
