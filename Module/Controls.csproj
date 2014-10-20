@@ -65,6 +65,12 @@
       <DependentUpon>HistogramView.cs</DependentUpon>
     </Compile>
     <Compile Include="Charting\ITimeSeriesView.cs" />
+    <Compile Include="Charting\PlotView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Charting\PlotView.Designer.cs">
+      <DependentUpon>PlotView.cs</DependentUpon>
+    </Compile>
     <Compile Include="Charting\TimeSeriesView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -114,6 +120,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Charting\HistogramView.resx">
       <DependentUpon>HistogramView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Charting\PlotView.resx">
+      <DependentUpon>PlotView.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Charting\TimeSeriesView.resx">
       <DependentUpon>TimeSeriesView.cs</DependentUpon>

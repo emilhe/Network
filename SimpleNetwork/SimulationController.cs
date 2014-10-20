@@ -31,6 +31,7 @@ namespace BusinessLogic
         // Current iteration parameters.
         private string _mNodeTag = "";
         private string _mEdgeTag = "";
+        private EdgeSet _mEdges;        
         private List<Node> _mNodes;
         private TsSourceInput _mSrcIn;
         private ExportStrategyInput _mExpStratIn;
@@ -56,7 +57,7 @@ namespace BusinessLogic
 
         public List<SimulationOutput> EvaluateTs(double penetration, double mixing)
         {
-            return Execute((update) =>
+            return Execute(update =>
             {
                 var prop = GetProperties(penetration, mixing);
                 SimulationOutput result = null;
@@ -70,7 +71,7 @@ namespace BusinessLogic
                 {
                     update();
                     result = RunSimulation(MapFromInput(_mExpStratIn), _mSrcIn.Length, penetration, mixing);
-                    result.Properties = prop;
+                    foreach (var property in prop) result.Properties.Add(property.Key, property.Value);
                 }
                 // If cache is enabled, save the result.
                 if (CacheEnabled)
@@ -123,17 +124,24 @@ namespace BusinessLogic
                 {
                     foreach (var exportStrategy in ExportStrategies)
                     {
-                        // Refresh key dependent values here.
-                        _mSrcIn = source;
-                        _mNodeTag = nodeFunc.Key;
-                        _mExpStratIn = exportStrategy;
-
-                        // Add sub result.
-                        results.Add(function(() =>
+                        //Parallel.ForEach(EdgeFuncs, edgeFunc =>
+                        foreach (var edgeFunc in EdgeFuncs)
                         {
-                            // Delay expensive non key dependent validations to here.
-                            _mNodes = nodeFunc.Value(source);
-                        }));
+                            // Refresh key dependent values here.
+                            _mSrcIn = source;
+                            _mNodeTag = nodeFunc.Key;
+                            _mEdgeTag = edgeFunc.Key;
+                            _mExpStratIn = exportStrategy;
+
+                            // Add sub result.
+                            results.Add(function(() =>
+                            {
+                                // Delay expensive non key dependent validations to here.
+                                _mNodes = nodeFunc.Value(source);
+                                _mEdges = edgeFunc.Value(_mNodes);
+                            }));
+                        }
+                        //});
                     }
                 }
             }
@@ -183,9 +191,8 @@ namespace BusinessLogic
                     return new SelfishExportStrategy(MapFromEnum(input.DistributionStrategy));
                 case ExportStrategy.Cooperative:
                     return new CooperativeExportStrategy(MapFromEnum(input.DistributionStrategy));
-                // TODO: Only one edge function supported at the moment; more might be relevant later.
                 case ExportStrategy.ConstrainedFlow:
-                    return new ConstrainedFlowExportStrategy(_mNodes, EdgeFuncs.Values.First()(_mNodes));
+                    return new ConstrainedFlowExportStrategy(_mNodes, _mEdges);
             }
 
             throw new ArgumentException("No strategy matching {0}.", input.ExportStrategy.GetDescription());
@@ -198,8 +205,7 @@ namespace BusinessLogic
                 case DistributionStrategy.SkipFlow:
                     return new SkipFlowStrategy();
                 case DistributionStrategy.MinimalFlow:
-                    // TODO: Only one edge function supported at the moment; more might be relevant later.
-                    return new MinimalFlowStrategy(_mNodes, EdgeFuncs.Values.First()(_mNodes));
+                    return new MinimalFlowStrategy(_mNodes, _mEdges);
             }
 
             throw new ArgumentException("No strategy matching {0}.", strategy.GetDescription());

@@ -15,17 +15,36 @@ namespace BusinessLogic
 
         public static EdgeSet GetEuropeEdges(List<Node> nodes)
         {
+           return GetEdges(nodes, "NtcMatrix", 1);
+
+            //var result = new EdgeSet(nodes.Count);
+            //// Create mapping between countryname and index.
+            //var idxMap = new Dictionary<string, int>();
+            //for (int i = 0; i < nodes.Count; i++) idxMap.Add(nodes[i].CountryName, i);
+            //// Connect the countries.
+            //var ntcData = ProtoStore.LoadLinkData();
+            //foreach (var row in ntcData)
+            //{
+            //    if(row.LinkCapacity == 0) continue;
+            //    if (row.CountryFrom.Equals(row.CountryTo)) continue;
+            //    result.AddEdge(idxMap[row.CountryFrom], idxMap[row.CountryTo]); // For now, don't add the capacity.
+            //}
+
+            //return result;
+        }
+
+        public static EdgeSet GetEdges(List<Node> nodes, string key, double frac)
+        {
             var result = new EdgeSet(nodes.Count);
             // Create mapping between countryname and index.
             var idxMap = new Dictionary<string, int>();
             for (int i = 0; i < nodes.Count; i++) idxMap.Add(nodes[i].CountryName, i);
             // Connect the countries.
-            var ntcData = ProtoStore.LoadNtcData();
+            var ntcData = ProtoStore.LoadLinkData(key);
             foreach (var row in ntcData)
             {
-                if(row.LinkCapacity == 0) continue;
                 if (row.CountryFrom.Equals(row.CountryTo)) continue;
-                result.AddEdge(idxMap[row.CountryFrom], idxMap[row.CountryTo]); // For now, don't add the capacity.
+                result.AddEdge(idxMap[row.CountryFrom], idxMap[row.CountryTo], 1, row.LinkCapacity * frac); // For now, don't add the capacity.
             }
 
             return result;

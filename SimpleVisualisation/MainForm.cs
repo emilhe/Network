@@ -20,6 +20,7 @@ namespace Main
         private TimeSeriesControl _timeSeriesControl;
         private GroupHistogramView _histogramView;
         private ContourView _contourView;
+        private PlotView _plotView;
 
         public MainForm()
         {
@@ -49,8 +50,9 @@ namespace Main
     //item.ColumnHeader.Equals("Installed capacity") &&
     //item.Year.Equals(2010)).Select(item => item.Value).Sum();
 
-            Figures.ConstrainedFlowAnalysis(this);
-            //Configurations.NoStoragePlot(this);
+
+            //Figures.ConstrainedFlowAnalysis(this);
+            Configurations.OneYearVE(this);
 
             //Figures.FlowAnalysis(this);
             //ChartUtils.SaveChart(_contourView.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\AverageVsYearly.png");
@@ -168,6 +170,8 @@ namespace Main
             _contourView.Visible = true;
             if (_timeSeriesControl != null) _timeSeriesControl.Visible = false;
             if (_histogramView != null) _histogramView.Visible = false;
+            if (_plotView != null) _plotView.Visible = false;
+
             return _contourView;
         }
 
@@ -184,6 +188,31 @@ namespace Main
 
         #endregion
 
+        #region Plot view
+
+        public PlotView DisplayPlot()
+        {
+            if (_plotView == null) InitializePlotControl();
+            _plotView.Visible = true;
+            if (_timeSeriesControl != null) _timeSeriesControl.Visible = false;
+            if (_histogramView != null) _histogramView.Visible = false;
+            if (_contourView != null) _contourView.Visible = false;
+            return _plotView;
+        }
+
+        private void InitializePlotControl()
+        {
+            _plotView = new PlotView
+            {
+                Dock = DockStyle.Fill,
+                Location = new Point(0, 0),
+                Name = "PlotView",
+            };
+            panel1.Controls.Add(_plotView);
+        }
+
+        #endregion
+
         #region Ts GUI mapping
 
         public TimeSeriesControl DisplayTimeSeries()
@@ -192,6 +221,7 @@ namespace Main
             _timeSeriesControl.Visible = true;
             if (_contourView != null) _contourView.Visible = false;
             if (_histogramView != null) _histogramView.Visible = false;
+            if (_plotView != null) _plotView.Visible = false;
 
             return _timeSeriesControl;
         }
@@ -217,6 +247,7 @@ namespace Main
             _histogramView.Visible = true;
             if (_timeSeriesControl != null) _timeSeriesControl.Visible = false;
             if (_contourView != null) _contourView.Visible = false;
+            if (_plotView != null) _plotView.Visible = false;
 
             return _histogramView;
         }

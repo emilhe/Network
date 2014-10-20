@@ -153,7 +153,7 @@ namespace BusinessLogic.Utils
             for (int i = 0; i < _mN; i++)
             {
                 // Starting with initial value.
-                 StorageOptimum[i] = _mFlow.StorageVariables[i].Get(GRB.DoubleAttr.X);
+                StorageOptimum[i] = _mFlow.StorageVariables[i].Get(GRB.DoubleAttr.X);
             }
 
             for (int i = 0; i < _mN; i++)

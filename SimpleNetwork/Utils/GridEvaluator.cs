@@ -36,7 +36,8 @@ namespace BusinessLogic.Utils
             // TODO: Generic dimension (currently only 2D)            
             var grid = new bool[dims[0], dims[1]];
             var temp = new int[dims.Length];
-            var guess = dims[0]/2;
+            //var guess = dims[0]/2;
+            var guess = 0;
 
             for (temp[1] = 0; temp[1] < dims[1]; temp[1]++)
             {
@@ -72,6 +73,7 @@ namespace BusinessLogic.Utils
 
     public class GridScanParameters
     {
+        public bool StartFromMin { get; set; }
         public double MixingFrom { get; set; }
         public double MixingTo { get; set; }
         public int MixingSteps { get; set; }

@@ -130,20 +130,20 @@ namespace SimpleImporter
 
         #region NTC Data
 
-        public static void SaveNtcData(List<NtcDataRow> data)
+        public static void SaveLinkData(List<LinkDataRow> data, string key)
         {
-            using (var file = File.Create(Path.Combine(BaseDir, "NtcMatrix")))
+            using (var file = File.Create(Path.Combine(BaseDir, key)))
             {
                 Serializer.Serialize(file, data);
             }
         }
 
-        public static List<NtcDataRow> LoadNtcData()
+        public static List<LinkDataRow> LoadLinkData(string key)
         {
-            List<NtcDataRow> result;
-            using (var file = File.OpenRead(Path.Combine(BaseDir, "NtcMatrix")))
+            List<LinkDataRow> result;
+            using (var file = File.OpenRead(Path.Combine(BaseDir, key)))
             {
-                result = Serializer.Deserialize<List<NtcDataRow>>(file);
+                result = Serializer.Deserialize<List<LinkDataRow>>(file);
             }
             return result;
         }
@@ -294,14 +294,14 @@ namespace SimpleImporter
     }
 
     [ProtoContract]
-    public class NtcDataRow
+    public class LinkDataRow
     {
         [ProtoMember(1)]
         public string CountryFrom { get; set; }
         [ProtoMember(2)]
         public string CountryTo { get; set; }
         [ProtoMember(3)]
-        public int LinkCapacity { get; set; }
+        public double LinkCapacity { get; set; }
     }
 
     #endregion

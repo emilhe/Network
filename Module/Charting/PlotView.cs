@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
@@ -6,12 +7,12 @@ using BusinessLogic.Interfaces;
 
 namespace Controls.Charting
 {
-    public partial class TimeSeriesView : UserControl, ITimeSeriesView
+    public partial class PlotView : UserControl
     {
 
         public Chart MainChart { get { return chart; } }
 
-        public TimeSeriesView()
+        public PlotView()
         {
             InitializeComponent();
 
@@ -21,15 +22,18 @@ namespace Controls.Charting
             MainChart.Series.Clear();
         }
 
-        public void AddData(ITimeSeries ts)
+        public void AddData(Dictionary<double, double> values, string name)
         {
             // Construct new time series.
-            var series = new Series(ts.Name) {ChartType = SeriesChartType.FastLine};
-            foreach (var tsItem in ts)
+            var spline = new Series(name + "@spline") {ChartType = SeriesChartType.Spline};
+            var points = new Series(name) { ChartType = SeriesChartType.Point };
+            foreach (var tsItem in values)
             {
-                series.Points.AddXY(tsItem.TimeStamp, tsItem.Value);
+                spline.Points.AddXY(tsItem.Key, tsItem.Value);
+                points.Points.AddXY(tsItem.Key, tsItem.Value);
             }
-            chart.Series.Add(series);
+            chart.Series.Add(spline);
+            chart.Series.Add(points);
 
             RenderAxis();
         }

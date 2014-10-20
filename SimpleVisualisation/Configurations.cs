@@ -49,6 +49,36 @@ namespace Main
 
         #endregion
 
+        #region Contour control test
+
+        public static void TestPlotControl(MainForm main)
+        {
+            var view = main.DisplayPlot();
+            var data = new Dictionary<double, double>();
+            data.Add(1,2);
+            data.Add(3, 4);
+            data.Add(7, 5);
+            view.AddData(data, "Test");
+        }
+
+        #endregion
+
+        #region PerformanceTest
+
+        public static void OneYearVE(MainForm main)
+        {
+            var ctrl = new SimulationController { InvalidateCache = true };
+            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.ISET, Offset = 0, Length = 1 });
+            ctrl.ExportStrategies.Add(new ExportStrategyInput
+            {
+                ExportStrategy = ExportStrategy.ConstrainedFlow,
+            });
+
+            var data = ctrl.EvaluateTs(1.029, 0.65);
+        }
+
+        #endregion
+
         #region ShowTimeSeris
 
         public static void ShowTimeSeris(MainForm main)
@@ -142,12 +172,12 @@ namespace Main
             var view = main.DisplayContour();
             var grid = new GridScanParameters
             {
-                MixingFrom = 0.45,
-                MixingTo = 0.85,
-                MixingSteps = 40,
-                PenetrationFrom = 1.00,
-                PenetrationTo = 1.15,
-                PenetrationSteps = 100
+                MixingFrom = 0.60,
+                MixingTo = 0.70,
+                MixingSteps = 10,
+                PenetrationFrom = 1.05,
+                PenetrationTo = 1.10,
+                PenetrationSteps = 50
             };
             var ctrl = new SimulationController
             {
@@ -162,8 +192,10 @@ namespace Main
                 Sources = new List<TsSourceInput>
                 {
                     // Simulate 8 years; the ISET data are 8 years long. Offset VE data by 21; VE are 1979-2010 while ISET are 2000-2007.
-                    new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 8},
-                    new TsSourceInput {Source = TsSource.VE, Offset = 21, Length = 8},
+                    //new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 8},
+                    //new TsSourceInput {Source = TsSource.VE, Offset = 21, Length = 8},
+                                        //new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 8},
+                    new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 1},
                 }
             };
 

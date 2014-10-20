@@ -13,21 +13,21 @@ namespace SimpleImporter
     public class NtcImporter
     {
 
-        private const string Path = @"C:\Users\xXx\Dropbox\Master Thesis\NtcMatrix.txt";
+        private const string Path = @"C:\Users\Emil\Dropbox\Master Thesis\NtcMatrix.txt";
 
         public static void Parse()
         {
             var lines = File.ReadAllLines(Path);
-            var data = new List<NtcDataRow>();
+            var data = new List<LinkDataRow>();
             ParseLines(lines, data);
 
-            ProtoStore.SaveNtcData(data);
+            ProtoStore.SaveLinkData(data, "NtcMatrix");
 
             Console.WriteLine("NTC data parsed.");
             Console.ReadLine();
         }
 
-        private static void ParseLines(IEnumerable<string> lines, List<NtcDataRow> data)
+        private static void ParseLines(IEnumerable<string> lines, List<LinkDataRow> data)
         {
             var i = 0;
             foreach (var line in lines)
@@ -35,7 +35,7 @@ namespace SimpleImporter
                 var cells = line.Split('\t');
                 for (int j = 0; j < cells.Length; j++)
                 {
-                    data.Add(new NtcDataRow
+                    data.Add(new LinkDataRow
                     {
                         CountryFrom = Countries[i],
                         CountryTo = Countries[j],

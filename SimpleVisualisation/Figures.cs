@@ -349,67 +349,141 @@ namespace Main
 
         public static void ConstrainedFlowAnalysis(MainForm main)
         {
+            CalculateFlowData();
+
+            // What flow fractions should be investigated?
+            //var fractions = new[] { 1, 0.75, 0.5, 0.4, 0.3, 0.29, 0.28, 0.27, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.20 };
+            var fractions = new[] { 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.32, 0.31 };
+            var originalMix = 0.65;
+            var originalPen = 1.026;
+            //var originalMix = 0.60;
+            //var originalPen = 1.06;
+
+            // Prepare the setup.
+            var dataPoints = new Dictionary<double, double>();
+            var grid = new GridScanParameters
+            {
+                StartFromMin = true,
+                // Fix the mix.
+                MixingFrom = originalMix,
+                MixingTo = originalMix+0.01,
+                MixingSteps = 1,
+                // Vary the penetration.
+                PenetrationFrom = originalPen,
+                PenetrationTo = originalPen + 0.20,
+                PenetrationSteps = 40
+            };
             var ctrl = new SimulationController { InvalidateCache = false };
-            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 1 });
+            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
                 new ExportStrategyInput
                 {
                     ExportStrategy = ExportStrategy.ConstrainedFlow
                 });
-            var outputs = ctrl.EvaluateTs(1.029, 0.65);
-            var view = main.DisplayHistogram();
 
-            // Create reference histogram.
-            var homo = Capacities(outputs[0]);
-            view.Setup(homo.Keys.ToList());
-            view.AddData(homo.Values.ToArray(), "Homogeneous");
-            ChartUtils.SaveChart(view.MainChart, 1500, 750,
-                @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\Homogeneous.png");
+            // Do the crunching.
+            var fracIdx = 0;
+            while (true)
+            {
+                var fraction = fractions[fracIdx];
+                // Update edge functions.
+                ctrl.EdgeFuncs.Clear();
+                ctrl.EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100), list => ConfigurationUtils.GetEdges(list, "flowTest", fraction)); // OK
+                // Evaluate.    
+                var result = ctrl.EvaluateGrid(grid)[0].Grid;
+                // Find last success.
+                var idx = result.GetLength(0)-1;
+                while (result[idx, 0])
+                {
+                    idx--;
+                    if (idx < 0) break;
+                }
+                if (idx == result.GetLength(0) - 1) break;
+                idx++;
+                // Save and prepare next iteration.
+                dataPoints.Add(fraction, grid.Cols[idx]);
+                grid.PenetrationFrom = grid.Cols[idx];
+                grid.PenetrationSteps = result.GetLength(0)-idx;
+                fracIdx++;
+            }
+
+            var hest = 2;
+
+            var view = main.DisplayPlot();
+            view.AddData(dataPoints, "Real");
+
+            //ctrl.EdgeFuncs.Add("Europe edges, constrained 100%", list => ConfigurationUtils.GetEdges(list, "flowTest", 1.00)); // OK
+            //ctrl.EdgeFuncs.Add("Europe edges, constrained 75%", list => ConfigurationUtils.GetEdges(list, "flowTest", 0.75)); // OK
+            //ctrl.EdgeFuncs.Add("Europe edges, constrained 50%", list => ConfigurationUtils.GetEdges(list, "flowTest", 0.50)); // FAIL
+            //ctrl.EdgeFuncs.Add("Europe edges, constrained 40%", list => ConfigurationUtils.GetEdges(list, "flowTest", 0.40)); // FAIL
+            //ctrl.EdgeFuncs.Add("Europe edges, constrained 30%", list => ConfigurationUtils.GetEdges(list, "flowTest", 0.30)); // FAIL
+            //ctrl.EdgeFuncs.Add("Europe edges, constrained 20%", list => ConfigurationUtils.GetEdges(list, "flowTest", 0.20)); // FAIL
+            //ctrl.EdgeFuncs.Add("Europe edges, constrained 30%", list => ConfigurationUtils.GetEdges(list, "flowTest", 0.30)); // FAIL
+            //ctrl.EdgeFuncs.Add("Europe edges, constrained 25%", list => ConfigurationUtils.GetEdges(list, "flowTest", 0.25)); // FAIL
+            //var outputs = ctrl.EvaluateTs(1.067, 0.60);
+
+            //var grid = new GridScanParameters
+            //{
+            //    MixingFrom = 0.60,
+            //    MixingTo = 0.61,
+            //    MixingSteps = 1,
+            //    PenetrationFrom = 1.05,
+            //    PenetrationTo = 1.25,
+            //    PenetrationSteps = 40
+            //};
+
+            //var result = ctrl.EvaluateGrid(grid);
+            //var view = main.DisplayContour();
+            //view.AddData(grid.Rows, grid.Cols, result[0].Grid, "10%");
+            //view.AddData(grid.Rows, grid.Cols, result[1].Grid, "75%");
+            //view.AddData(grid.Rows, grid.Cols, result[2].Grid, "50%");
+            //view.AddData(grid.Rows, grid.Cols, result[3].Grid, "40%");
+            //view.AddData(grid.Rows, grid.Cols, result[4].Grid, "30%");
+            //view.AddData(grid.Rows, grid.Cols, result[5].Grid, "20%");
+            //view.AddData(grid.Rows, grid.Cols, result[6].Grid, "10%");
+
+            //// Prepare chart printing.
+            //view.MainChart.ChartAreas[0].AxisX.Title = "Penetration, γ";
+            //view.MainChart.ChartAreas[0].AxisY.Title = "Mixing, α";
+            //view.MainChart.ChartAreas[0].AxisY.Minimum = 0.59;
+            //view.MainChart.ChartAreas[0].AxisY.Maximum = 0.61;
+            //ChartUtils.SaveChart(view.MainChart, 1000, 500, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\ConstrainedFlow.png");
         }
 
-        //public static void FlowAnalysisNoStorage(MainForm main)
-        //{
-        //    var ctrl = new SimulationController { InvalidateCache = false };
-        //    ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
-        //    ctrl.ExportStrategies.Add(
-        //        new ExportStrategyInput
-        //        {
-        //            ExportStrategy = ExportStrategy.ConstrainedFlow
-        //        });
-        //    ctrl.NodeFuncs.Clear();
-        //    ctrl.NodeFuncs.Add("6h batt (homo), 150 TWh hydro (homo)", s =>
-        //    {
-        //        var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
-        //        ConfigurationUtils.SetupHomoStuff(nodes, (int)s.Length, true, false, true);
-        //        ConfigurationUtils.SetupHeterogeneousStorage(nodes, (int)s.Length);
-        //        return nodes;
-        //    });
-        //    ctrl.NodeFuncs.Add("6h batt (homo), 150 TWh hydro (hetero)", s =>
-        //    {
-        //        var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
-        //        ConfigurationUtils.SetupHomoStuff(nodes, (int)s.Length, true, false, false);
-        //        ConfigurationUtils.SetupHeterogeneousBackup(nodes, (int)s.Length);
-        //        return nodes;
-        //    });
-        //    var outputs = ctrl.EvaluateTs(1.126, 0.65);
-        //    var view = main.DisplayHistogram();
+        private static void CalculateFlowData()
+        {
+            var ctrl = new SimulationController { InvalidateCache = false };
+            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
+            ctrl.ExportStrategies.Add(
+                new ExportStrategyInput
+                {
+                    ExportStrategy = ExportStrategy.ConstrainedFlow
+                });
+            var outputs = ctrl.EvaluateTs(1.026, 0.65);
 
-        //    // Create reference histogram.
-        //    var homo = Capacities(outputs[0]);
-        //    view.Setup(homo.Keys.ToList());
-        //    view.AddData(homo.Values.ToArray(), "Homogeneous");
-        //    ChartUtils.SaveChart(view.MainChart, 1500, 750,
-        //        @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\HomogeneousNoStorage.png");
+            // Create reference histogram.
+            var flows = new List<LinkDataRow>();
+            foreach (var pair in FullCapacities(outputs[0]))
+            {
+                var countries = pair.Key.Split(new[] { "\r\n" }, StringSplitOptions.None);
+                flows.Add(new LinkDataRow
+                {
+                    CountryFrom = CountryInfo.GetName(countries[0]),
+                    CountryTo = CountryInfo.GetName(countries[1]),
+                    LinkCapacity = pair.Value
+                });
+            }
 
-        //    // Create reference histogram.
-        //    var het = Capacities(outputs[1]);
-        //    FilterValues(homo, het);
-        //    view.Setup(homo.Keys.ToList());
-        //    view.AddData(homo.Values.ToArray(), "Homogeneous");
-        //    view.AddData(het.Values.ToArray(), "Heterogeneous Backup");
-        //    ChartUtils.SaveChart(view.MainChart, 1000, 500,
-        //        @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\HeterogeneousNoStorage.png");
-        //}
+            ProtoStore.SaveLinkData(flows, "flowReal");
+        }
+
+        private static Dictionary<string, double> FullCapacities(SimulationOutput output)
+        {
+            return output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
+                .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
+                    flowTimeSeries =>
+                        Math.Max(Math.Abs(flowTimeSeries.GetAllValues().Min()), flowTimeSeries.GetAllValues().Max()));
+        }
 
         #endregion
 
