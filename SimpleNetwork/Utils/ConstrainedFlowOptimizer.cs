@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace BusinessLogic.Utils
         #region Fields
 
         private const char Precision = GRB.CONTINUOUS;
+        private const bool DebugLog = false;
 
         private bool Ready { get { return NodesSet && EdgesSet; } }        
         private bool NodesSet {get { return _mDeltas != null; }}
@@ -85,6 +87,7 @@ namespace BusinessLogic.Utils
         /// <param name="highLimits"> higher limit (charge) </param>
         public void SetNodes(double[] nodes, double[] lowLimits, double[] highLimits)
         {
+            var now = DateTime.Now;
             if (nodes.Length != _mN)
             {
                 throw new ArgumentException("Dismension mismatch between nodes and FlowOptimizer.");
@@ -99,25 +102,34 @@ namespace BusinessLogic.Utils
             SetBalanceObjective();
 
             // Update model.
+            if(DebugLog) Console.WriteLine("Setup: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
             _mFlow.Model.Update();
-            _mBalance.Model.Update(); 
+            if (DebugLog) Console.WriteLine("Flow: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
+            _mBalance.Model.Update();
+            if (DebugLog) Console.WriteLine("Balance: {0}", DateTime.Now.Subtract(now).TotalMilliseconds); 
+
         }
 
         public void Solve()
         {
+            var now = DateTime.Now;
             if (!Ready) throw new ArgumentException(SolveError());
 
             // Solve models.
             SolveBalanceModel();
+            if (DebugLog) Console.WriteLine("Solve balance: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
             SolveFlowModel();
+            if (DebugLog) Console.WriteLine("Solve flow: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
 
             // Make results publicly available.
             ExtractResultsFromModel();
+            if (DebugLog) Console.WriteLine("Extract results: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
 
             // Remove old constraints.
             _mFlow.Model.Remove(_mOptimumConstr);
             foreach (var constr in _mFlow.Constraints) _mFlow.Model.Remove(constr);
             foreach (var constr in _mBalance.Constraints) _mBalance.Model.Remove(constr);
+            if (DebugLog) Console.WriteLine("Remove constraints: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
         }
 
         private void SolveBalanceModel()
@@ -150,11 +162,13 @@ namespace BusinessLogic.Utils
 
         private void ExtractResultsFromModel()
         {
+            var now = DateTime.Now;
             for (int i = 0; i < _mN; i++)
             {
                 // Starting with initial value.
                 StorageOptimum[i] = _mFlow.StorageVariables[i].Get(GRB.DoubleAttr.X);
             }
+            if (DebugLog) Console.WriteLine("Extract storage: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
 
             for (int i = 0; i < _mN; i++)
             {
@@ -165,6 +179,7 @@ namespace BusinessLogic.Utils
                     Flows[i, j] = _mFlow.EdgeVariables[i, j].Get(GRB.DoubleAttr.X);
                 }
             }
+            if (DebugLog) Console.WriteLine("Extract edges: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
 
             for (int i = 0; i < _mN; i++)
             {
@@ -176,6 +191,7 @@ namespace BusinessLogic.Utils
                     NodeOptimum[i] = NodeOptimum[i] - Flows[i, j] + Flows[j, i];
                 }
             }
+            if (DebugLog) Console.WriteLine("Calc opts: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
         }
 
         /// <summary>
@@ -206,7 +222,7 @@ namespace BusinessLogic.Utils
                     }
                     if (_mEdges.EdgeExists(j, i))
                     {
-                        wrapper.NodeExprs[i].AddTerm(pos ? _mEdges.GetEdgeCost(i, j) : -_mEdges.GetEdgeCost(i, j), wrapper.EdgeVariables[j, i]);
+                        wrapper.NodeExprs[i].AddTerm(pos ? _mEdges.GetEdgeCost(j, i) : -_mEdges.GetEdgeCost(j, i), wrapper.EdgeVariables[j, i]);
                     }
                 }
                 wrapper.Constraints[i] = wrapper.Model.AddConstr(wrapper.NodeExprs[i], GRB.GREATER_EQUAL, 0, "node" + i);
@@ -225,9 +241,9 @@ namespace BusinessLogic.Utils
                 wrapper.StorageVariables[i] = wrapper.Model.AddVar(-double.MaxValue, double.MaxValue, 0, Precision, "storage" + i);
                 for (int j = 0; j < _mN; j++)
                 {
-                    // TODO: IMPOSE EDGE LIMITATIONS HERE!!
                     if (!_mEdges.EdgeExists(i, j)) continue;
-                    wrapper.EdgeVariables[i, j] = wrapper.Model.AddVar(0, _mEdges.GetEdgeCapacity(i,j), 0, Precision, "edge" + i + j);
+                    //wrapper.EdgeVariables[i, j] = wrapper.Model.AddVar(0, _mEdges.GetEdgeCapacity(i, j), 0, Precision, "edge" + i + j);
+                    wrapper.EdgeVariables[i, j] = wrapper.Model.AddVar(-_mEdges.GetEdgeCapacity(i, j), _mEdges.GetEdgeCapacity(i, j), 0, Precision, "edge" + i + j);
                 }
             }
 

@@ -44,6 +44,8 @@ namespace BusinessLogic
             foreach (var row in ntcData)
             {
                 if (row.CountryFrom.Equals(row.CountryTo)) continue;
+                // Skip non existing links.
+                if (row.LinkCapacity < 1) continue;
                 result.AddEdge(idxMap[row.CountryFrom], idxMap[row.CountryTo], 1, row.LinkCapacity * frac); // For now, don't add the capacity.
             }
 

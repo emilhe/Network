@@ -64,7 +64,7 @@ namespace UnitTest
             _mNumberOfEvals = 0;
             var grid = GridEvaluator.EvalSparse(ReadGrid, _mDims);
             Assert.AreEqual(_mGrid, grid);
-            Assert.AreEqual(_mNumberOfEvals, 17); // Less than grid.Length
+            Assert.AreEqual(_mNumberOfEvals, 19); // Less than grid.Length (or 17 is center is used instead of start)
         }
 
     }

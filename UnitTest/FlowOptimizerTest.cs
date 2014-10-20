@@ -63,7 +63,7 @@ namespace UnitTest
             opt.SetNodes(nodes, new double[] { 0, 0, 0, 0 }, new[] { double.MaxValue, double.MaxValue, double.MaxValue, double.MaxValue });
             opt.Solve();
             var flowSum = 0.0;
-            foreach (var flow in opt.Flows) flowSum += flow;
+            foreach (var flow in opt.Flows) flowSum += Math.Abs(flow);
             AreAlmostEqual(4.5, flowSum, FlowDelta * edges.NodeCount);
             AreAlmostEqual(new double[] { 0, 0, 2, 0 }, opt.NodeOptimum, FlowDelta);
         }
@@ -111,8 +111,8 @@ namespace UnitTest
             edges.AddEdge(0, 1);
             // Test the most basic test case.
             opt.SetEdges(edges);
-            opt.SetNodes(nodes, new[] { -1 - FlowDelta * edges.EdgeCount, 0 - FlowDelta * edges.EdgeCount },
-                new[] { FlowDelta * edges.EdgeCount, FlowDelta * edges.EdgeCount });
+            opt.SetNodes(nodes, new[] { -1, 0.0},
+                new[] { 0.0, 0.0 });
             opt.Solve();
             AreAlmostEqual(new double[,] { { 0, 3 }, { 0, 0 } }, opt.Flows, FlowDelta);
             AreAlmostEqual(new double[] { -1, 0 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);

@@ -151,7 +151,6 @@ namespace BusinessLogic
                 {
                     _mCachedConstrLoLims[i].Set(GRB.DoubleAttr.RHS, (_mLoLims[i] - _mDeltas[i] - ConvParam));
                     _mCachedConstrHiLims[i].Set(GRB.DoubleAttr.RHS, (_mHiLims[i] - _mDeltas[i] + ConvParam));
-
                 }
                 _mModel.Update();
                 return;
@@ -172,7 +171,7 @@ namespace BusinessLogic
                 _mCachedConstrHiLims[i] = _mModel.AddConstr(cst, GRB.LESS_EQUAL, (_mHiLims[i] - _mDeltas[i] + ConvParam), "c" + i);
             }
             _mModel.Update();
-        }
+        }   
 
         /// <summary>
         /// Set variables (when edges change).
@@ -185,7 +184,7 @@ namespace BusinessLogic
                 for (int j = 0; j < _mN; j++)
                 {
                     if (!_mEdges.EdgeExists(i, j)) continue;
-                    _mVariables[i, j] = _mModel.AddVar(0, int.MaxValue, 0, Precision, "x" + i + j);
+                    _mVariables[i, j] = _mModel.AddVar(-int.MaxValue, int.MaxValue, 0, Precision, "x" + i + j);
                 }
             }
             _mModel.Update(); 
@@ -249,11 +248,13 @@ namespace BusinessLogic
         public void AddEdge(int i, int j, double cost = 1, double capacity = double.PositiveInfinity)
         {
             if (i == j) throw new ArgumentException("Cannot connect a node to itself.");
+            // Different capacities "each way" is NOT allowed.
             if (EdgeExists(i, j)) return;
+            if (EdgeExists(j, i)) return;
 
             // The connection matric is to be constructed screw symmetric; we wan't positive on top.
             _mEdges.Add(i + j * _mNodeCount, new[] { cost , capacity});
-            _mEdges.Add(j + i * _mNodeCount, new[] { cost, capacity });
+            //_mEdges.Add(j + i * _mNodeCount, new[] { cost, capacity });
             _mEdgeCount++;
         }
 
@@ -286,7 +287,7 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Get the cost of traversing an edge.
+        /// Get the capacity of an edge.
         /// </summary>
         /// <param name="i"> index the nodes to connect </param>
         /// <param name="j"> index the nodes to connect </param>
@@ -300,20 +301,19 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Get the cost of traversing an edge.
+        /// Set the capacity of an edge.
         /// </summary>
         /// <param name="i"> index the nodes to connect </param>
         /// <param name="j"> index the nodes to connect </param>
         /// <param name="capacity"> link capacity </param>
         /// <returns> the cost </returns>
-        public double SetEdgeCapacity(int i, int j, double capacity)
+        public void SetEdgeCapacity(int i, int j, double capacity)
         {
             if (!EdgeExists(i,j)) throw new ArgumentException("Edge does not exist.");
 
             // The connection matrix is screw symmetic.
             _mEdges[i + j*_mNodeCount][1] = capacity;
-            _mEdges[j + i*_mNodeCount][1] = capacity;
-            return _mEdges[i + j * _mNodeCount][1];
+            //_mEdges[j + i*_mNodeCount][1] = capacity;
         }
 
     }
