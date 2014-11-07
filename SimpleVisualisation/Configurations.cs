@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 using BusinessLogic.TimeSeries;
 using Controls.Charting;
 using SimpleImporter;
@@ -49,7 +52,7 @@ namespace Main
 
         #endregion
 
-        #region Contour control test
+        #region Plot control test
 
         public static void TestPlotControl(MainForm main)
         {
@@ -59,6 +62,263 @@ namespace Main
             data.Add(3, 4);
             data.Add(7, 5);
             view.AddData(data, "Test");
+        }
+
+        #endregion
+
+        #region Backup energy 
+
+        public static void BackupEnergyRelative(MainForm main)
+        {
+            var alpha = 0.8;
+            var penetrations = new[] { 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.75, 2.0, 2.25, 2.5 };
+            var ctrl = new SimulationController
+            {
+                InvalidateCache = false,
+                ExportStrategies = new List<ExportStrategyInput>
+                {
+                    //new ExportStrategyInput{ExportStrategy = ExportStrategy.None},
+                    new ExportStrategyInput{ExportStrategy = ExportStrategy.Cooperative, DistributionStrategy = DistributionStrategy.SkipFlow}
+                },
+                Sources = new List<TsSourceInput>
+                {
+                    new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 32},
+                    new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 8},
+                }
+            };
+
+            var results = DoBackupStuff(ctrl, penetrations, alpha);
+            var view = main.DisplayPlot();
+            foreach (var result in results) view.AddData(penetrations, result.Value, result.Key, false);
+            // Setup view.
+            view.MainChart.ChartAreas[0].AxisX.Title = "Penetration, γ";
+            view.MainChart.ChartAreas[0].AxisY.Title = "Backup energy [load]";
+
+            foreach (var series in view.MainChart.Series)
+            {
+                series.BorderWidth = 3;
+            }
+            ChartUtils.SaveChart(view.MainChart, 1000, 500, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\BackupEnergyRelative.png");
+        }
+
+        public static void BackupEnergyAbsolute(MainForm main)
+        {
+            var alpha = 0.8;
+            var penetrations = new[] { 1.0,1.1,1.2,1.3, 1.4, 1.5, 1.6, 1.8, 2,2.25, 2.50, 2.75, 3,3.25, 3.5,4,4.5,5,6,7,8,9,10 };
+            var ctrlFlow = new SimulationController
+            {
+                InvalidateCache = false,
+                ExportStrategies = new List<ExportStrategyInput>
+                {
+                    new ExportStrategyInput{ExportStrategy = ExportStrategy.Cooperative, DistributionStrategy = DistributionStrategy.SkipFlow}
+                },
+                Sources = new List<TsSourceInput> { new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 }, }
+            };
+            var ctrlNoFlow = new SimulationController
+            {
+                InvalidateCache = false,
+                ExportStrategies = new List<ExportStrategyInput>{new ExportStrategyInput{ExportStrategy = ExportStrategy.None},},
+                Sources = new List<TsSourceInput>{new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 32},}
+            };
+
+            var flowResults = DoBackupStuff(ctrlNoFlow, penetrations, alpha, false, true);
+            var noFlowResults = DoBackupStuff(ctrlFlow, penetrations, alpha, false);
+            var view = main.DisplayPlot();
+            foreach (var result in flowResults) view.AddData(penetrations, result.Value, result.Key, false);
+            foreach (var result in noFlowResults) view.AddData(penetrations, result.Value, result.Key, false);
+            var backup = new Series("150 TWh");
+            backup.Points.AddXY(penetrations[0], 150);
+            backup.Points.AddXY(penetrations[penetrations.Length - 1], 150);
+            backup.ChartType = SeriesChartType.Line;
+            backup.BorderDashStyle = ChartDashStyle.Dash;
+            view.MainChart.Series.Add(backup);
+            // Setup view.
+            view.MainChart.ChartAreas[0].AxisX.Title = "Penetration, γ";
+            view.MainChart.ChartAreas[0].AxisY.Title = "Backup energy [TWh]";
+            foreach (var series in view.MainChart.Series) series.BorderWidth = 3; 
+            ChartUtils.SaveChart(view.MainChart, 1000, 500, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\BackupEnergyAbsolute.png");
+        }
+
+        //public static void BackupEnergyNotConnected(MainForm main)
+        //{
+        //    var alpha = 0.8;
+        //    var penetrations = new[] {1.0, 1.25, 1.50, 1.75, 2, 2.5, 3, 4, 5};
+        //    var ctrl = new SimulationController
+        //    {
+        //        InvalidateCache = false,
+        //        ExportStrategies = new List<ExportStrategyInput>
+        //        {
+        //            new ExportStrategyInput {ExportStrategy = ExportStrategy.None},
+        //            //new ExportStrategyInput{ExportStrategy = ExportStrategy.Cooperative, DistributionStrategy = DistributionStrategy.SkipFlow}
+        //        },
+        //        Sources = new List<TsSourceInput>
+        //        {
+        //            new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 32},
+        //            new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 8},
+        //        }
+        //    };
+
+        //    var results = DoBackupStuff(ctrl, penetrations, alpha, false);
+        //    var view = main.DisplayPlot();
+        //    foreach (var result in results) view.AddData(penetrations, result.Value, result.Key, false);
+        //    // Setup view.
+        //    view.MainChart.ChartAreas[0].AxisX.Minimum = penetrations[0];
+        //    view.MainChart.ChartAreas[0].AxisX.Maximum = penetrations[penetrations.Length-1];
+        //    view.MainChart.ChartAreas[0].AxisX.Interval = 1;
+        //    view.MainChart.ChartAreas[0].AxisX.Title = "Penetration, γ";
+        //    view.MainChart.ChartAreas[0].AxisY.Title = "Backup energy [load]";
+        //    ChartUtils.SaveChart(view.MainChart, 1000, 500, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\BackupEnergyNotConnected.png");
+
+        //    //var backup = new Series("150 TWh backup");
+        //    //backup.Points.AddXY(penetrations[0], 150);
+        //    //backup.Points.AddXY(penetrations[penetrations.Length - 1], 150);
+        //    //backup.ChartType = SeriesChartType.Line;
+        //    //backup.BorderDashStyle = ChartDashStyle.Dash;
+        //    //view.MainChart.Series.Add(backup);
+        //}
+
+        //public static void BackupEnergyPlotsNoConnectionEnd(MainForm main)
+        //{
+        //    var alpha = 0.8;
+        //    var penetrations = new[] {8, 8.5, 9, 9.5, 10.0 };
+        //    // No export + cooperative, VE + ISET
+        //    var ctrl = new SimulationController
+        //    {
+        //        InvalidateCache = false,
+        //        ExportStrategies = new List<ExportStrategyInput>
+        //        {
+        //            new ExportStrategyInput {ExportStrategy = ExportStrategy.None},
+        //            //new ExportStrategyInput{ExportStrategy = ExportStrategy.Cooperative, DistributionStrategy = DistributionStrategy.SkipFlow}
+        //        },
+        //        Sources = new List<TsSourceInput>
+        //        {
+        //            new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 32},
+        //            new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 8},
+        //        }
+        //    };
+
+        //    var results = DoBackupStuff(ctrl, penetrations, alpha, false);
+        //    var view = main.DisplayPlot();
+        //    foreach (var result in results) view.AddData(penetrations, result.Value, result.Key, false);
+        //    view.MainChart.ChartAreas[0].AxisX.Minimum = penetrations[0];
+        //    view.MainChart.ChartAreas[0].AxisX.Maximum = penetrations[penetrations.Length - 1];
+        //    view.MainChart.ChartAreas[0].AxisX.Interval = 1;
+        //}
+
+        private static Dictionary<string, double[]> DoBackupStuff(SimulationController ctrl, double[] penetrations, double alpha, bool normalize = true, bool includeHomo = false)
+        {
+            ctrl.NodeFuncs.Clear();
+            ctrl.NodeFuncs.Add("Mega storage", s =>
+            {
+                var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
+                ConfigurationUtils.SetupMegaStorage(nodes);
+                return nodes;
+            });
+            var results = new Dictionary<string, double[]>();
+
+            //Parallel.For(0,penetrations.Length, idx =>
+            for (int idx = 0; idx < penetrations.Length; idx++)
+            {
+                var res = ctrl.EvaluateTs(penetrations[idx], alpha);
+                foreach (var sim in res)
+                {
+                    var backups = sim.TimeSeries.Where(item => item.Name.Contains("Backup")).ToArray();
+                    var deltaFraction = OptimalDistribution(backups);
+                    var key = ((TsSource) int.Parse(sim.Properties["TsSource"]) + ", " +
+                               ((ExportStrategy) int.Parse(sim.Properties["ExportStrategy"])).GetDescription());
+                    if (includeHomo)
+                    {
+                        var homoKey = key + ", homo";
+                        var optKey = key + ", opt";
+                        if (!results.ContainsKey(homoKey)) results.Add(homoKey, new double[penetrations.Length]);
+                        if (!results.ContainsKey(optKey)) results.Add(optKey, new double[penetrations.Length]);
+                        if (normalize)
+                        {
+                            results[homoKey][idx] = HomogeneousDistribution(backups);
+                            results[optKey][idx] = deltaFraction;
+                        }
+                        else
+                        {
+                            // Backup per year in TWh  
+                            results[homoKey][idx] = (HomogeneousDistribution(backups)*
+                                                     backups.Select(item => item.First().Value).Sum())/
+                                                    double.Parse(sim.Properties["Length"])/1000;
+                            results[optKey][idx] = (deltaFraction*backups.Select(item => item.First().Value).Sum())/
+                                                   double.Parse(sim.Properties["Length"])/1000;
+                        }
+                    }
+                    else
+                    {
+                        if (!results.ContainsKey(key)) results.Add(key, new double[penetrations.Length]);
+                        if (normalize) results[key][idx] = deltaFraction;
+                        else
+                        {
+                            // Backup per year in TWh  
+                            results[key][idx] = (deltaFraction*backups.Select(item => item.First().Value).Sum())/
+                                                double.Parse(sim.Properties["Length"])/1000;
+                        }
+                    }
+                }
+            }//);
+
+            return results;
+        }
+
+        private static double OptimalDistribution(ITimeSeries[] backups)
+        {
+            var start = backups.Select(item => item.First().Value).Sum();
+            var end = backups.Select(item => item.Last().Value).Sum();
+            return (start - end)/start;
+        }
+
+        private static double HomogeneousDistribution(ITimeSeries[] backups)
+        {
+            var deltas = new double[backups.Length];
+            for (int i = 0; i < backups.Length; i++)
+            {
+                var values = backups[i].GetAllValues();
+                deltas[i] = (values[0] - values[values.Count-1]) / values[0];
+            }
+            return deltas.Max();
+        }
+
+        #endregion
+
+        #region Constrained Flow, no storage
+
+        public static void ConstrainedFlowNoStorage(MainForm main, bool save = false)
+        {
+            var view = main.DisplayContour();
+            var grid = new GridScanParameters
+            {
+                MixingFrom = 0.50,
+                MixingTo = 0.55,
+                MixingSteps = 5,
+                PenetrationFrom = 1.45,
+                PenetrationTo = 1.50,
+                PenetrationSteps = 5
+            };
+            var ctrl = new SimulationController
+            {
+                InvalidateCache = true,
+                ExportStrategies = new List<ExportStrategyInput>
+                {
+                    new ExportStrategyInput{ExportStrategy = ExportStrategy.None}
+                },
+                Sources = new List<TsSourceInput>
+                {
+                    new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 32},
+                }
+            };
+            ctrl.NodeFuncs.Clear();
+            ctrl.NodeFuncs.Add("No storage", s =>
+            {
+                var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
+                ConfigurationUtils.SetupHomoStuff(nodes, (int)s.Length, true, true, true);
+                return nodes;
+            });
+
+            foreach (var result in ctrl.EvaluateGrid(grid)) view.AddData(grid.Rows, grid.Cols, result.Grid, result.Description);
         }
 
         #endregion
@@ -83,7 +343,7 @@ namespace Main
 
         public static void ShowTimeSeris(MainForm main)
         {
-            var ctrl = new SimulationController {InvalidateCache = false};
+            var ctrl = new SimulationController {InvalidateCache = true};
             ctrl.Sources.Add(new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 1});
             ctrl.ExportStrategies.Add(new ExportStrategyInput
             {

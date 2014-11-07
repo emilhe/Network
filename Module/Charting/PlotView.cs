@@ -22,11 +22,34 @@ namespace Controls.Charting
             MainChart.Series.Clear();
         }
 
+        public void AddData(double[] x, double[] y, string name, bool addPoints = true)
+        {
+            // Construct new time series.
+            var line = new Series(name) { ChartType = SeriesChartType.Line };
+            for (int i = 0; i < x.Length; i++)
+            {
+                line.Points.AddXY(x[i], y[i]);
+            }
+            chart.Series.Add(line);
+
+            if (addPoints)
+            {
+                var points = new Series(name + ", points") { ChartType = SeriesChartType.Point };
+                for (int i = 0; i < x.Length; i++)
+                {
+                    line.Points.AddXY(x[i], y[i]);
+                }
+                chart.Series.Add(points);
+            }
+
+            RenderAxis();
+        }
+
         public void AddData(Dictionary<double, double> values, string name)
         {
             // Construct new time series.
-            var spline = new Series(name + "@spline") {ChartType = SeriesChartType.Spline};
-            var points = new Series(name) { ChartType = SeriesChartType.Point };
+            var spline = new Series(name + ", line") {ChartType = SeriesChartType.Line};
+            var points = new Series(name + ", points"){ ChartType = SeriesChartType.Point };
             foreach (var tsItem in values)
             {
                 spline.Points.AddXY(tsItem.Key, tsItem.Value);

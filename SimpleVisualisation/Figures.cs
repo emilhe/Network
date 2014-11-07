@@ -129,7 +129,7 @@ namespace Main
 
         public static void FlowAnalysis(MainForm main)
         {
-            var ctrl = new SimulationController { InvalidateCache = false };
+            var ctrl = new SimulationController { InvalidateCache = true };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
                 new ExportStrategyInput
@@ -158,7 +158,7 @@ namespace Main
                 ConfigurationUtils.SetupHeterogeneousBackup(nodes, (int)s.Length);
                 return nodes;
             });
-            var outputs = ctrl.EvaluateTs(1.029, 0.65);
+            var outputs = ctrl.EvaluateTs(1.026, 0.65);
             var view = main.DisplayHistogram();
            
             // Create reference histogram.
@@ -347,15 +347,57 @@ namespace Main
 
         #region Constrained flow analysis
 
+        public static void ConstrainedFlowAnalysisCache(MainForm main)
+        {
+            // What flow fractions should be investigated?
+            var fractions = new[] { 1, 0.75, 0.5, 0.4, 0.39, 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.32, 0.31 };
+            var penetrations = new[] { 1.026, 1.026, 1.026, 1.026, 1.026, 1.026, 1.026, 1.026, 1.026, 1.026, 1.046, 1.106, 1.321 };
+
+            var view = main.DisplayPlot();
+            view.AddData(fractions.Zip(penetrations, (x, y) => new {x, y }).ToDictionary(item => item.x, item => item.y), "α = 0.65");
+
+            // Prepare chart printing.
+            view.MainChart.Series[0].BorderWidth = 4;
+            view.MainChart.Series[1].MarkerSize = 8;
+            view.MainChart.ChartAreas[0].AxisY.Minimum = 0.9;
+            view.MainChart.ChartAreas[0].AxisX.Title = "Normalised link capacity";
+            view.MainChart.ChartAreas[0].AxisY.Title = "Penetration, γ";
+            ChartUtils.SaveChart(view.MainChart, 1000, 500, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\FlowAnalysis.png");
+        }
+
+        public static void Comparison(MainForm main)
+        {
+            var ctrl = new SimulationController { InvalidateCache = false };
+            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
+            ctrl.ExportStrategies.Add(
+                new ExportStrategyInput
+                {
+                    ExportStrategy = ExportStrategy.ConstrainedFlow
+                });
+            var outputs = ctrl.EvaluateTs(1.026, 0.65);
+            var view = main.DisplayHistogram();
+
+            // Create reference histogram.
+            var homo = Capacities(outputs[0]);
+            var homo2 = outputs[0].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
+                        .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
+                            flowTimeSeries => StatUtils.CalcEmpCapacity(flowTimeSeries.GetAllValues()));
+            view.Setup(homo.Keys.ToList());
+            view.AddData(homo.Values.ToArray(), "Homogeneous, 0.5/99.5 percentile");
+            view.AddData(homo2.Values.ToArray(), "Homogeneous, 33% maximum");
+            ChartUtils.SaveChart(view.MainChart, 1500, 750,
+                @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\HomogeneousComp.png");
+        }
+
         public static void ConstrainedFlowAnalysis(MainForm main)
         {
             CalculateFlowData();
 
             // What flow fractions should be investigated?
             //var fractions = new[] { 1, 0.75, 0.5, 0.4, 0.3, 0.29, 0.28, 0.27, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.20 };
-            var fractions = new[] { 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.32, 0.31 };
+            var fractions = new[] { 0.31 };
             var originalMix = 0.65;
-            var originalPen = 1.026;
+            var originalPen = 1.226;
             //var originalMix = 0.60;
             //var originalPen = 1.06;
 
@@ -401,7 +443,7 @@ namespace Main
                 if (idx == result.GetLength(0) - 1) break;
                 idx++;
                 // Save and prepare next iteration.
-                dataPoints.Add(fraction, grid.Cols[idx]);
+                dataPoints.Add(fraction, grid.Cols[idx]);   
                 grid.PenetrationFrom = grid.Cols[idx];
                 grid.PenetrationSteps = result.GetLength(0)-idx;
                 fracIdx++;

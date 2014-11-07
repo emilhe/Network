@@ -12,7 +12,11 @@ namespace BusinessLogic.Utils
         {
             var edges = new EdgeSet(nodes.Count);
             // For now, connect the nodes in a straight line.
-            for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
+            for (int i = 0; i < nodes.Count - 1; i++)
+            {
+                edges.Connect(i, i + 1);
+                edges.Connect(i+1, i);
+            }
             return edges;
         }
 

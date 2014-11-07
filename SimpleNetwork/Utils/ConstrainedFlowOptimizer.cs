@@ -214,7 +214,7 @@ namespace BusinessLogic.Utils
                 wrapper.NodeExprs[i].AddConstant(pos ? _mDeltas[i] : -_mDeltas[i]);
                 wrapper.NodeExprs[i].AddTerm(pos ? 1 : -1, wrapper.StorageVariables[i]);
                 // Add edges.
-                for (int j = 0; j < _mN; j++)
+                for (int j = 0; j < _mN; j++)   
                 {
                     if (_mEdges.EdgeExists(i, j))
                     {

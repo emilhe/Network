@@ -68,7 +68,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
             {
                 for (int j = i; j < _mNodes.Count; j++)
                 {
-                    if(!_mEdges.EdgeExists(i,j)) continue;
+                    if(!_mEdges.Connected(i,j)) continue;
                     _mFlowTimeSeriesMap[i + _mNodes.Count*j].AppendData(                        _flowOptimizer.Flows[i, j] - _flowOptimizer.Flows[j, i]);
                 }
             }
@@ -95,7 +95,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
             {
                 for (int j = i; j < _mNodes.Count; j++)
                 {
-                    if (!_mEdges.EdgeExists(i, j)) continue;
+                    if (!_mEdges.Connected(i, j)) continue;
                     _mFlowTimeSeriesMap.Add(i + _mNodes.Count*j,
                         new DenseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation));
                 }

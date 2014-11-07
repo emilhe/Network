@@ -27,7 +27,7 @@ namespace BusinessLogic
             //{
             //    if(row.LinkCapacity == 0) continue;
             //    if (row.CountryFrom.Equals(row.CountryTo)) continue;
-            //    result.AddEdge(idxMap[row.CountryFrom], idxMap[row.CountryTo]); // For now, don't add the capacity.
+            //    result.Connect(idxMap[row.CountryFrom], idxMap[row.CountryTo]); // For now, don't add the capacity.
             //}
 
             //return result;
@@ -46,7 +46,7 @@ namespace BusinessLogic
                 if (row.CountryFrom.Equals(row.CountryTo)) continue;
                 // Skip non existing links.
                 if (row.LinkCapacity < 1) continue;
-                result.AddEdge(idxMap[row.CountryFrom], idxMap[row.CountryTo], 1, row.LinkCapacity * frac); // For now, don't add the capacity.
+                result.Connect(idxMap[row.CountryFrom], idxMap[row.CountryTo], 1, row.LinkCapacity * frac); // For now, don't add the capacity.
             }
 
             return result;
@@ -81,6 +81,14 @@ namespace BusinessLogic
         #endregion
 
         #region Storage/backup distribution
+
+        public static void SetupMegaStorage(List<Node> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                 node.StorageCollection.Add(new BasicBackup("Backup", node.LoadTimeSeries.GetAllValues().Sum()));
+            }
+        }
 
         public static void SetupHomoStuff(List<Node> nodes, int years, bool bat, bool storage, bool backup)
         {

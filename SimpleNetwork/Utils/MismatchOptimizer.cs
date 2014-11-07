@@ -131,7 +131,7 @@ namespace BusinessLogic.Utils
             {
                 for (int j = 0; j < _mN; j++)
                 {
-                    if (!_mEdges.EdgeExists(i, j)) continue;
+                    if (!_mEdges.Connected(i, j)) continue;
 
                     _mFlows[i, j] = _mEdgeVariables[i, j].Get(GRB.DoubleAttr.X);
                 }
@@ -163,7 +163,7 @@ namespace BusinessLogic.Utils
                 for (int j = 0; j < _mN; j++)
                 {
                     // TODO: IMPOSE EDGE LIMITATIONS HERE!!
-                    if (!_mEdges.EdgeExists(i, j)) continue;
+                    if (!_mEdges.Connected(i, j)) continue;
                     _mEdgeVariables[i, j] = _mModel.AddVar(-int.MaxValue, int.MaxValue, 0, Precision, "edge" + i + j);
                 }
             }
@@ -190,8 +190,8 @@ namespace BusinessLogic.Utils
                 // Add edges.
                 for (int j = 0; j < _mN; j++)
                 {
-                    if (_mEdges.EdgeExists(i, j)) expr.AddTerm(pos ? -_mEdges.GetEdgeCost(i, j) : _mEdges.GetEdgeCost(i, j), _mEdgeVariables[i, j]);
-                    if (_mEdges.EdgeExists(j, i)) expr.AddTerm(pos ? _mEdges.GetEdgeCost(i, j) : -_mEdges.GetEdgeCost(i, j), _mEdgeVariables[j, i]);
+                    if (_mEdges.Connected(i, j)) expr.AddTerm(pos ? -_mEdges.GetEdgeCost(i, j) : _mEdges.GetEdgeCost(i, j), _mEdgeVariables[i, j]);
+                    if (_mEdges.Connected(j, i)) expr.AddTerm(pos ? _mEdges.GetEdgeCost(i, j) : -_mEdges.GetEdgeCost(i, j), _mEdgeVariables[j, i]);
                 }
                 if(!firstRun) _mModel.Remove(_mConstr[i]);
                 _mConstr[i] = _mModel.AddConstr(expr, GRB.GREATER_EQUAL, 0, "node" + i);

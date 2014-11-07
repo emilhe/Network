@@ -121,7 +121,7 @@ namespace BusinessLogic
             {
                 for (int j = 0; j < _mN; j++)
                 {
-                    if (!_mEdges.EdgeExists(i, j)) continue;
+                    if (!_mEdges.Connected(i, j)) continue;
 
                     Flows[i, j] = _mVariables[i, j].Get(GRB.DoubleAttr.X);
                 }
@@ -164,8 +164,8 @@ namespace BusinessLogic
                 GRBLinExpr cst = 0.0;
                 for (int j = 0; j < _mN; j++)
                 {
-                    if (_mEdges.EdgeExists(i, j)) cst.AddTerm(-_mEdges.GetEdgeCost(i, j), _mVariables[i, j]);
-                    if (_mEdges.EdgeExists(j, i)) cst.AddTerm(_mEdges.GetEdgeCost(j, i), _mVariables[j, i]);
+                    if (_mEdges.Connected(i, j)) cst.AddTerm(-_mEdges.GetEdgeCost(i, j), _mVariables[i, j]);
+                    if (_mEdges.Connected(j, i)) cst.AddTerm(_mEdges.GetEdgeCost(j, i), _mVariables[j, i]);
                 }
                 _mCachedConstrLoLims[i] = _mModel.AddConstr(cst, GRB.GREATER_EQUAL, (_mLoLims[i] - _mDeltas[i] - ConvParam), "c" + i);
                 _mCachedConstrHiLims[i] = _mModel.AddConstr(cst, GRB.LESS_EQUAL, (_mHiLims[i] - _mDeltas[i] + ConvParam), "c" + i);
@@ -183,8 +183,9 @@ namespace BusinessLogic
             {
                 for (int j = 0; j < _mN; j++)
                 {
-                    if (!_mEdges.EdgeExists(i, j)) continue;
-                    _mVariables[i, j] = _mModel.AddVar(-int.MaxValue, int.MaxValue, 0, Precision, "x" + i + j);
+                                        // Here positive, directed edges are used.
+                    if (_mEdges.Connected(i, j)) _mVariables[i, j] = _mModel.AddVar(0, int.MaxValue, 0, Precision, "x" + i + j);
+                    if (_mEdges.Connected(j, i)) _mVariables[j, i] = _mModel.AddVar(0, int.MaxValue, 0, Precision, "x" + j + i);
                 }
             }
             _mModel.Update(); 
@@ -200,7 +201,7 @@ namespace BusinessLogic
             {
                 for (int j = 0; j < _mN; j++)
                 {
-                    if (!_mEdges.EdgeExists(i, j)) continue;
+                    if (!_mEdges.Connected(i, j)) continue;
                     // Note that the SQUARED flow is minimized (to minimize the needed capacity).
                     obj.AddTerm(_mEdges.GetEdgeCost(i, j), _mVariables[i, j], _mVariables[i, j]);
                 }
@@ -229,6 +230,7 @@ namespace BusinessLogic
         public int NodeCount { get { return _mNodeCount; } }
         public int EdgeCount { get { return _mEdgeCount; } }
 
+        // Edges from i (low idx) -> j (high idx).
         private readonly Dictionary<int, double[]> _mEdges;
         private readonly int _mNodeCount;
         private int _mEdgeCount;
@@ -245,17 +247,30 @@ namespace BusinessLogic
         /// </summary>
         /// <param name="i"> index the nodes to connect </param>
         /// <param name="j"> index the nodes to connect </param>
-        public void AddEdge(int i, int j, double cost = 1, double capacity = double.PositiveInfinity)
+        public void Connect(int i, int j, double cost = 1, double capacity = double.PositiveInfinity)
         {
             if (i == j) throw new ArgumentException("Cannot connect a node to itself.");
-            // Different capacities "each way" is NOT allowed.
-            if (EdgeExists(i, j)) return;
-            if (EdgeExists(j, i)) return;
+            // Different capacities "each way" is NOT allowed.            
+            if(i > j) Connect(j,i,cost,capacity); 
+            if (Connected(i, j)) return;
 
             // The connection matric is to be constructed screw symmetric; we wan't positive on top.
             _mEdges.Add(i + j * _mNodeCount, new[] { cost , capacity});
-            //_mEdges.Add(j + i * _mNodeCount, new[] { cost, capacity });
             _mEdgeCount++;
+        }
+
+        /// <summary>
+        /// Check of two nodes are connected (fast since a dictionary is used).
+        /// </summary>
+        /// <param name="i"> index the nodes to connect </param>
+        /// <param name="j"> index the nodes to connect </param>
+        /// <returns> true if the nodes are connected </returns>
+        public bool Connected(int i, int j)
+        {
+            if (i == j) return false;
+            if (i > j) return Connected(j, i);
+
+            return _mEdges.ContainsKey(i + j*_mNodeCount);
         }
 
         /// <summary>
@@ -266,7 +281,6 @@ namespace BusinessLogic
         /// <returns> true if the nodes are connected </returns>
         public bool EdgeExists(int i, int j)
         {
-            // A node cannot be connected to itself.
             if (i == j) return false;
 
             return _mEdges.ContainsKey(i + j * _mNodeCount);
@@ -281,6 +295,7 @@ namespace BusinessLogic
         public double GetEdgeCost(int i, int j)
         {
             if (i == j) throw new ArgumentException("A node cannot be connected to itself.");
+            if (i > j) return GetEdgeCost(j, i);
 
             // The connection matrix is screw symmetic.
             return _mEdges[i + j*_mNodeCount][0];
@@ -295,8 +310,8 @@ namespace BusinessLogic
         public double GetEdgeCapacity(int i, int j)
         {
             if (i == j) throw new ArgumentException("A node cannot be connected to itself.");
+            if (i > j) return GetEdgeCapacity(j, i);
 
-            // The connection matrix is screw symmetic.
             return _mEdges[i + j * _mNodeCount][1];
         }
 
@@ -309,11 +324,15 @@ namespace BusinessLogic
         /// <returns> the cost </returns>
         public void SetEdgeCapacity(int i, int j, double capacity)
         {
-            if (!EdgeExists(i,j)) throw new ArgumentException("Edge does not exist.");
+            if (i > j)
+            {
+                SetEdgeCapacity(j, i, capacity);
+                return;
+            }
 
-            // The connection matrix is screw symmetic.
+            if (!Connected(i,j)) throw new ArgumentException("Edge does not exist.");
+            
             _mEdges[i + j*_mNodeCount][1] = capacity;
-            //_mEdges[j + i*_mNodeCount][1] = capacity;
         }
 
     }

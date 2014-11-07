@@ -71,7 +71,7 @@ namespace UnitTest
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
             mCtrl.SetMix(0.65);
-            mCtrl.SetPenetration(1.028);
+            mCtrl.SetPenetration(1.0); //28
             mCtrl.Execute();
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(false, simulation.Output.Success);

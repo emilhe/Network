@@ -74,7 +74,7 @@ namespace BusinessLogic
         //public void BalanceLocally(double stepSize = 0.05)
         //{
         //    var edges = new EdgeSet(Nodes.Count);
-        //    for (int i = 0; i < Nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
+        //    for (int i = 0; i < Nodes.Count - 1; i++) edges.Connect(i, i + 1);
         //    var exportStrategy = new NetworkModel(Nodes, new CooperativeExportStrategy(), new MinimalFlowStrategy(edges));
         //    var system = new Simulation(exportStrategy);
         //    // TODO: This can be done faster if the flow optimization is simply skipped!

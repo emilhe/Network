@@ -61,22 +61,25 @@ namespace BusinessLogic
             {
                 var prop = GetProperties(penetration, mixing);
                 SimulationOutput result = null;
+                
                 // Try to load from disk (unless cache is invalidated)
                 if (CacheEnabled && !InvalidateCache)
                 {
                     result = AccessClient.LoadSimulationOutput(prop.UniqueKey().ToString());
                 }
+
                 // If no result is found, calculate it.
                 if (result == null)
                 {
                     update();
                     result = RunSimulation(MapFromInput(_mExpStratIn), _mSrcIn.Length, penetration, mixing);
                     foreach (var property in prop) result.Properties.Add(property.Key, property.Value);
-                }
-                // If cache is enabled, save the result.
-                if (CacheEnabled)
-                {
-                    AccessClient.SaveSimulationOutput(result, prop.UniqueKey().ToString());
+
+                    // If cache is enabled, save the result.
+                    if (CacheEnabled)
+                    {
+                        AccessClient.SaveSimulationOutput(result, prop.UniqueKey().ToString());
+                    }
                 }
 
                 return result;
@@ -304,6 +307,7 @@ namespace BusinessLogic
         private string BuildPropertyString()
         {
             var result = string.Empty;
+            if (Properties == null) return result;
             var idx = 0;
             foreach (var property in Properties)
             {

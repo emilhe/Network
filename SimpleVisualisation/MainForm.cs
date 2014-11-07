@@ -52,8 +52,8 @@ namespace Main
     //item.Year.Equals(2010)).Select(item => item.Value).Sum();
 
 
-            //Figures.ConstrainedFlowAnalysis(this);
-            Configurations.OneYearVE(this);
+            Configurations.ShowTimeSeris(this);
+            //Configurations.OneYearVE(this);
 
             //Figures.FlowAnalysis(this);
             //ChartUtils.SaveChart(_contourView.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\AverageVsYearly.png");
@@ -142,7 +142,7 @@ namespace Main
             //var nodes = opt.Nodes;
             //var edges = new EdgeSet(nodes.Count);
             //// For now, connect the nodes in a straight line.
-            //for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
+            //for (int i = 0; i < nodes.Count - 1; i++) edges.Connect(i, i + 1);
             //var system = new Simulation(nodes, edges);
             //for (var pen = 1.02; pen <= 1.10; pen += 0.0025)
             //{
@@ -156,7 +156,7 @@ namespace Main
             //var mCtrl = new MixController(nodes);
             // For now, connect the nodes in a straight line.
 
-            //for (int i = 0; i < nodes.Count - 1; i++) edges.AddEdge(i, i + 1);
+            //for (int i = 0; i < nodes.Count - 1; i++) edges.Connect(i, i + 1);
             //var config = new NetworkModel(nodes, new CooperativeExportStrategy(), new SkipFlowStrategy());
             //var system = new Simulation(config);
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);

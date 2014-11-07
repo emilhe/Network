@@ -21,6 +21,16 @@ namespace Utils.Statistics
         }
 
         /// <summary>
+        /// The capacity is maximum of the absolute value of the 0.5% and the 99.5% quantiles.
+        /// </summary>
+        public static double CalcEmpCapacity(List<double> values)
+        {
+            var max = Math.Max(Math.Abs(values.Min()), Math.Abs(values.Max()));
+            return max/3;
+        }
+
+
+        /// <summary>
         /// Calculate the percentile given an ordered double array.
         /// </summary>
         public static double Percentile(List<double> orderedData, double quantile)
