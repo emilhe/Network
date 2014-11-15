@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Configuration;
+using System.Xml.Linq;
 using BusinessLogic.Generators;
 using BusinessLogic.Storages;
 using SimpleImporter;
+using Utils;
 
 namespace BusinessLogic
 {
@@ -92,17 +94,58 @@ namespace BusinessLogic
 
         public static void SetupHomoStuff(List<Node> nodes, int years, bool bat, bool storage, bool backup)
         {
-            // Standard
-            var loads = nodes.ToDictionary(item => item.CountryName, item => item.LoadTimeSeries.GetAverage());
-            var loadSum = loads.Values.Sum();
+            SetupStuff(nodes, years, bat, storage, backup, LoadScaling(nodes));
+        }
+
+        public static void SetupStuff(List<Node> nodes, int years, bool bat, bool storage, bool backup, Dictionary<string, double> scaling)
+        {
             foreach (var node in nodes)
             {
-                var avgLoad = loads[node.CountryName];
+                var scale = scaling[node.CountryName];
 
-                if(bat) node.StorageCollection.Add(new BatteryStorage(6 * avgLoad)); // Should this be in TWh too?
-                if (storage) node.StorageCollection.Add(new HydrogenStorage(25000 * avgLoad / loadSum));
-                if (backup) node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", 150000 * avgLoad / loadSum * years));
+                if (bat) node.StorageCollection.Add(new BatteryStorage(2200 * scale)); 
+                if (storage) node.StorageCollection.Add(new HydrogenStorage(25000 * scale));
+                if (backup) node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", (150000 * years) * scale));
             }
+        }
+
+        public static Dictionary<string, double> LoadScaling(List<Node> nodes)
+        {
+            var results = nodes.ToDictionary(item => item.CountryName, item => item.LoadTimeSeries.GetAverage());
+            
+            var sum = results.Values.Sum();
+            foreach (var key in results.Keys.ToArray())
+            {
+                results[key] = results[key]/sum;
+            }
+
+            return results;
+        }
+
+        public static Dictionary<string, double> MismatchScaling(List<Node> nodes)
+        {
+            var results = new Dictionary<string, double>(nodes.Count);
+
+            foreach (var node in nodes)
+            {
+                var negativeMicmathes = 0.0;
+                var ticks = node.LoadTimeSeries.Count();
+                for (int tick = 0; tick < ticks; tick++)
+                {
+                    var delta = node.GetDelta(tick);
+                    if(delta > 0) continue;
+                    negativeMicmathes -= node.GetDelta(tick);
+                }
+                results.Add(node.CountryName, negativeMicmathes);
+            }
+
+            var sum = results.Values.Sum();
+            foreach (var key in results.Keys.ToArray())
+            {
+                results[key] = results[key] / sum;
+            }
+
+            return results;
         }
 
         public static void SetupHeterogeneousBackup(List<Node> nodes, int years)
@@ -125,21 +168,41 @@ namespace BusinessLogic
                 {"Switzerland", 8.4},
                 //{"Bosnia", 0.0}
             };
-            var sum = hydroCountries.Select(item => item.Value).Sum();
 
-            foreach (var node in nodes)
-            {
-                if (!hydroCountries.Keys.Contains(node.CountryName)) continue;
+            SetupBackup(nodes, years, hydroCountries, "Hydro reservoir");
+        }
 
-                node.StorageCollection.Add(new BasicBackup("Hydro reservoir",
-                    (150000*years/sum)*hydroCountries[node.CountryName]));
-            }
+        public static void SetupOptimalBackup(List<Node> nodes, int years)
+        {
+            var opts = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalOptimalBackupBatteryAndHydrogenWithLinks.txt");
+
+            SetupBackup(nodes, years, opts, "Optimal backup");
+        }
+
+        public static void SetupOptimalBackupDelta(List<Node> nodes, int years)
+        {
+            var opts = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogenDelta.txt");
+
+            SetupBackup(nodes, years, opts, "Optimal backup");
         }
 
         public static void SetupHeterogeneousStorage(List<Node> nodes, int years)
         {
             var germany = nodes.Single(item => item.CountryName.Equals("Germany"));
             germany.StorageCollection.Add(new HydrogenStorage(25000 * years));
+        }
+
+        private static void SetupBackup(List<Node> nodes, int years, Dictionary<string, double> scheme, string label)
+        {
+            var sum = scheme.Select(item => item.Value).Sum();
+
+            foreach (var node in nodes)
+            {
+                if (!scheme.Keys.Contains(node.CountryName)) continue;
+
+                node.StorageCollection.Add(new BasicBackup(label,
+                    (150000*years/sum)*scheme[node.CountryName]));
+            }
         }
 
         #endregion

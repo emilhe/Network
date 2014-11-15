@@ -9,16 +9,16 @@ namespace BusinessLogic.Generators
     /// </summary>
     public class TimeSeriesGenerator : IGenerator
     {
-        private readonly Interfaces.ITimeSeries _mTimeSeries;
+        private readonly ITimeSeries _mTimeSeries;
 
         public bool Measurering { get; private set; }
 
-        public Interfaces.ITimeSeries TimeSeries { get; private set; }
-        public Interfaces.ITimeSeries UnderlyingTimeSeries { get { return _mTimeSeries; } }
+        public ITimeSeries TimeSeries { get; private set; }
+        public ITimeSeries UnderlyingTimeSeries { get { return _mTimeSeries; } }
 
         public string Name { get; private set; }
 
-        public TimeSeriesGenerator(string name, Interfaces.ITimeSeries ts)
+        public TimeSeriesGenerator(string name, ITimeSeries ts)
         {
             Name = name;
             _mTimeSeries = ts;

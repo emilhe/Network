@@ -51,11 +51,17 @@ namespace Main
     //item.ColumnHeader.Equals("Installed capacity") &&
     //item.Year.Equals(2010)).Select(item => item.Value).Sum();
 
+            //Configurations.CompareSources(this);
+            //Configurations.CompareSources(this);
+            //Configurations.Flo(this);
 
-            Configurations.ShowTimeSeris(this);
-            //Configurations.OneYearVE(this);
+            //Figures.DrawDistributions();
+            //Configurations.BackupAnalysisNoLinks(this);
+            //Configurations.BackupEnergyAbsoluteWithStorage(this);
+            //Configurations.BackupEnergyAbsoluteWithStorage(this);
 
-            //Figures.FlowAnalysis(this);
+            //Configurations.BackupAnalysisWithLinksWitDelta(this);
+            Figures.FlowAnalysisNext(this);
             //ChartUtils.SaveChart(_contourView.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\AverageVsYearly.png");
 
             //var test = new MainSetupControl
@@ -79,7 +85,7 @@ namespace Main
             //    mCtrl.TimeSeriesExecution();
             //    simulation.Simulate(8765 * parameters.Years);
             //    Console.WriteLine("Mix " + mCtrl.Mixes[0] + "; Penetation " + mCtrl.Penetrations[0] + ": " +
-            //          watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
+            //          watch.ElapsedMilliseconds + ", " + (simulation.Output.Failure ? "SUCCESS" : "FAIL"));
             //    test.MainPanel.Controls.Clear();
             //    timeSeriesControl = new TimeSeriesControl
             //    {
@@ -148,7 +154,7 @@ namespace Main
             //{
             //    opt.SetPenetration(pen);
             //    system.Simulate(24 * 7 * 52);
-            //    Console.WriteLine("Penetation " + pen + ", " + (system.Output.Success ? "SUCCESS" : "FAIL"));
+            //    Console.WriteLine("Penetation " + pen + ", " + (system.Output.Failure ? "SUCCESS" : "FAIL"));
             //}
             //DisplayTimeSeries(system.Output);
 

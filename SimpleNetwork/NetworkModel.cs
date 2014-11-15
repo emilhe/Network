@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.ExportStrategies;
+using BusinessLogic.FailureStrategies;
 using BusinessLogic.Interfaces;
 
 namespace BusinessLogic
@@ -9,17 +10,29 @@ namespace BusinessLogic
     {
         public List<Node> Nodes { get; private set; }
         public double Mismatch { get; private set; }
-        public double Curtailment { get { return _mBalanceResult.Curtailment; } }
-        public bool Failure { get { return _mBalanceResult.Failure; } }
-        public IExportStrategy ExportStrategy { get; private set; }
 
-        private readonly double[] _mMismatches;
-        private BalanceResult _mBalanceResult;
-
-        public NetworkModel(List<Node> nodes, IExportStrategy exportStrategy)
+        public double Curtailment
         {
+            get { return _mBalanceResult.Curtailment; }
+        }
+
+        public bool Failure
+        {
+            get { return FailureStrategy.Failure; }
+        }
+
+        public IFailureStrategy FailureStrategy { get; private set; }
+        public IExportStrategy ExportStrategy { get; private set; }
+        private BalanceResult _mBalanceResult;
+        private readonly double[] _mMismatches;
+
+        public NetworkModel(List<Node> nodes, IExportStrategy exportStrategy, IFailureStrategy failureStrategy = null)
+        {
+            if (failureStrategy == null) failureStrategy = new NoBlackoutStrategy();
+
             Nodes = nodes;
             ExportStrategy = exportStrategy;
+            FailureStrategy = failureStrategy;
             _mMismatches = new double[Nodes.Count];
             ExportStrategy.Bind(Nodes, _mMismatches);
         }
@@ -31,6 +44,7 @@ namespace BusinessLogic
             Mismatch = _mMismatches.Sum();
             // Delegate balancing to the export strategy.
             _mBalanceResult = ExportStrategy.BalanceSystem(tick);
+            FailureStrategy.Record(_mBalanceResult);
         }
 
     }

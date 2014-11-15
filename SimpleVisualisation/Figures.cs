@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic;
+using BusinessLogic.FailureStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
 using BusinessLogic.Utils;
@@ -19,6 +20,87 @@ namespace Main
 {
     class Figures
     {
+
+        #region DistributionMaps
+
+        public static void DrawDistributions()
+        {
+            // Mean load distribution.
+            var nodes = ConfigurationUtils.CreateNodes(TsSource.VE);
+            var ctrl = new MixController(nodes);
+            ctrl.SetMix(0.65);
+            ctrl.SetPenetration(1.026);
+            ctrl.Execute();
+
+            var loadScaling = ConfigurationUtils.LoadScaling(nodes);
+            //var max = loadScaling.Values.Max();
+            //foreach (var key in loadScaling.Keys.ToArray()) loadScaling[key] = loadScaling[key] / max;
+            var chart = EuropeChart.DrawEurope(loadScaling, Color.Black, Color.Yellow, Color.DarkGreen);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\MeanLoadDistribution.png");
+
+            // Mismatch distribution.
+            var scaling = ConfigurationUtils.MismatchScaling(nodes);
+            //max = scaling.Values.Max();
+            //foreach (var key in scaling.Keys.ToArray()) scaling[key] = scaling[key] / max;
+            DeltaScaling(loadScaling, scaling);
+            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\MeanMismatchDistribution.png");
+
+            #region Optimal distributions
+
+            // Optimal distribution [TESt].
+            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogenDelta.txt");
+            DeltaScaling(loadScaling, scaling);
+            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalBatteryHydrogenDelta.png");
+
+            // Optimal distribution.
+            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalNoStorageNoLinks.txt");
+            DeltaScaling(loadScaling, scaling);
+            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -8, 8);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalNoStorageNoLinksNorm.png");
+
+            // Optimal distribution without links.
+            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryNoLinks.txt");
+            DeltaScaling(loadScaling, scaling);
+            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -8, 8);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalBatteryNoLinksNorm.png");
+
+            // Optimal distribution without links.
+            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogenNoLinks.txt");
+            DeltaScaling(loadScaling, scaling);
+            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -8, 8);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalBatteryHydrogenNoLinksNorm.png");
+
+            // Optimal distribution.
+            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalNoStorage.txt");
+            DeltaScaling(loadScaling, scaling);
+            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalNoStorageNorm.png");
+
+            // Optimal distribution without links.
+            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBattery.txt");
+            DeltaScaling(loadScaling, scaling);
+            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalBatteryNorm.png");
+
+            // Optimal distribution without links.
+            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogen.txt");
+            DeltaScaling(loadScaling, scaling);
+            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalBatteryHydrogenNorm.png");
+
+            #endregion
+
+        }
+
+        private static void DeltaScaling(Dictionary<string, double> loadScaling, Dictionary<string, double> scaling)
+        {
+            var sum = scaling.Values.Sum();
+            foreach (var key in scaling.Keys.ToArray()) scaling[key] = (scaling[key] / sum - loadScaling[key])* 100;
+        }
+
+        #endregion
 
         #region Backup analysis
 
@@ -77,17 +159,12 @@ namespace Main
             ChartUtils.SaveChart(tsView.MainChart, 1000, 500,
                 @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\BackupTs.png");
 
-            // Create full bar chart graphics.
-            var fullhistView = new HistogramView();
-            var midpoints = new double[24];
-            for (int i = 0; i < 24; i++)
-            {
-                midpoints[i] = 0.1 + i*0.2;
-            }
-            fullhistView.AddData(derivedDataDaily[0].ToDataBinTable(midpoints), derivedDataDaily[0].Name);
-            fullhistView.AddData(derivedDataDaily[1].ToDataBinTable(midpoints), derivedDataDaily[1].Name);
-            fullhistView.MainChart.ChartAreas[0].AxisX.Title = "Consumption [TWh]";
-            ChartUtils.SaveChart(fullhistView.MainChart, 1000, 500,
+            // Create full bar chart graphics, NB: All zero values are filtered out!
+            var fullHistView = new HistogramView();
+            fullHistView.AddData(derivedDataDaily[0].GetAllValues().Where(item => item > 1e-12).ToList().ToDataBinTable(), derivedDataDaily[0].Name);
+            fullHistView.AddData(derivedDataDaily[1].GetAllValues().Where(item => item > 1e-12).ToList().ToDataBinTable(), derivedDataDaily[1].Name);
+            fullHistView.MainChart.ChartAreas[0].AxisX.Title = "Consumption [TWh]";
+            ChartUtils.SaveChart(fullHistView.MainChart, 1000, 500,
                 @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\FullBackupHist.png");
 
             // Create bar chart graphics.
@@ -199,6 +276,59 @@ namespace Main
                 @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\Heterogeneous.png");
         }
 
+        public static void FlowAnalysisNext(MainForm main)
+        {
+            var ctrl = new SimulationController { InvalidateCache = false };
+            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
+            ctrl.ExportStrategies.Add(
+                new ExportStrategyInput
+                {
+                    ExportStrategy = ExportStrategy.ConstrainedFlow,
+                });
+            //ctrl.NodeFuncs.Clear();
+            //ctrl.NodeFuncs.Add("2.2 TWh batt (delta), 25 TWh hydrogen (delta), 150 TWh hydro (delta)", s =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
+            //    ConfigurationUtils.SetupStuff(nodes, s.Length, true, true, true, ConfigurationUtils.MismatchScaling(nodes));
+            //    return nodes;
+            //});
+            ctrl.NodeFuncs.Add("6h batt (delta), 25 TWh hydrogen (delta), 150 TWh hydro (optimalDelta)", s =>
+            {
+                var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
+                ConfigurationUtils.SetupStuff(nodes, s.Length, true, true, false, ConfigurationUtils.MismatchScaling(nodes));
+                ConfigurationUtils.SetupOptimalBackupDelta(nodes, s.Length);
+                return nodes;
+            });
+            var outputs = ctrl.EvaluateTs(1.026, 0.65);
+            var view = main.DisplayHistogram();
+            var labels = new[] { "Homo", "DeltaOptimal"};
+            int idx;
+
+            // Create histogram.
+            idx = 0;
+            foreach (var output in outputs)
+            {
+                var data = Capacities(output);
+                if (idx == 0) view.Setup(data.Keys.ToList());
+                view.AddData(data.Values.ToArray(), string.Format("{0}, sum = {1}", labels[idx], data.Values.Sum().ToString("0.0")));
+                idx++;
+            }
+            ChartUtils.SaveChart(view.MainChart, 1500, 750,
+                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\Percentile.png");
+
+            // Create histogram.
+            idx = 0;
+            foreach (var output in outputs)
+            {
+                var data = FullCapacities(output);
+                if (idx == 0) view.Setup(data.Keys.ToList());
+                view.AddData(data.Values.ToArray(), string.Format("{0}, sum = {1}", labels[idx], data.Values.Sum().ToString("0.0")));
+                idx++;
+            }
+            ChartUtils.SaveChart(view.MainChart, 1500, 750,
+                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\FullCapacity.png");
+        }
+
         public static void FlowAnalysisNoStorage(MainForm main)
         {
             var ctrl = new SimulationController { InvalidateCache = false };
@@ -243,94 +373,18 @@ namespace Main
                 @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\HeterogeneousNoStorage.png");
         }
 
-        public static void DrawEuropeMaps()
-        {
-            // Heterogeneous storage.
-            var storage = EuropeChart.DrawEurope(new Dictionary<string, double>
-            {
-                {"Sweden", 0},
-                {"Norway", 0},
-                {"Slovakia", 0},
-                {"Slovenia", 0},
-                {"Serbia", 0},
-                {"Romania", 0},
-                {"Portugal", 0},
-                {"Poland", 0},
-                {"Netherlands", 0},
-                {"Latvia", 0},
-                {"Luxemborg", 0},
-                {"Lithuania", 0},
-                {"Italy", 0},
-                {"Ireland", 0},
-                {"Hungary", 0},
-                {"Croatia", 0},
-                {"Greece", 0},
-                {"Great Britain", 0},
-                {"France", 0},
-                {"Finland", 0},
-                {"Estonia", 0},
-                {"Spain", 0},
-                {"Denmark", 0},
-                {"Germany", 1},
-                {"Czech Republic", 0},
-                {"Switzerland", 0},
-                {"Bosnia", 0},
-                {"Bulgaria", 0},
-                {"Belgium", 0},
-                {"Austria", 0},
-                {"Cyprus", 0},
-                {"Malta", 0},
-            }, Color.Black, Color.Green, Color.Yellow);
-            storage.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\HeterogeneousS.png");
-
-            // Heterogeneous backup.
-            var backup = EuropeChart.DrawEurope(new Dictionary<string, double>
-            {
-                // Data source: "Nord Pool, http://www.nordpoolspot.com/Market-data1/Power-system-data/Hydro-Reservoir/Hydro-Reservoir/ALL/Hourly/".
-                {"Norway", 82.244},
-                {"Sweden", 33.675},
-                {"Finland", 5.530},
-                // Data source: "Feix 2000"
-                {"Austria", 3.2},
-                {"France", 9.8},
-                {"Germany", 0.3},
-                {"Greece", 2.4},
-                {"Italy", 7.9},
-                {"Portugal", 2.6},
-                {"Spain", 18.4},
-                {"Switzerland", 8.4},
-                //{"Bosnia", 0.0}
-
-                {"Slovenia", 0},
-                {"Slovakia", 0},
-                {"Serbia", 0},
-                {"Romania", 0},
-                {"Poland", 0},
-                {"Netherlands", 0},
-                {"Latvia", 0},
-                {"Luxemborg", 0},
-                {"Lithuania", 0},
-                {"Ireland", 0},
-                {"Hungary", 0},
-                {"Croatia", 0},
-                {"Great Britain", 0},
-                {"Estonia", 0},
-                {"Denmark", 0},
-                {"Czech Republic", 0},
-                {"Bosnia", 0},
-                {"Bulgaria", 0},
-                {"Belgium", 0},
-                {"Cyprus", 0},
-                {"Malta", 0},
-            }, Color.Black, Color.Yellow, Color.Red);
-            backup.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\HeterogeneousB.png");
-        }
-
         private static Dictionary<string, double> Capacities(SimulationOutput output)
         {
             return output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
                         .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
                             flowTimeSeries => StatUtils.CalcCapacity(flowTimeSeries.GetAllValues()));
+        }
+
+        private static Dictionary<string, double> FullCapacities(SimulationOutput output)
+        {
+            return output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
+                        .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
+                            flowTimeSeries => StatUtils.CalcFullCapacity(flowTimeSeries.GetAllValues()));
         }
 
         private static void FilterValues(Dictionary<string, double> val1, Dictionary<string, double> val2, double tolerance = 2)
@@ -395,9 +449,12 @@ namespace Main
 
             // What flow fractions should be investigated?
             //var fractions = new[] { 1, 0.75, 0.5, 0.4, 0.3, 0.29, 0.28, 0.27, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.20 };
-            var fractions = new[] { 0.31 };
-            var originalMix = 0.65;
-            var originalPen = 1.226;
+            var fractions = new[] { 1, 0.30, 0.29, 0.28, 0.27, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.20, 0.15, 0.10 };
+            //var fractions = new[] { 0.31 };
+            //var originalMix = 0.65;
+            //var originalPen = 1.026;      
+            var originalMix = 0.62;
+            var originalPen = 1.021;
             //var originalMix = 0.60;
             //var originalPen = 1.06;
 
@@ -413,7 +470,7 @@ namespace Main
                 // Vary the penetration.
                 PenetrationFrom = originalPen,
                 PenetrationTo = originalPen + 0.20,
-                PenetrationSteps = 40
+                PenetrationSteps = 10
             };
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
@@ -422,11 +479,15 @@ namespace Main
                 {
                     ExportStrategy = ExportStrategy.ConstrainedFlow
                 });
+            ctrl.FailFuncs = new Dictionary<string, Func<IFailureStrategy>>();
+            ctrl.FailFuncs.Add("Allow blackouts", () => new AllowBlackoutsStrategy(100));
 
             // Do the crunching.
             var fracIdx = 0;
             while (true)
             {
+                if (fracIdx == fractions.Length) break;
+
                 var fraction = fractions[fracIdx];
                 // Update edge functions.
                 ctrl.EdgeFuncs.Clear();
@@ -453,6 +514,7 @@ namespace Main
 
             var view = main.DisplayPlot();
             view.AddData(dataPoints, "Real");
+            view.MainChart.ChartAreas[0].AxisY.Minimum = 1;
 
             //ctrl.EdgeFuncs.Add("Europe edges, constrained 100%", list => ConfigurationUtils.GetEdges(list, "flowTest", 1.00)); // OK
             //ctrl.EdgeFuncs.Add("Europe edges, constrained 75%", list => ConfigurationUtils.GetEdges(list, "flowTest", 0.75)); // OK
@@ -501,7 +563,8 @@ namespace Main
                 {
                     ExportStrategy = ExportStrategy.ConstrainedFlow
                 });
-            var outputs = ctrl.EvaluateTs(1.026, 0.65);
+            //var outputs = ctrl.EvaluateTs(1.026, 0.65);
+            var outputs = ctrl.EvaluateTs(1.021, 0.62);
 
             // Create reference histogram.
             var flows = new List<LinkDataRow>();
@@ -516,16 +579,16 @@ namespace Main
                 });
             }
 
-            ProtoStore.SaveLinkData(flows, "flowReal");
+            ProtoStore.SaveLinkData(flows, "flow32Year"); //flowReal
         }
 
-        private static Dictionary<string, double> FullCapacities(SimulationOutput output)
-        {
-            return output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
-                .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-                    flowTimeSeries =>
-                        Math.Max(Math.Abs(flowTimeSeries.GetAllValues().Min()), flowTimeSeries.GetAllValues().Max()));
-        }
+        //private static Dictionary<string, double> FullCapacities(SimulationOutput output)
+        //{
+        //    return output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
+        //        .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
+        //            flowTimeSeries =>
+        //                Math.Max(Math.Abs(flowTimeSeries.GetAllValues().Min()), flowTimeSeries.GetAllValues().Max()));
+        //}
 
         #endregion
 

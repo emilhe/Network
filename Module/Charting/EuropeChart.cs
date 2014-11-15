@@ -36,7 +36,7 @@ namespace Controls.Charting
             {"Slovenia", ColorTranslator.FromHtml("#6F971C")},
             {"Slovakia", ColorTranslator.FromHtml("#2B2200")},
             {"Serbia", ColorTranslator.FromHtml("#00FF66")},
-            {"Romania", ColorTranslator.FromHtml("#FF2F7A")},
+            {"Romania", ColorTranslator.FromHtml("#FF7F2A")},
             {"Portugal", ColorTranslator.FromHtml("#FFD5D5")},
             {"Poland", ColorTranslator.FromHtml("#808000")},
             {"Norway", ColorTranslator.FromHtml("#88AA00")},
@@ -86,19 +86,21 @@ namespace Controls.Charting
         }
 
         /// <summary>
-        /// Draws an image of europe with the countries colored proportional to their value (from = 0, to = 1).
+        /// Draws an image of europe with the countries colored proportional to their value (absolute).
         /// </summary>
         /// <param name="countryValues"> country values </param>
         /// <param name="defaultColor"> default country color </param>
-        /// <param name="from"> low value color </param>
-        /// <param name="to"> high  value color </param>
+        /// <param name="colorFrom"> low value color </param>
+        /// <param name="colorTo"> high  value color </param>
+        /// <param name="from"> low value </param>
+        /// <param name="to"> high value </param>
         /// <returns> a image of europe </returns>
-        public static Bitmap DrawEurope(Dictionary<string, double> countryValues, Color defaultColor, Color from, Color to)
+        public static Bitmap DrawEurope(Dictionary<string, double> countryValues, Color defaultColor, Color colorFrom, Color colorTo, double from, double to)
         {
             var source = new Bitmap(Image.FromFile(Path));
             var padding = (source.Width + source.Height) / 100;
-            var target = PrepareWithScaleBar(source, from, to, padding);
-            var countryColors = CalculateColorMap(countryValues, from, to);
+            var target = PrepareWithScaleBar(source, colorFrom, colorTo, padding, from, to);
+            var countryColors = CalculateColorMap(countryValues, colorFrom, colorTo, from, to);
             var colorMap = PrepareColorMap(countryColors, defaultColor);
 
             WriteColors(source, target, colorMap, padding);
@@ -107,26 +109,40 @@ namespace Controls.Charting
         }
 
         /// <summary>
+        /// Draws an image of europe with the countries colored proportional to their value (normalized).
+        /// </summary>
+        /// <param name="countryValues"> country values </param>
+        /// <param name="defaultColor"> default country color </param>
+        /// <param name="colorFrom"> low value color </param>
+        /// <param name="colorTo"> high  value color </param>
+        /// <returns> a image of europe </returns>
+        public static Bitmap DrawEurope(Dictionary<string, double> countryValues, Color defaultColor, Color colorFrom,
+            Color colorTo)
+        {
+            return DrawEurope(countryValues, defaultColor, colorFrom, colorTo,
+                countryValues.Values.Min(),
+                countryValues.Values.Max());
+        }
+
+        /// <summary>
         /// Map from values to color using the from-to gradient (manual calculation).
         /// </summary>
         /// <param name="countryValues"> the data values </param>
-        /// <param name="from"> the low value color </param>
-        /// <param name="to"> the high value color </param>
+        /// <param name="colorFrom"> the low value color </param>
+        /// <param name="colorTo"> the high value color </param>
         /// <returns> gradients to be painted </returns>
-        private static Dictionary<string, Color> CalculateColorMap(Dictionary<string, double> countryValues, Color from, Color to)
+        private static Dictionary<string, Color> CalculateColorMap(Dictionary<string, double> countryValues, Color colorFrom, Color colorTo, double from, double to)
         {
             var colorMap = new Dictionary<string, Color>();
-            var min = countryValues.Values.Min();
-            var max = countryValues.Values.Max();
             
             foreach (var key in countryValues.Keys)
             {
                 // Normalise to 1.
-                var value = (countryValues[key] - min)/(max - min);
+                var value = (countryValues[key] - from) / (to - from);
                 // Blend colors.
-                byte r = (byte) ((to.R*value) + from.R*(1 - value));
-                byte g = (byte) ((to.G*value) + from.G*(1 - value));
-                byte b = (byte) ((to.B*value) + from.B*(1 - value));
+                byte r = (byte) ((colorTo.R*value) + colorFrom.R*(1 - value));
+                byte g = (byte) ((colorTo.G*value) + colorFrom.G*(1 - value));
+                byte b = (byte) ((colorTo.B*value) + colorFrom.B*(1 - value));
                 var color = Color.FromArgb(r, g, b);
                 
                 colorMap.Add(key, color);
@@ -150,7 +166,7 @@ namespace Controls.Charting
         /// </summary>
         /// <param name="source"> the source bitmap </param>
         /// <returns> bitmap with scale bar </returns>
-        private static Bitmap PrepareWithScaleBar(Bitmap source, Color from, Color to, int padding)
+        private static Bitmap PrepareWithScaleBar(Bitmap source, Color colorFrom, Color colorTo, int padding, double from, double to)
         {
             var scaleBar = (int)(0.04 * source.Width);
             var target = new Bitmap(source.Width + scaleBar + 3*padding, source.Height + 2*padding,
@@ -162,12 +178,14 @@ namespace Controls.Charting
                 X = source.Width + 2*padding,
                 Y = padding
             };
-            var myVerticalGradient = new LinearGradientBrush(verticalFillRectangle, to, from, 90f);
+            var myVerticalGradient = new LinearGradientBrush(verticalFillRectangle, colorTo, colorFrom, 90f);
 
             using (var graphics = Graphics.FromImage(target))
             {
                 graphics.FillRectangle(myVerticalGradient, verticalFillRectangle);
             }
+
+            // TODO: Draw lables!
 
             return target;
         }

@@ -97,6 +97,7 @@ namespace BusinessLogic
             foreach (var node in Model.Nodes) node.Reset();
             // Reset edge time series.
             Model.ExportStrategy.Reset();
+            Model.FailureStrategy.Reset();
         }
 
         /// <summary>

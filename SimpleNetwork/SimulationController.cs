@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
+using BusinessLogic.FailureStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Utils;
 using SimpleImporter;
@@ -27,13 +28,16 @@ namespace BusinessLogic
         // Optional parameters.
         public Dictionary<string, Func<TsSourceInput, List<Node>>> NodeFuncs { get; set; }
         public Dictionary<string, Func<List<Node>, EdgeSet>> EdgeFuncs { get; set; }
+        public Dictionary<string, Func<IFailureStrategy>> FailFuncs { get; set; }
         
         // Current iteration parameters.
         private string _mNodeTag = "";
         private string _mEdgeTag = "";
+        private string _mFailTag = "";
         private EdgeSet _mEdges;        
         private List<Node> _mNodes;
         private TsSourceInput _mSrcIn;
+        private IFailureStrategy _mFail;
         private ExportStrategyInput _mExpStratIn;
 
         #endregion
@@ -48,6 +52,8 @@ namespace BusinessLogic
             NodeFuncs.Add("6h batt (homo), 25TWh hydrogen (homo), 150 TWh hydro-bio (homo)", s => ConfigurationUtils.CreateNodesWithBackup(s.Source, s.Length, s.Offset));
             // Default way to construct edges.
             EdgeFuncs = new Dictionary<string, Func<List<Node>, EdgeSet>> { { "Europe edges", ConfigurationUtils.GetEuropeEdges } };
+            // Default way to define failures.
+            FailFuncs = new Dictionary<string, Func<IFailureStrategy>>{{"No blackout", () => new NoBlackoutStrategy()}};
 
             Sources = new List<TsSourceInput>();
             ExportStrategies = new List<ExportStrategyInput>();
@@ -127,24 +133,27 @@ namespace BusinessLogic
                 {
                     foreach (var exportStrategy in ExportStrategies)
                     {
-                        //Parallel.ForEach(EdgeFuncs, edgeFunc =>
                         foreach (var edgeFunc in EdgeFuncs)
                         {
-                            // Refresh key dependent values here.
-                            _mSrcIn = source;
-                            _mNodeTag = nodeFunc.Key;
-                            _mEdgeTag = edgeFunc.Key;
-                            _mExpStratIn = exportStrategy;
-
-                            // Add sub result.
-                            results.Add(function(() =>
+                            foreach (var failFunc in FailFuncs)
                             {
-                                // Delay expensive non key dependent validations to here.
-                                _mNodes = nodeFunc.Value(source);
-                                _mEdges = edgeFunc.Value(_mNodes);
-                            }));
+                                // Refresh key dependent values here.
+                                _mSrcIn = source;
+                                _mNodeTag = nodeFunc.Key;
+                                _mEdgeTag = edgeFunc.Key;
+                                _mFailTag = failFunc.Key;
+                                _mExpStratIn = exportStrategy;
+
+                                // Add sub result.
+                                results.Add(function(() =>
+                                {
+                                    // Delay expensive non key dependent validations to here.
+                                    _mNodes = nodeFunc.Value(source);
+                                    _mEdges = edgeFunc.Value(_mNodes);
+                                    _mFail = failFunc.Value();
+                                }));
+                            }
                         }
-                        //});
                     }
                 }
             }
@@ -180,7 +189,8 @@ namespace BusinessLogic
                         {"Length", _mSrcIn.Length.ToString()},
                         {"Offset", _mSrcIn.Offset.ToString()},
                         {"NodeTag", _mNodeTag},
-                        {"EdgeTag", _mEdgeTag}
+                        {"EdgeTag", _mEdgeTag},
+                        {"FailureTag", _mFailTag},
                     };
         } 
 
@@ -216,7 +226,7 @@ namespace BusinessLogic
 
         private bool[,] RunSimulation(IExportStrategy strategy, double years, GridScanParameters grid)
         {
-            var model = new NetworkModel(_mNodes, strategy);
+            var model = new NetworkModel(_mNodes, strategy, _mFail);
             var simulation = new Simulation(model);
             var mCtrl = new MixController(_mNodes);
             var watch = new Stopwatch();
@@ -240,7 +250,7 @@ namespace BusinessLogic
 
         private SimulationOutput RunSimulation(IExportStrategy strategy, double years, double penetration, double mixing)
         {
-            var model = new NetworkModel(_mNodes, strategy);
+            var model = new NetworkModel(_mNodes, strategy, _mFail);
             var simulation = new Simulation(model);
             var mCtrl = new MixController(_mNodes);
             var watch = new Stopwatch();
@@ -260,7 +270,7 @@ namespace BusinessLogic
     public class TsSourceInput
     {
         public TsSource Source { get; set; }
-        public double Length { get; set; } // In years
+        public int Length { get; set; } // In years
         public double Offset { get; set; } // In years
 
         public string Description

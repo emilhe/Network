@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace Utils
@@ -85,6 +87,29 @@ namespace Utils
             source.MultiLoop(indices => result[indices[0], indices[1]] = source[k++]);
 
             return result;
+        }
+
+        #endregion
+
+        #region Input/output extensions
+
+        public static void ToFile<T, V>(this Dictionary<T, V> dictionary, string path)
+        {
+            File.WriteAllLines(path,dictionary.Select(x =>x.Key + ":" + x.Value));
+        }
+
+        public static Dictionary<T, V> DictionaryFromFile<T,V>(string path) where T : IConvertible where V: IConvertible
+        {
+            return File.ReadAllLines(path).Select(line => line.Split(':'))
+                .ToDictionary(item => Parse<T>(item[0]), item => Parse<V>(item[1]));
+        }
+
+        public static T Parse<T>(string s) where T : IConvertible
+        {
+            if (typeof (T) == typeof (string)) return (T) Convert.ChangeType(s, typeof (T));
+            if (typeof (T) == typeof (double)) return (T) Convert.ChangeType(double.Parse(s), typeof (T));
+            if (typeof (T) == typeof (int)) return (T) Convert.ChangeType(int.Parse(s), typeof (T));
+            throw new ArgumentException(string.Format("{0} is not supported by ditionary parsing.", typeof (T)));
         }
 
         #endregion
