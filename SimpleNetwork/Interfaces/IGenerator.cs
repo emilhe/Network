@@ -3,10 +3,12 @@
     /// <summary>
     /// Power generation abstraction.
     /// </summary>
-    public interface IGenerator : IMeasureableLeaf
+    public interface IGenerator : IMeasureable, ITickListener
     {
+        
         string Name { get; }
-        double GetProduction(int tick);
+        double Production { get; }
+
     }
 
 }

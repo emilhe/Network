@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
 using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
@@ -10,15 +11,8 @@ namespace BusinessLogic.Storages
     /// </summary>
     public class BasicStorage : IStorage
     {
-        private bool _mMeasurering;
+
         private double _mRemainingCapacity;
-
-        public bool Measurering
-        {
-            get { return _mMeasurering; }
-        }
-
-        public ITimeSeries TimeSeries { get; private set; }
 
         public string Name { get; private set; }
         public double Efficiency { get; private set; }
@@ -31,6 +25,9 @@ namespace BusinessLogic.Storages
             Capacity = capacity;
             Efficiency = efficiency;
             InitialCapacity = initialCapacity;
+
+            LimitIn = double.PositiveInfinity;
+            LimitOut = double.NegativeInfinity;
 
             _mRemainingCapacity = initialCapacity;
         }
@@ -60,6 +57,9 @@ namespace BusinessLogic.Storages
             _mRemainingCapacity = InitialCapacity;
         }
 
+        public double LimitIn { get; set; }
+        public double LimitOut { get; set; }
+
         private double EffectiveEnergyReleasedOnDrainEmpty()
         {
             return _mRemainingCapacity * Efficiency;
@@ -74,24 +74,24 @@ namespace BusinessLogic.Storages
 
         #region Charge/discharge
 
-        public double Inject(int tick, double amount)
+        public double Inject(double amount)
         {
-            if (amount > 0) return Charge(tick, amount);
-            return -Discharge(tick, -amount);
+            if (amount > 0) return Charge(amount);
+            return -Discharge(-amount);
         }
 
-        public double Restore(int tick, Response response)
+        public double Restore(Response response)
         {
             if (response == Response.Charge)
             {
                 var cost = EffectiveEnergyNeededToRestoreFullCapacity();
-                Restore(tick);
+                Refill();
                 return -cost;
             }
             else
             {
                 var cost = EffectiveEnergyReleasedOnDrainEmpty();
-                Drain(tick);
+                Drain();
                 return cost;
             }
         }
@@ -99,71 +99,87 @@ namespace BusinessLogic.Storages
         /// <summary>
         /// Discharge the battery. Returns how much energy is still needed (that is NOT discharged).
         /// </summary>
-        /// <param name="tick"> tick </param>
         /// <param name="toDischarge"></param>
         /// <returns> the energy which was not stored </returns>
-        private double Discharge(int tick, double toDischarge)
+        private double Discharge(double toDischarge)
         {
             toDischarge /= Efficiency;
             if ((_mRemainingCapacity - toDischarge) < 0)
             {
                 var remainder = toDischarge - _mRemainingCapacity;
-                Drain(tick);
+                Drain();
                 return (remainder*Efficiency);
             }
             // There is power; discharge.
             _mRemainingCapacity -= toDischarge;
-            if (_mMeasurering) TimeSeries.AddData(tick, _mRemainingCapacity);
             return 0;
         }
 
         /// <summary>
         /// Charge the battery. Returns how much energy is left (that is NOT stored).
         /// </summary>
-        /// <param name="tick"> tick </param>
         /// <param name="toCharge"></param>
         /// <returns> the energy which was not stored </returns>
-        private double Charge(int tick, double toCharge)
+        private double Charge(double toCharge)
         {
             toCharge *= Efficiency;
             if ((_mRemainingCapacity + toCharge) > Capacity)
             {
                 var excess = (toCharge + _mRemainingCapacity) - Capacity;
-                Restore(tick);
+                Refill();
                 return excess/Efficiency;
             }
             // There is still room; just charge.
             _mRemainingCapacity += toCharge;
-            if (_mMeasurering) TimeSeries.AddData(tick, _mRemainingCapacity);
             return 0;
         }
 
-        private void Restore(int tick)
+        // TODO: Fix refill/drain problems..
+
+        private void Refill()
         {
             _mRemainingCapacity = Capacity;
-            if (_mMeasurering) TimeSeries.AddData(tick, _mRemainingCapacity);
         }
 
-        private void Drain(int tick)
+        private void Drain()
         {
             _mRemainingCapacity = 0;
-            if (_mMeasurering) TimeSeries.AddData(tick, _mRemainingCapacity);
         }
 
         #endregion
 
-        public void StartMeasurement()
+        #region Measurement
+
+        private ITimeSeries _mTimeSeries;
+        private bool _mMeasuring;
+
+        public bool Measuring { get { return _mMeasuring; } }
+
+        public void Start()
         {
-            TimeSeries = new SparseTimeSeries(Name);
-            TimeSeries.AddData(0, _mRemainingCapacity);
-            _mMeasurering = true;
+            _mTimeSeries = new DenseTimeSeries(Name);
+            _mMeasuring = true;
         }
 
-        public void Reset()
+        public void Clear()
         {
-            TimeSeries = null;
-            _mMeasurering = false;
+            _mTimeSeries = null;
+            _mMeasuring = false;
         }
+
+        public void Sample(int tick)
+        {
+            if (!_mMeasuring) return;
+            _mTimeSeries.AppendData(_mRemainingCapacity);
+        }
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            return new List<ITimeSeries> { _mTimeSeries };
+        }
+
+        #endregion
 
     }
+
 }

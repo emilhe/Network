@@ -9,7 +9,7 @@
     /// <summary>
     /// Storage abstraction.
     /// </summary>
-    public interface IStorage : IMeasureableLeaf
+    public interface IStorage : IMeasureable
     {
         /// <summary>
         /// Name/description of the storage.
@@ -34,18 +34,16 @@
         /// <summary>
         /// Injects an amount of energy (positive or negative) into the storage.
         /// </summary>
-        /// <param name="tick"> tick </param>
         /// <param name="amount"> amount of energy </param>
         /// <returns> remaining energy </returns>
-        double Inject(int tick, double amount);
+        double Inject(double amount);
 
         /// <summary>
         /// Restore (= fully charge/discharge) the storage.
         /// </summary>
-        /// <param name="tick"> tick </param>
         /// <param name="response"> should we charge or discharge? </param>
         /// <returns> cost of discharge </returns>
-        double Restore(int tick, Response response);
+        double Restore(Response response);
 
         /// <summary>
         /// Remaining capacity for a specific response; charge or dicharge.
@@ -55,9 +53,20 @@
         double RemainingCapacity(Response response);
         
         /// <summary>
-        /// Reset capacity (the be used when a new simulation is started).
+        /// Reset capacity (to be used when a new simulation is started).
         /// </summary>
         void ResetCapacity();
+
+        /// <summary>
+        /// The POWER capacity (how much can be discharged in one time step).
+        /// </summary>
+        double LimitIn { get; }
+
+        /// <summary>
+        /// The POWER capacity (how much can be discharged in one time step).
+        /// </summary>
+        double LimitOut { get; }
+
     }
 
 }

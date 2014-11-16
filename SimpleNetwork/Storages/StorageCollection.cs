@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Interfaces;
 
 namespace BusinessLogic.Storages
 {
-    public class StorageCollection
+    public class StorageCollection : IEnumerable<KeyValuePair<double, IStorage>>
     {
 
         private readonly Dictionary<double, IStorage> _mStorageMap;
@@ -42,14 +43,24 @@ namespace BusinessLogic.Storages
             return _mStorageMap[efficiency];
         }
 
-        public Dictionary<double, IStorage>.ValueCollection Storages()
+        //public Dictionary<double, IStorage>.ValueCollection Storages()
+        //{
+        //    return _mStorageMap.Values;
+        //}
+
+        //public Dictionary<double, IStorage>.KeyCollection Efficiencies()
+        //{
+        //    return _mStorageMap.Keys;
+        //}
+
+        public IEnumerator<KeyValuePair<double, IStorage>> GetEnumerator()
         {
-            return _mStorageMap.Values;
+            return _mStorageMap.GetEnumerator();
         }
 
-        public Dictionary<double, IStorage>.KeyCollection Efficiencies()
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            return _mStorageMap.Keys;
+            return ((IEnumerable) _mStorageMap).GetEnumerator();
         }
     }
 }

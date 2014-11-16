@@ -29,12 +29,12 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Balance the system utilizing the storages of all nodes.
         /// </summary>
-        public BalanceResult BalanceSystem(int tick)
+        public BalanceResult BalanceSystem()
         {
             // Find relevant storage layer, charge all below.
-            var balanceResult = _mHelper.BalanceGlobally(tick, (() => (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge));
+            var balanceResult = _mHelper.BalanceGlobally((() => (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge));
             // Distribute power.
-            _mHelper.DistributePower(tick);
+            _mHelper.DistributePower();
 
             return balanceResult;
         }
@@ -43,25 +43,30 @@ namespace BusinessLogic.ExportStrategies
 
         public List<ITimeSeries> CollectTimeSeries()
         {
-            var result = ((IMeasureableNode) _mHelper).CollectTimeSeries();
+            var result =  _mHelper.CollectTimeSeries();
             // Bind flow dependence.
             foreach (var ts in result) ts.Properties.Add("Flow", "Cooperative");
             return result;
         }
 
-        public void StartMeasurement()
+        public bool Measuring
         {
-            ((IMeasureable) _mHelper).StartMeasurement();
+            get { return _mHelper.Measuring; }
         }
 
-        public void Reset()
+        public void Start()
         {
-            ((IMeasureable) _mHelper).Reset();
+            ((IMeasureable) _mHelper).Start();
         }
 
-        public bool Measurering
+        public void Clear()
         {
-            get { return _mHelper.Measurering; }
+            _mHelper.Clear();
+        }
+
+        public void Sample(int tick)
+        {
+            ((IMeasureable) _mHelper).Sample(tick);
         }
 
         #endregion

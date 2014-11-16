@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.FailureStrategies;
@@ -29,21 +30,26 @@ namespace BusinessLogic
         public NetworkModel(List<Node> nodes, IExportStrategy exportStrategy, IFailureStrategy failureStrategy = null)
         {
             if (failureStrategy == null) failureStrategy = new NoBlackoutStrategy();
+            _mMismatches = new double[nodes.Count];
 
             Nodes = nodes;
             ExportStrategy = exportStrategy;
             FailureStrategy = failureStrategy;
-            _mMismatches = new double[Nodes.Count];
             ExportStrategy.Bind(Nodes, _mMismatches);
+
         }
 
         public void Evaluate(int tick)
         {
             // Calculate mismatches.
-            for (int i = 0; i < Nodes.Count; i++) _mMismatches[i] = Nodes[i].GetDelta(tick);
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                _mMismatches[i] = Nodes[i].GetDelta();
+            }
             Mismatch = _mMismatches.Sum();
+
             // Delegate balancing to the export strategy.
-            _mBalanceResult = ExportStrategy.BalanceSystem(tick);
+            _mBalanceResult = ExportStrategy.BalanceSystem();
             FailureStrategy.Record(_mBalanceResult);
         }
 

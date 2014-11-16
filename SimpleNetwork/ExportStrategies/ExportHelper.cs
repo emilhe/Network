@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Interfaces;
-using BusinessLogic.ExportStrategies.DistributionStrategies;
 
 namespace BusinessLogic.ExportStrategies
 {
-    class ExportHelper : IMeasureableNode
+    class ExportHelper : IMeasureable
     {
         // Tolerance due to numeric roundings OR the distribution strategy chosen.
         public double Tolerance
@@ -31,7 +30,7 @@ namespace BusinessLogic.ExportStrategies
             _mMismatches = mismatches;
 
             _mStorageMap =
-                _mNodes.SelectMany(item => item.StorageCollection.Efficiencies())
+                _mNodes.SelectMany(item => item.StorageCollection.Select(subItem => subItem.Key))
                     .Distinct()
                     .OrderByDescending(item => item)
                     .ToArray();
@@ -42,7 +41,7 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Detmine the storage level at which the flow optimisation is to take place. Restore/drain all lower levels.
         /// </summary>
-        public BalanceResult BalanceGlobally(int tick, Func<Response> respFunc)
+        public BalanceResult BalanceGlobally(Func<Response> respFunc)
         {
             var result = new BalanceResult();
             _mSystemResponse = respFunc();
@@ -57,7 +56,7 @@ namespace BusinessLogic.ExportStrategies
                 {
                     if (!_mNodes[index].StorageCollection.Contains(_mStorageMap[_mStorageLevel])) continue;
                     _mMismatches[index] += _mNodes[index].StorageCollection.Get(_mStorageMap[_mStorageLevel])
-                        .Restore(tick, _mSystemResponse);
+                        .Restore(_mSystemResponse);
                 }
             }
 
@@ -100,7 +99,7 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Charge all nodes individually until all energy is used or the storage is full, skip nodes not fulfilling condition.
         /// </summary>
-        public BalanceResult BalanceLocally(int tick, Func<int, bool> condition, bool allowCurtailment)
+        public BalanceResult BalanceLocally(Func<int, bool> condition, bool allowCurtailment)
         {
             var result = new BalanceResult {Curtailment = 0, Failure = false};
 
@@ -117,7 +116,7 @@ namespace BusinessLogic.ExportStrategies
                         if (_mMismatches[i] < -Tolerance) result.Failure = true;
                         result.Curtailment += _mMismatches[i];
                     }
-                    _mMismatches[i] = _mNodes[i].StorageCollection.Get(efficiency).Inject(tick, _mMismatches[i]);
+                    _mMismatches[i] = _mNodes[i].StorageCollection.Get(efficiency).Inject(_mMismatches[i]);
                 }
             }
 
@@ -131,9 +130,9 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Distribute power. This includes chargeing/discharge storage if necessary.
         /// </summary>
-        public void DistributePower(int tick)
+        public void DistributePower()
         {
-            DistributionStrategy.DistributePower(_mNodes, _mMismatches, _mStorageMap[_mStorageLevel], tick);
+            DistributionStrategy.DistributePower(_mNodes, _mMismatches, _mStorageMap[_mStorageLevel]);
         }
 
         /// <summary>
@@ -148,24 +147,31 @@ namespace BusinessLogic.ExportStrategies
 
         #region Measurement
 
-        public void StartMeasurement()
-        {
-            if (DistributionStrategy == null) return;
-            DistributionStrategy.StartMeasurement();
-        }
-
-        public void Reset()
-        {
-            if (DistributionStrategy == null) return;
-            DistributionStrategy.Reset();
-        }
-
-        public bool Measurering
+        public bool Measuring
         {
             get
             {
-                return DistributionStrategy != null && DistributionStrategy.Measurering;
+                if (DistributionStrategy == null) return false;
+                return DistributionStrategy.Measuring;
             }
+        }
+
+        public void Start()
+        {
+            if (DistributionStrategy == null) return;
+            DistributionStrategy.Start();
+        }
+
+        public void Clear()
+        {
+            if (DistributionStrategy == null) return;
+            DistributionStrategy.Clear();
+        }
+
+        public void Sample(int tick)
+        {
+            if (DistributionStrategy == null) return;
+            DistributionStrategy.Sample(tick);
         }
 
         public List<ITimeSeries> CollectTimeSeries()

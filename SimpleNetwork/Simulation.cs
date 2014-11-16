@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Configuration;
+using System.Runtime.InteropServices;
+using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
-using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
 
 namespace BusinessLogic
 {
@@ -20,10 +20,14 @@ namespace BusinessLogic
         private bool _mSuccess;
 
         // Current iteration fields.
-        private int _mTick;
+        private List<ITickListener> _mTickListeners; 
+        private List<IMeasureable> _mMeasureables;
 
         #endregion
 
+        /// <summary>
+        /// The simulation model.
+        /// </summary>
         public NetworkModel Model { get; set; }
 
         /// <summary>
@@ -52,24 +56,22 @@ namespace BusinessLogic
         public void Simulate(int ticks, bool log = true)
         {
             ResetStorages();
-            if (log) StartLogging();
-            else ClearLogs();
+            SetupTickListeners();
+            if (log) SetupLoggers();
+            else Reset();
 
             // Simulation main loop.
-            _mTick = 0;
+            var tick = 0;
             _mSuccess = true;
-            while (_mTick < ticks)
+            while (tick < ticks)
             {
                 if (_mDebug) _mWatch.Restart();
-                Model.Evaluate(_mTick);
-                if (log) _mSystemTimeSeries["Mismatch"].AppendData(Model.Mismatch);
-                if (log) _mSystemTimeSeries["Curtailment"].AppendData(Model.Curtailment);
-                if (Model.Failure)
-                {
-                    _mSuccess = false;
-                }
+                SignalTickChanged(tick);
+                Model.Evaluate(tick);
+                if (log) SignalLoggers(tick);
+                if (Model.Failure) _mSuccess = false;
                 if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
-                _mTick++;
+                tick++;
                 if (!log && Model.Failure) break;
                 //if(_mTick % 10000 == 0) Console.WriteLine("Progress: {0} of {1}",_mTick, ticks);
             }
@@ -82,28 +84,40 @@ namespace BusinessLogic
         /// </summary>
         private void ResetStorages()
         {
-            foreach (var storage in Model.Nodes.SelectMany(item => item.StorageCollection.Storages()))
-                storage.ResetCapacity();
+            foreach (var item in Model.Nodes.SelectMany(item => item.StorageCollection))
+            {
+                item.Value.ResetCapacity();
+            }
         }
 
         /// <summary>
         /// Reset simulation parameters.
         /// </summary>
-        private void ClearLogs()
+        private void Reset()
         {
             _mSystemTimeSeries = null;
 
             // Reset node time series.
-            foreach (var node in Model.Nodes) node.Reset();
+            foreach (var node in Model.Nodes) node.Clear();
             // Reset edge time series.
-            Model.ExportStrategy.Reset();
+            Model.ExportStrategy.Clear();
             Model.FailureStrategy.Reset();
         }
 
         /// <summary>
-        /// Initialize simulation parameters.
+        /// Setup tick listeners.
         /// </summary>
-        private void StartLogging()
+        private void SetupTickListeners()
+        {
+            _mTickListeners = new List<ITickListener>();
+            _mTickListeners.AddRange(Model.Nodes);
+        }
+
+
+        /// <summary>
+        /// Setup loggers.
+        /// </summary>
+        private void SetupLoggers()
         {
             // System time series setup.
             var systemTimeSeries = new List<ITimeSeries>
@@ -114,9 +128,27 @@ namespace BusinessLogic
             _mSystemTimeSeries = systemTimeSeries.ToDictionary(item => item.Name, item => item);
 
             // Node time series setup.
-            foreach (var node in Model.Nodes) node.StartMeasurement();
-            // Reset edge time series.
-            Model.ExportStrategy.StartMeasurement();
+            _mMeasureables = new List<IMeasureable> {Model.ExportStrategy};
+            _mMeasureables.AddRange(Model.Nodes);
+            foreach (var measureable in _mMeasureables) measureable.Start();
+        }
+
+        /// <summary>
+        /// Signal to update models.
+        /// </summary>
+        private void SignalTickChanged(int tick)
+        {
+            foreach (var listener in _mTickListeners) listener.TickChanged(tick);
+        }
+
+        /// <summary>
+        /// Signal to the measureable to sample.
+        /// </summary>
+        private void SignalLoggers(int tick)
+        {
+            _mSystemTimeSeries["Mismatch"].AppendData(Model.Mismatch);
+            _mSystemTimeSeries["Curtailment"].AppendData(Model.Curtailment);
+            foreach (var measureable in _mMeasureables) measureable.Sample(tick);
         }
 
         /// <summary>

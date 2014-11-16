@@ -584,7 +584,7 @@ namespace Main
 
         //private static Dictionary<string, double> FullCapacities(SimulationOutput output)
         //{
-        //    return output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
+        //    return output._mTimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
         //        .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
         //            flowTimeSeries =>
         //                Math.Max(Math.Abs(flowTimeSeries.GetAllValues().Min()), flowTimeSeries.GetAllValues().Max()));

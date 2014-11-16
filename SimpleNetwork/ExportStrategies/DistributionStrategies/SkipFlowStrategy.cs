@@ -15,7 +15,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
         /// <summary>
         /// Distribute the power. After distribution, all mismatches will be covered by storage.
         /// </summary>
-        public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency, int tick)
+        public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency)
         {
             var toInject = mismatches.Sum();
 
@@ -23,7 +23,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
             for (int idx = 0; idx < nodes.Count; idx++)
             {
                 if (!nodes[idx].StorageCollection.Contains(efficiency)) continue;
-                toInject = nodes[idx].StorageCollection.Get(efficiency).Inject(tick, toInject);
+                toInject = nodes[idx].StorageCollection.Get(efficiency).Inject(toInject);
             }
             // Distribute the remaining mismatches "randomly" if any.
             for (int idx = 0; idx < nodes.Count; idx++)
@@ -98,19 +98,21 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
 
         #region Measurement
 
-        public void StartMeasurement()
+        public bool Measuring { get { return false; } }
+
+        public void Start()
         {
             // Nothing to measure.
         }
 
-        public void Reset()
+        public void Clear()
         {
             // Nothing to measure.
         }
 
-        public bool Measurering
+        public void Sample(int tick)
         {
-            get { return false; }
+            // Nothing to measure.
         }
 
         public List<ITimeSeries> CollectTimeSeries()

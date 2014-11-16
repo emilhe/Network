@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 
 namespace BusinessLogic.Interfaces
 {
-    public interface IMeasureableNode : IMeasureable
+    public interface ITickListener
     {
 
         /// <summary>
-        /// Collect time series.
+        /// Signal that the tick has changed; the measureable should sample!
         /// </summary>
-        /// <returns></returns>
-        List<ITimeSeries> CollectTimeSeries();
+        void TickChanged(int tick);
 
     }
 }

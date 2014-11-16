@@ -7,67 +7,79 @@ using Utils;
 namespace BusinessLogic
 {
 
-    public class Node : IMeasureableNode
+    public class Node : IMeasureable, ITickListener
     {
+
         public string CountryName { get; set; }
         public string Abbreviation { get { return CountryInfo.GetAbbrev(CountryName); } }
         public ITimeSeries LoadTimeSeries { get; private set; }
         public StorageCollection StorageCollection { get; set; }
         public List<IGenerator> Generators { get; set; }
 
+        public double Load { get; private set; }
+            
         public Node(string name, ITimeSeries loadTimeSeries)
         {
             CountryName = name;
             LoadTimeSeries = loadTimeSeries;
 
             Generators = new List<IGenerator>();
-            StorageCollection = new StorageCollection();
-            StorageCollection.Add(new Curtailment());
+            StorageCollection = new StorageCollection {new Curtailment()};
         }
+
+        public double GetDelta()
+        {
+            return Generators.Sum(generator => generator.Production) - Load;
+        }
+
+        #region Measurement
+
+        public bool Measuring { get; private set; }
 
         public List<ITimeSeries> CollectTimeSeries()
         {
             var result = new List<ITimeSeries>();
-            result.AddRange(Generators.Where(item => item.Measurering).Select(item => item.TimeSeries));
-            result.AddRange(StorageCollection.Storages().Where(item => item.Measurering).Select(item => item.TimeSeries));
+            foreach (var generator in Generators.Where(item => item.Measuring))
+            {
+                result.AddRange(generator.CollectTimeSeries());
+            }
+            foreach (var item in StorageCollection.Where(item => item.Value.Measuring))
+            {
+                result.AddRange(item.Value.CollectTimeSeries());
+            }
             // Bind country dependence.
             foreach (var ts in result) ts.Properties.Add("Country", CountryName);
             return result;
         }
 
-        public double GetDelta(int tick)
+        public void Start()
         {
-            return Generators.Sum(generator => generator.GetProduction(tick)) - GetLoad(tick);
+            foreach (var generator in Generators) generator.Start();
+            foreach (var item in StorageCollection) item.Value.Start();
+            Measuring = true;
         }
 
-        private double GetLoad(int tick)
+        public void Clear()
         {
-            return LoadTimeSeries.GetValue(tick);
+            foreach (var generator in Generators) generator.Clear();
+            foreach (var item in StorageCollection) item.Value.Clear();
+            Measuring = false;
         }
 
-        public void StartMeasurement()
+        public void Sample(int tick)
         {
-            //foreach (var gen in Generators) gen.StartMeasurement(); TODO: MAYBE ADD A SWITCH?
-            foreach (var sto in StorageCollection.Storages()) sto.StartMeasurement();
+            foreach (var generator in Generators) generator.Sample(tick);
+            foreach (var item in StorageCollection) item.Value.Sample(tick);
         }
 
-        public void Reset()
+        #endregion
+
+        public void TickChanged(int tick)
         {
-            foreach (var gen in Generators) gen.Reset();
-            foreach (var sto in StorageCollection.Storages()) sto.Reset();
+            Load = LoadTimeSeries.GetValue(tick);
+            foreach (var generator in Generators) generator.TickChanged(tick);
+            //foreach (var item in StorageCollection) item.Value.TickChanged(tick);
         }
-
-        public bool Measurering
-        {
-            get
-            {
-                if (Generators.Any()) return Generators[0].Measurering;
-                if (StorageCollection.Storages().Any()) return StorageCollection.Storages().First().Measurering;
-
-                return false;
-            }
-        }
-
     }
 
 }

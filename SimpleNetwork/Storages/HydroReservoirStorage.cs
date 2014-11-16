@@ -1,30 +1,25 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
-using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
 
 namespace BusinessLogic.Storages
 {
-    /// <summary>
-    /// Battery storage model (efficiency = 1).
-    /// </summary>
-    public class BatteryStorage : IStorage
+    public class HydroReservoirStorage : IStorage
     {
 
         private readonly BasicStorage _mCore;
 
-        public BatteryStorage(double capacity, double initialCapacity = 0)
+        public HydroReservoirStorage(double reservoirCapacity, double initialFillingLevel)
         {
-            _mCore = new BasicStorage("Battery storage", 1, capacity, initialCapacity);
-        }
-
-        public void Sample(int tick)
-        {
-            _mCore.Sample(tick);
+            _mCore = new BasicStorage("Hydro reservoir", 1, reservoirCapacity, reservoirCapacity * initialFillingLevel);
         }
 
         public List<ITimeSeries> CollectTimeSeries()
         {
-            return _mCore.CollectTimeSeries();
+            return ((IMeasureable) _mCore).CollectTimeSeries();
         }
 
         public bool Measuring
@@ -40,6 +35,11 @@ namespace BusinessLogic.Storages
         public void Clear()
         {
             _mCore.Clear();
+        }
+
+        public void Sample(int tick)
+        {
+            ((IMeasureable) _mCore).Sample(tick);
         }
 
         public string Name
@@ -64,6 +64,8 @@ namespace BusinessLogic.Storages
 
         public double Inject(double amount)
         {
+            // It is NOT possible to discharge the reservoir; the generator is already at max.
+            if (amount < 0) return amount;
             return ((IStorage)_mCore).Inject(amount);
         }
 
@@ -93,5 +95,6 @@ namespace BusinessLogic.Storages
             get { return _mCore.LimitOut; }
             set { _mCore.LimitOut = value; }
         }
+
     }
 }

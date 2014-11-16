@@ -60,8 +60,11 @@ namespace Main
             //Configurations.BackupEnergyAbsoluteWithStorage(this);
             //Configurations.BackupEnergyAbsoluteWithStorage(this);
 
+            //Configurations.CompareSources(this);
+            Configurations.CompareFlows(this);
+
             //Configurations.BackupAnalysisWithLinksWitDelta(this);
-            Figures.FlowAnalysisNext(this);
+            //Figures.FlowAnalysisNext(this);
             //ChartUtils.SaveChart(_contourView.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\AverageVsYearly.png");
 
             //var test = new MainSetupControl

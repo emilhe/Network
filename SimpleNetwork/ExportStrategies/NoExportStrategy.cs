@@ -15,31 +15,36 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Charge all nodes individually until all energy is used or the storage is full.
         /// </summary>
-        public BalanceResult BalanceSystem(int tick)
+        public BalanceResult BalanceSystem()
         {
-            return _mHelper.BalanceLocally(tick, i => true, true);
+            return _mHelper.BalanceLocally(i => true, true);
         }
 
         #region Measurement
 
         public List<ITimeSeries> CollectTimeSeries()
         {
-            return ((IMeasureableNode)_mHelper).CollectTimeSeries();
+            return _mHelper.CollectTimeSeries();
         }
 
-        public void StartMeasurement()
+        public bool Measuring
         {
-            ((IMeasureable)_mHelper).StartMeasurement();
+            get { return _mHelper.Measuring; }
         }
 
-        public void Reset()
+        public void Start()
         {
-            ((IMeasureable)_mHelper).Reset();
+            ((IMeasureable) _mHelper).Start();
         }
 
-        public bool Measurering
+        public void Clear()
         {
-            get { return _mHelper.Measurering; }
+            ((IMeasureable)_mHelper).Clear();
+        }
+
+        public void Sample(int tick)
+        {
+            ((IMeasureable) _mHelper).Sample(tick);
         }
 
         #endregion

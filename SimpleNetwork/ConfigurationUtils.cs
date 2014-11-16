@@ -132,9 +132,9 @@ namespace BusinessLogic
                 var ticks = node.LoadTimeSeries.Count();
                 for (int tick = 0; tick < ticks; tick++)
                 {
-                    var delta = node.GetDelta(tick);
+                    var delta = node.GetDelta();
                     if(delta > 0) continue;
-                    negativeMicmathes -= node.GetDelta(tick);
+                    negativeMicmathes -= node.GetDelta();
                 }
                 results.Add(node.CountryName, negativeMicmathes);
             }

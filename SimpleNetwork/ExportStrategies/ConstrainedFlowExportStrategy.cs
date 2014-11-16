@@ -50,13 +50,13 @@ namespace BusinessLogic.ExportStrategies
             _mMismatches = mismatches;
 
             _mStorageMap =
-                _mNodes.SelectMany(item => item.StorageCollection.Efficiencies())
+                _mNodes.SelectMany(item => item.StorageCollection.Select(subItem => subItem.Key))
                     .Distinct()
                     .OrderByDescending(item => item)
                     .ToArray();
         }
 
-        public BalanceResult BalanceSystem(int tick)
+        public BalanceResult BalanceSystem()
         {
             var result = new BalanceResult {Curtailment = 0.0};
             _mSystemResponse = (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge;
@@ -78,16 +78,14 @@ namespace BusinessLogic.ExportStrategies
                 // Record curtailment, if any.
                 if (_mStorageMap[_mStorageLevel] == -1) result.Curtailment = _mMismatches.Sum();
 
-                DoFlowStuff(tick, _mStorageMap[_mStorageLevel]);
+                DoFlowStuff(_mStorageMap[_mStorageLevel]);
             }
-
-            if (Measurering) RecordFlow();
 
             result.Failure = (result.Curtailment < -_mNodes.Count*Tolerance);
             return result;
         }
 
-        private void DoFlowStuff(int tick, double efficiency)
+        private void DoFlowStuff(double efficiency)
         {
             // Setup limits.
             for (int idx = 0; idx < _mNodes.Count; idx++)
@@ -115,7 +113,7 @@ namespace BusinessLogic.ExportStrategies
                 _mMismatches[index] = _mConstrainedFlowOptimizer.NodeOptimum[index];
 
                 if (!_mNodes[index].StorageCollection.Contains(efficiency)) continue;
-                _mNodes[index].StorageCollection.Get(efficiency).Inject(tick, -_mConstrainedFlowOptimizer.StorageOptimum[index]);
+                _mNodes[index].StorageCollection.Get(efficiency).Inject(-_mConstrainedFlowOptimizer.StorageOptimum[index]);
             }
 
             // Save flow result temporarily.
@@ -125,25 +123,9 @@ namespace BusinessLogic.ExportStrategies
 
         #region Measurement
 
-        private void RecordFlow()
-        {
-            for (int i = 0; i < _mNodes.Count; i++)
-            {
-                for (int j = i; j < _mNodes.Count; j++)
-                {
-                    if (!_mEdges.Connected(i, j)) continue;
-                    _mFlowTimeSeriesMap[i + _mNodes.Count * j].AppendData(_mFlows[i, j] - _mFlows[j, i]);
-                }
-            }
-        }
+        public bool Measuring { get; private set; }
 
-        public void StartMeasurement()
-        {
-            Measurering = true;
-            InitializeTimeSeriesFromEdges();
-        }
-
-        private void InitializeTimeSeriesFromEdges()
+        public void Start()
         {
             _mFlowTimeSeriesMap = new Dictionary<int, ITimeSeries>();
 
@@ -156,12 +138,26 @@ namespace BusinessLogic.ExportStrategies
                         new DenseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation));
                 }
             }
+
+            Measuring = true;
         }
 
-        public void Reset()
+        public void Clear()
         {
-            Measurering = false;
             _mFlowTimeSeriesMap = null;
+            Measuring = false;
+        }
+
+        public void Sample(int tick)
+        {
+            for (int i = 0; i < _mNodes.Count; i++)
+            {
+                for (int j = i; j < _mNodes.Count; j++)
+                {
+                    if (!_mEdges.Connected(i, j)) continue;
+                    _mFlowTimeSeriesMap[i + _mNodes.Count * j].AppendData(_mFlows[i, j] - _mFlows[j, i]);
+                }
+            }
         }
 
         public List<ITimeSeries> CollectTimeSeries()
@@ -170,8 +166,6 @@ namespace BusinessLogic.ExportStrategies
             foreach (var ts in result) ts.Properties.Add("Flow", "NewFlow");
             return result;
         }
-
-        public bool Measurering { get; private set; }
 
         private Dictionary<int, ITimeSeries> _mFlowTimeSeriesMap = new Dictionary<int, ITimeSeries>();
 

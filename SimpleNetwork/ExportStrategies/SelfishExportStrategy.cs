@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using BusinessLogic.Interfaces;
-using BusinessLogic.ExportStrategies.DistributionStrategies;
 
 namespace BusinessLogic.ExportStrategies
 {
@@ -26,36 +23,41 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Balance the system; first a node takes what it can use, then it shares.
         /// </summary>
-        public BalanceResult BalanceSystem(int tick)
+        public BalanceResult BalanceSystem()
         {
-            _mHelper.BalanceLocally(tick, i => _mMismatches[i] > 0, false);
+            _mHelper.BalanceLocally(i => _mMismatches[i] > 0, false);
 
-            _mHelper.BalanceGlobally(tick, () => Response.Charge);
+            _mHelper.BalanceGlobally(() => Response.Charge);
             _mHelper.EqualizePower();
 
-            return _mHelper.BalanceLocally(tick, i => _mMismatches[i] < 0, true);
+            return _mHelper.BalanceLocally(i => _mMismatches[i] < 0, true);
         }
 
         #region Measurement
 
         public List<ITimeSeries> CollectTimeSeries()
         {
-            return ((IMeasureableNode)_mHelper).CollectTimeSeries();
+            return _mHelper.CollectTimeSeries();
         }
 
-        public void StartMeasurement()
+        public bool Measuring
         {
-            ((IMeasureable)_mHelper).StartMeasurement();
+            get { return _mHelper.Measuring; }
         }
 
-        public void Reset()
+        public void Start()
         {
-            ((IMeasureable)_mHelper).Reset();
+            _mHelper.Start();
         }
 
-        public bool Measurering
+        public void Clear()
         {
-            get { return _mHelper.Measurering; }
+            _mHelper.Clear();
+        }
+
+        public void Sample(int tick)
+        {
+            _mHelper.Sample(tick);
         }
 
         #endregion

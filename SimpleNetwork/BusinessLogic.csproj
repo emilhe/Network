@@ -106,13 +106,14 @@
     <Compile Include="ExportStrategies\DistributionStrategies\MinimalFlowStrategy.cs" />
     <Compile Include="ExportStrategies\NoExportStrategy.cs" />
     <Compile Include="ExportStrategies\DistributionStrategies\SkipFlowStrategy.cs" />
-    <Compile Include="Interfaces\IMeasureableNode.cs" />
     <Compile Include="Interfaces\IFailureStrategy.cs" />
+    <Compile Include="Interfaces\ITickListener.cs" />
     <Compile Include="MixController.cs" />
     <Compile Include="SimulationController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />
     <Compile Include="Storages\Curtailment.cs" />
-    <Compile Include="Storages\HydroModel.cs" />
+    <Compile Include="Generators\HydroReservoirGenerator.cs" />
+    <Compile Include="Storages\HydroReservoirStorage.cs" />
     <Compile Include="Storages\StorageCollection.cs" />
     <Compile Include="Generators\ConstantGenerator.cs" />
     <Compile Include="Generators\RandomGenerator.cs" />
@@ -128,7 +129,6 @@
     <Compile Include="TimeSeries\Mapping.cs" />
     <Compile Include="Utils\FlowOptimizer.cs" />
     <Compile Include="Interfaces\IGenerator.cs" />
-    <Compile Include="Interfaces\IMeasureableLeaf.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

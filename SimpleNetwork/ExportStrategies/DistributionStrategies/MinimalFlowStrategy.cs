@@ -30,7 +30,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
             _mHiLims = new double[nodes.Count];
         }
 
-        public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency, int tick)
+        public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency)
         {
             // Setup limits.
             for (int idx = 0; idx < nodes.Count; idx++)
@@ -59,18 +59,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
                     mismatches[index] = _flowOptimizer.NodeOptimum[index];
                     continue;
                 }
-                mismatches[index] = nodes[index].StorageCollection.Get(efficiency).Inject(tick, _flowOptimizer.NodeOptimum[index]);
-            }
-
-            // Record flows.
-            if (!Measurering) return;
-            for (int i = 0; i < _mNodes.Count; i++)
-            {
-                for (int j = i; j < _mNodes.Count; j++)
-                {
-                    if(!_mEdges.Connected(i,j)) continue;
-                    _mFlowTimeSeriesMap[i + _mNodes.Count*j].AppendData(                        _flowOptimizer.Flows[i, j] - _flowOptimizer.Flows[j, i]);
-                }
+                mismatches[index] = nodes[index].StorageCollection.Get(efficiency).Inject(_flowOptimizer.NodeOptimum[index]);
             }
         }
 
@@ -81,13 +70,9 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
 
         #region Measurement
 
-        public void StartMeasurement()
-        {
-            Measurering = true;
-            InitializeTimeSeriesFromEdges();
-        }
+        public bool Measuring { get; private set; }
 
-        private void InitializeTimeSeriesFromEdges()
+        public void Start()
         {
             _mFlowTimeSeriesMap = new Dictionary<int, ITimeSeries>();
 
@@ -100,20 +85,35 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
                         new DenseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation));
                 }
             }
+
+            Measuring = true;
         }
 
-        public void Reset()
+        public void Clear()
         {
-            Measurering = false;
             _mFlowTimeSeriesMap = null;
+            Measuring = false;
+        }
+
+        public void Sample(int tick)
+        {
+            if (!Measuring) return;
+
+            for (int i = 0; i < _mNodes.Count; i++)
+            {
+                for (int j = i; j < _mNodes.Count; j++)
+                {
+                    if (!_mEdges.Connected(i, j)) continue;
+                    _mFlowTimeSeriesMap[i + _mNodes.Count*j].AppendData(_flowOptimizer.Flows[i, j] -
+                                                                        _flowOptimizer.Flows[j, i]);
+                }
+            }
         }
 
         public List<ITimeSeries> CollectTimeSeries()
         {
             return _mFlowTimeSeriesMap.Values.ToList();
         }
-
-        public bool Measurering { get; private set; }
 
         private Dictionary<int, ITimeSeries> _mFlowTimeSeriesMap = new Dictionary<int, ITimeSeries>();
 

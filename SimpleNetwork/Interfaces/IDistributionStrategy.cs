@@ -2,7 +2,7 @@
 
 namespace BusinessLogic.Interfaces
 {
-    public interface IDistributionStrategy : IMeasureableNode
+    public interface IDistributionStrategy : IMeasureable
     {
             
         /// <summary>
@@ -13,7 +13,7 @@ namespace BusinessLogic.Interfaces
         /// <summary>
         /// Distribute power. This includes chargeing/discharge storage if necessary.
         /// </summary>
-        void DistributePower(List<Node> nodes, double[] mismatches, double efficiency, int tick);
+        void DistributePower(List<Node> nodes, double[] mismatches, double efficiency);
 
         /// <summary>
         /// Equalize power. This does NOT include charging/discharging storage.

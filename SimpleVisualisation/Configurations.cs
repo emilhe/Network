@@ -635,8 +635,10 @@ namespace Main
                 MixingFrom = 0.50,
                 MixingTo = 0.80,
                 MixingSteps = 15,
-                PenetrationFrom = 1.00,
-                PenetrationTo = 1.05,
+                PenetrationFrom = 1.05,
+                PenetrationTo = 1.10,
+                //PenetrationFrom = 1.00,
+                //PenetrationTo = 1.05,
                 PenetrationSteps = 50
             };
             var ctrl = new SimulationController
@@ -656,10 +658,10 @@ namespace Main
                     //new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 8},
                     //new TsSourceInput {Source = TsSource.VE, Offset = 21, Length = 8},
                                         //new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 8},
-                    new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 32},
+                    new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 1},
                 }
             };
-            ctrl.FailFuncs.Add("32 blackouts", () => new AllowBlackoutsStrategy(32));
+            //ctrl.FailFuncs.Add("32 blackouts", () => new AllowBlackoutsStrategy(32));
 
             foreach (var result in ctrl.EvaluateGrid(grid)) view.AddData(grid.Rows, grid.Cols, result.Grid, result.Description);            
         }
@@ -667,31 +669,34 @@ namespace Main
         public static void CompareFlows(MainForm main, bool save = false)
         {
             var ctrl = new SimulationController();
-            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
+            ctrl.InvalidateCache = true;
+            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 1 });
             ctrl.ExportStrategies.Add(new ExportStrategyInput
             {
                 ExportStrategy = ExportStrategy.ConstrainedFlow,
             });
-            ctrl.FailFuncs.Add("32 blackouts", () => new AllowBlackoutsStrategy(32));
+            //ctrl.FailFuncs.Add("32 blackouts", () => new AllowBlackoutsStrategy(32));
 
             var data = ctrl.EvaluateTs(1.021, 0.62);
 
-            // Do statistics stuff.
-            var capacity =
-                data[0].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
-                    .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-                        flowTimeSeries => StatUtils.CalcEmpCapacity(flowTimeSeries.GetAllValues().ToList()));
-            var capacityNoExt =
-                data[1].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
-                    .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-                        flowTimeSeries => StatUtils.CalcEmpCapacity(flowTimeSeries.GetAllValues().ToList()));
+            //// Do statistics stuff.
+            //var capacity =
+            //    data[0]._mTimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
+            //        .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
+            //            flowTimeSeries => StatUtils.CalcCapacity(flowTimeSeries.GetAllValues().ToList()));
+            //var capacityNoExt =
+            //    data[1]._mTimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
+            //        .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
+            //            flowTimeSeries => StatUtils.CalcEmpCapacity(flowTimeSeries.GetAllValues().ToList()));
 
-            // View data.
-            var view = main.DisplayHistogram();
-            view.Setup(capacity.Keys.ToList());
-            view.AddData(capacity.Values.ToArray(), "Capacity");
-            view.AddData(capacityNoExt.Values.ToArray(), "CapacityNoExt");
+            //// View data.
+            //var view = main.DisplayHistogram();
+            //view.Setup(capacity.Keys.ToList());
+            //view.AddData(capacity.Values.ToArray(), "Capacity");
+            //view.AddData(capacityNoExt.Values.ToArray(), "CapacityNoExt");
 
+            var view = main.DisplayTimeSeries();
+            view.SetData(data[0]);
         }
 
 
@@ -803,7 +808,7 @@ namespace Main
                         .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
                             flowTimeSeries => StatUtils.CalcCapacity(flowTimeSeries.GetAllValues()));
                 //var maxVals =
-                //    output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
+                //    output._mTimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
                 //        .Select(flowTimeSeries => flowTimeSeries.GetAllValues().Select(item => Math.Abs(item)).Max())
                 //        .ToArray();
 

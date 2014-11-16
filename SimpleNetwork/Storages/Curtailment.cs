@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
 
@@ -7,26 +8,7 @@ namespace BusinessLogic.Storages
     public class Curtailment : IStorage
     {
 
-        private bool _mMeasurering;
-
-        public bool Measurering
-        {
-            get { return _mMeasurering; }
-        }
-
-        public ITimeSeries TimeSeries { get; private set; }
-
-        public void StartMeasurement()
-        {
-            TimeSeries = new SparseTimeSeries(Name);
-            _mMeasurering = true;
-        }
-
-        public void Reset()
-        {
-            TimeSeries = null;
-            _mMeasurering = false;
-        }
+        private double _mSample;
 
         public string Name
         {
@@ -48,13 +30,12 @@ namespace BusinessLogic.Storages
             get { return double.PositiveInfinity; }
         }
 
-        public double Inject(int tick, double amount)
+        public double Inject(double amount)
         {
-            if (_mMeasurering) TimeSeries.AddData(tick, amount);
-            return 0;
+            return _mSample = amount;
         }
 
-        public double Restore(int tick, Response response)
+        public double Restore(Response response)
         {
             return 0;
         }
@@ -68,5 +49,42 @@ namespace BusinessLogic.Storages
         {
             // Not possible.
         }
+
+        public double LimitIn { get { return double.PositiveInfinity; } }
+        public double LimitOut { get { return double.NegativeInfinity; } }
+
+        #region Measurement
+
+        private ITimeSeries _mTimeSeries;
+        private bool _mMeasuring;
+
+        public bool Measuring { get { return _mMeasuring; } }
+
+        public void Start()
+        {
+            _mTimeSeries = new DenseTimeSeries(Name);
+            _mTimeSeries.AppendData(_mSample);
+            _mMeasuring = true;
+        }
+
+        public void Clear()
+        {
+            _mTimeSeries = null;
+            _mMeasuring = false;
+        }
+
+        public void Sample(int tick)
+        {
+            if (!_mMeasuring) return;
+            _mTimeSeries.AppendData(_mSample);
+        }
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            return new List<ITimeSeries> { _mTimeSeries };
+        }
+
+        #endregion
+
     }
 }

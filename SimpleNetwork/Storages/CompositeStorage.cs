@@ -37,24 +37,29 @@ namespace BusinessLogic.Storages
                 new BasicBackup(Name, combinedCapacity);
         }
 
-        public bool Measurering
+        public void Sample(int tick)
         {
-            get { return _mCompositeStorage.Measurering; }
+            _mCompositeStorage.Sample(tick);
         }
 
-        public ITimeSeries TimeSeries
+        public List<ITimeSeries> CollectTimeSeries()
         {
-            get { return _mCompositeStorage.TimeSeries; }
+            return _mCompositeStorage.CollectTimeSeries();
         }
 
-        public void StartMeasurement()
+        public bool Measuring
         {
-            _mCompositeStorage.StartMeasurement();
+            get { return _mCompositeStorage.Measuring; }
         }
 
-        public void Reset()
+        public void Start()
         {
-            _mCompositeStorage.Reset();
+            _mCompositeStorage.Start();
+        }
+
+        public void Clear()
+        {
+            _mCompositeStorage.Clear();
         }
 
         public string Name
@@ -86,14 +91,14 @@ namespace BusinessLogic.Storages
             get { return _mCompositeStorage.Capacity; }
         }
 
-        public double Inject(int tick, double amount)
+        public double Inject(double amount)
         {
-            return _mCompositeStorage.Inject(tick, amount);
+            return _mCompositeStorage.Inject(amount);
         }
 
-        public double Restore(int tick, Response response)
+        public double Restore(Response response)
         {
-            return _mCompositeStorage.Restore(tick, response);
+            return _mCompositeStorage.Restore(response);
         }
 
         public double RemainingCapacity(Response response)
@@ -104,6 +109,16 @@ namespace BusinessLogic.Storages
         public void ResetCapacity()
         {
             _mCompositeStorage.ResetCapacity();
+        }
+
+        public double LimitIn
+        {
+            get { return _mCompositeStorage.LimitIn; }
+        }
+
+        public double LimitOut
+        {
+            get { return _mCompositeStorage.LimitOut; }
         }
     }
 

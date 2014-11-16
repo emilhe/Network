@@ -14,20 +14,21 @@ namespace BusinessLogic
 
         #region Singleton
 
-        private static TimeManager _mInstance;
+        private static readonly TimeManager _mInstance = new TimeManager();
 
         private TimeManager(){}
 
         public static TimeManager Instance()
         {
-            return _mInstance ?? (_mInstance = new TimeManager());
+            return _mInstance;
         }
 
         #endregion
 
         public DateTime GetTime(int tick)
         {
-            return StartTime.AddMinutes(tick*_mInstance.Interval);
+            return StartTime.AddMinutes(tick * _mInstance.Interval);
         }
+
     }
 }

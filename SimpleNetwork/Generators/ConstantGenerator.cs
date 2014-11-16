@@ -1,4 +1,5 @@
-﻿using BusinessLogic.Interfaces;
+﻿using System.Collections.Generic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
 using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
 
@@ -6,12 +7,15 @@ namespace BusinessLogic.Generators
 {
     class ConstantGenerator : IGenerator
     {
-        public bool Measurering { get; private set; }
-
         public string Name { get; private set; }
-        private readonly double _mGeneration;
 
-        public Interfaces.ITimeSeries TimeSeries { get; private set; }
+        public double Production
+        {
+            // The energy production is constant.
+            get { return _mGeneration/(8766); }
+        }
+
+        private readonly double _mGeneration;
 
         public ConstantGenerator(string name, double generation)
         {
@@ -19,24 +23,42 @@ namespace BusinessLogic.Generators
             _mGeneration = generation;
         }
 
-        public void StartMeasurement()
+        #region Measurement
+
+        private ITimeSeries _mTimeSeries;
+        private bool _mMeasuring;
+
+        public bool Measuring { get { return _mMeasuring; } }
+
+        public void Start()
         {
-            TimeSeries = new SparseTimeSeries(Name);
-            Measurering = true;
+            _mTimeSeries = new DenseTimeSeries(Name);
+            _mMeasuring = true;
         }
 
-        public void Reset()
+        public void Clear()
         {
-            TimeSeries = null;
-            Measurering = false;
+            _mTimeSeries = null;
+            _mMeasuring = false;
         }
 
-        public double GetProduction(int tick)
+        public void Sample(int tick)
         {
-            // For now, the hyrdo energy production is "linear".
-            var prod = _mGeneration/(8766);
-            if (Measurering) TimeSeries.AddData(tick, prod);
-            return prod;
+            if (!_mMeasuring) return;
+            _mTimeSeries.AppendData(Production);
         }
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            return new List<ITimeSeries>{_mTimeSeries};
+        }
+
+        #endregion
+
+        public void TickChanged(int tick)
+        {
+            // Do nothing.
+        }
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using BusinessLogic.Interfaces;
+﻿using System.Collections.Generic;
+using BusinessLogic.Interfaces;
 using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
 
 namespace BusinessLogic.Storages
@@ -15,24 +16,29 @@ namespace BusinessLogic.Storages
             _mCore = new BasicStorage(name, 1, capacity, capacity);
         }
 
-        public bool Measurering
+        public void Sample(int tick)
         {
-            get { return _mCore.Measurering; }
+             _mCore.Sample(tick);
         }
 
-        public ITimeSeries TimeSeries
+        public List<ITimeSeries> CollectTimeSeries()
         {
-            get { return _mCore.TimeSeries; }
+            return _mCore.CollectTimeSeries();
         }
 
-        public void StartMeasurement()
+        public bool Measuring
         {
-            ((IMeasureableLeaf)_mCore).StartMeasurement();
+            get { return _mCore.Measuring; }
         }
 
-        public void Reset()
+        public void Start()
         {
-            ((IMeasureableLeaf)_mCore).Reset();
+            ((IMeasureable) _mCore).Start();
+        }
+
+        public void Clear()
+        {
+            _mCore.Clear();
         }
 
         public string Name
@@ -56,16 +62,16 @@ namespace BusinessLogic.Storages
             get { return _mCore.Capacity; }
         }
 
-        public double Inject(int tick, double amount)
+        public double Inject(double amount)
         {
             // Only negative energy (discharge) can be injected.
-            return amount > 0 ? amount : ((IStorage)_mCore).Inject(tick, amount);
+            return amount > 0 ? amount : ((IStorage)_mCore).Inject(amount);
         }
 
-        public double Restore(int tick, Response response)
+        public double Restore(Response response)
         {
             // A backup cannot be charged.
-            return (response == Response.Charge) ? 0 : ((IStorage)_mCore).Restore(tick, response);
+            return (response == Response.Charge) ? 0 : ((IStorage)_mCore).Restore(response);
         }
 
         public double RemainingCapacity(Response response)
@@ -77,6 +83,18 @@ namespace BusinessLogic.Storages
         public void ResetCapacity()
         {
             ((IStorage)_mCore).ResetCapacity();
+        }
+
+        public double LimitIn
+        {
+            get { return _mCore.LimitIn; }
+            set { _mCore.LimitIn = value; }
+        }
+
+        public double LimitOut
+        {
+            get { return _mCore.LimitOut; }
+            set { _mCore.LimitOut = value; }
         }
     }
 }

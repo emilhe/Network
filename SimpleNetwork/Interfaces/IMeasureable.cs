@@ -1,28 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 namespace BusinessLogic.Interfaces
 {
     public interface IMeasureable
     {
 
-        /// <summary>
-        /// Start a measurement (all previous measurements are discarded).
-        /// </summary>
-        void StartMeasurement();
+        bool Measuring { get; }
 
         /// <summary>
-        /// Discard all previous measurements.
+        /// Start measuring.
         /// </summary>
-        void Reset();
+        void Start();
 
         /// <summary>
-        /// Is a measurement currently running?
+        /// Stop measuring and discard all previous measurements.
         /// </summary>
-        bool Measurering { get; }
+        void Clear();
+
+        /// <summary>
+        /// Signal that the measureable should sample!
+        /// </summary>
+        void Sample(int tick);
+
+        /// <summary>
+        /// Get the measurement time series.
+        /// </summary>
+        /// <returns></returns>
+        List<ITimeSeries> CollectTimeSeries();
 
     }
 }

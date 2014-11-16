@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
 using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
@@ -14,32 +15,54 @@ namespace BusinessLogic.Generators
         private readonly double _mGeneration;
 
         public string Name { get; private set; }
-        public bool Measurering { get; private set; }
-        public Interfaces.ITimeSeries TimeSeries { get; private set; }
+
+        public double Production { get; private set; }
 
         public RandomGenerator(string name, double generation)
         {
             Name = name;
             _mGeneration = generation;
+            _mTimeSeries = new DenseTimeSeries(name);
+
+            Production = _mRand.Next(0, (int)_mGeneration * 2);
         }
 
-        public double GetProduction(int tick)
+        #region Measurement
+
+        private ITimeSeries _mTimeSeries;
+        private bool _mMeasuring;
+
+        public bool Measuring { get { return _mMeasuring; } }
+
+        public void Start()
         {
-            var prod = _mRand.Next(0, (int)_mGeneration * 2);
-            if (Measurering) TimeSeries.AddData(tick, prod);
-            return prod;
+            _mTimeSeries = new DenseTimeSeries(Name);
+            _mMeasuring = true;
         }
 
-        public void StartMeasurement()
+        public void Clear()
         {
-            TimeSeries = new SparseTimeSeries(Name);
-            Measurering = true;
+            _mTimeSeries = null;
+            _mMeasuring = false;
         }
 
-        public void Reset()
+        public void Sample(int tick)
         {
-            TimeSeries = null;
-            Measurering = false;
+            if (_mMeasuring) _mTimeSeries.AppendData(Production);            
         }
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            return new List<ITimeSeries> { _mTimeSeries };
+        }
+
+        #endregion
+
+
+        public void TickChanged(int tick)
+        {
+            Production = _mRand.Next(0, (int)_mGeneration * 2);            
+        }
+
     }
 }
