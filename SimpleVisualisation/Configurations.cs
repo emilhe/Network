@@ -692,7 +692,7 @@ namespace Main
             //// View data.
             //var view = main.DisplayHistogram();
             //view.Setup(capacity.Keys.ToList());
-            //view.AddData(capacity.Values.ToArray(), "Capacity");
+            //view.AddData(capacity.Values.ToArray(), "NominalEnergy");
             //view.AddData(capacityNoExt.Values.ToArray(), "CapacityNoExt");
 
             var view = main.DisplayTimeSeries();

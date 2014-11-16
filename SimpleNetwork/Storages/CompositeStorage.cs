@@ -30,8 +30,8 @@ namespace BusinessLogic.Storages
 
         private void MergeStorages()
         {
-            var combinedCapacity = _mStorages.Select(item => item.Capacity).Sum();
-            var combinedInitialCapacity = _mStorages.Select(item => item.InitialCapacity).Sum();
+            var combinedCapacity = _mStorages.Select(item => item.NominalEnergy).Sum();
+            var combinedInitialCapacity = _mStorages.Select(item => item.InitialEnergy).Sum();
             _mCompositeStorage = (_mStorages[0].Efficiency > 0) ? (IStorage)
                 new BasicStorage(Name, _mStorages[0].Efficiency, combinedCapacity, combinedInitialCapacity) :
                 new BasicBackup(Name, combinedCapacity);
@@ -81,14 +81,14 @@ namespace BusinessLogic.Storages
             get { return _mCompositeStorage.Efficiency; }
         }
 
-        public double InitialCapacity
+        public double InitialEnergy
         {
-            get { return _mCompositeStorage.InitialCapacity; }
+            get { return _mCompositeStorage.InitialEnergy; }
         }
 
-        public double Capacity
+        public double NominalEnergy
         {
-            get { return _mCompositeStorage.Capacity; }
+            get { return _mCompositeStorage.NominalEnergy; }
         }
 
         public double Inject(double amount)
@@ -96,30 +96,31 @@ namespace BusinessLogic.Storages
             return _mCompositeStorage.Inject(amount);
         }
 
-        public double Restore(Response response)
+        public double InjectMax(Response response)
         {
-            return _mCompositeStorage.Restore(response);
+            return _mCompositeStorage.InjectMax(response);
         }
 
-        public double RemainingCapacity(Response response)
+        public double RemainingEnergy(Response response)
         {
-            return _mCompositeStorage.RemainingCapacity(response);
+            return _mCompositeStorage.RemainingEnergy(response);
         }
 
-        public void ResetCapacity()
+        public double AvailableEnergy(Response response)
         {
-            _mCompositeStorage.ResetCapacity();
+            return _mCompositeStorage.AvailableEnergy(response);
         }
 
-        public double LimitIn
+        public void ResetEnergy()
         {
-            get { return _mCompositeStorage.LimitIn; }
+            _mCompositeStorage.ResetEnergy();
         }
 
-        public double LimitOut
+        public double Capacity
         {
-            get { return _mCompositeStorage.LimitOut; }
+            get { return _mCompositeStorage.Capacity; }
         }
+
     }
 
 }

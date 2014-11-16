@@ -71,7 +71,7 @@ namespace BusinessLogic.ExportStrategies
                 var storage =
                     _mNodes.Select(item => item.StorageCollection)
                         .Where(item => item.Contains(_mStorageMap[_mStorageLevel]))
-                        .Select(item => item.Get(_mStorageMap[_mStorageLevel]).RemainingCapacity(_mSystemResponse))
+                        .Select(item => item.Get(_mStorageMap[_mStorageLevel]).AvailableEnergy(_mSystemResponse))
                         .Sum();
                 if (Math.Abs(storage) < Tolerance) continue;
 
@@ -98,8 +98,8 @@ namespace BusinessLogic.ExportStrategies
                 }
                 var storage = _mNodes[idx].StorageCollection.Get(efficiency);
                 // IMPORTANT: Since storages might be losse, it is only legal to charge OR discharge, otherwise energy dissipates.
-                _mLoLims[idx] = (_mMismatches.Sum() > 0) ? -storage.RemainingCapacity(Response.Charge) : 0;
-                _mHiLims[idx] = (_mMismatches.Sum() > 0) ? 0 : -storage.RemainingCapacity(Response.Discharge);
+                _mLoLims[idx] = (_mMismatches.Sum() > 0) ? -storage.AvailableEnergy(Response.Charge) : 0;
+                _mHiLims[idx] = (_mMismatches.Sum() > 0) ? 0 : -storage.AvailableEnergy(Response.Discharge);
             }
 
             // TODO: Pass capacity used in prios steps to solver (recorded in _mFlow).

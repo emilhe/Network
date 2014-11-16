@@ -1,30 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Storages;
 using BusinessLogic.TimeSeries;
 
-namespace BusinessLogic.Storages
+namespace BusinessLogic.Generators
 {
     public class HydroReservoirGenerator : IGenerator
     {
 
         private readonly BasicStorage _mInternalReservoir;
         private readonly ITimeSeries _mInflowPattern;
-        private readonly double _mGeneratorCapacity;
         private readonly double _mYearlyInflow;
 
-        public HydroReservoirGenerator(double generatorCapacity, double yearlyInflow, ITimeSeries inflowPattern, BasicStorage reservoir)
+        public HydroReservoirGenerator(double yearlyInflow, ITimeSeries inflowPattern, BasicStorage reservoir)
         {
-            _mGeneratorCapacity = generatorCapacity;
             _mInternalReservoir = reservoir;
             _mInflowPattern = inflowPattern;
             _mYearlyInflow = yearlyInflow;
-
-            Production = Math.Min(_mGeneratorCapacity, _mInternalReservoir.RemainingCapacity(Response.Discharge));
-            _mInternalReservoir.Inject(_mInflowPattern.GetValue(0) * _mYearlyInflow - Production);
         }   
 
         public string Name
@@ -69,7 +62,7 @@ namespace BusinessLogic.Storages
         public void TickChanged(int tick)
         {
             // Always produce AS MUCH as possible.
-            Production = Math.Min(_mGeneratorCapacity, _mInternalReservoir.RemainingCapacity(Response.Discharge));
+            Production = _mInternalReservoir.AvailableEnergy(Response.Discharge);
             // Inject inflow minus production into the reservoir.
             _mInternalReservoir.Inject(_mInflowPattern.GetValue(tick) * _mYearlyInflow - Production);
         }

@@ -86,7 +86,7 @@ namespace BusinessLogic
         {
             foreach (var item in Model.Nodes.SelectMany(item => item.StorageCollection))
             {
-                item.Value.ResetCapacity();
+                item.Value.ResetEnergy();
             }
         }
 

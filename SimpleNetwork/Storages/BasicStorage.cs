@@ -12,34 +12,33 @@ namespace BusinessLogic.Storages
     public class BasicStorage : IStorage
     {
 
-        private double _mRemainingCapacity;
+        private double _mRemainingEnergy;
 
         public string Name { get; private set; }
         public double Efficiency { get; private set; }
-        public double InitialCapacity { get; private set; }
-        public double Capacity { get; private set; }
+        public double InitialEnergy { get; private set; }
+        public double NominalEnergy { get; private set; }
+        public double Capacity { get; set; }
 
-        public BasicStorage(string name, double efficiency, double capacity, double initialCapacity = 0)
+        public BasicStorage(string name, double efficiency, double nominalEnergy, double initialEnergy = 0)
         {
             Name = name;
-            Capacity = capacity;
+            NominalEnergy = nominalEnergy;
             Efficiency = efficiency;
-            InitialCapacity = initialCapacity;
+            InitialEnergy = initialEnergy;
+            Capacity = double.PositiveInfinity;
 
-            LimitIn = double.PositiveInfinity;
-            LimitOut = double.NegativeInfinity;
-
-            _mRemainingCapacity = initialCapacity;
+            _mRemainingEnergy = initialEnergy;
         }
 
-        #region Capacity info
+        #region Energy info
 
         /// <summary>
         /// Minus means energy TO RELASE, plus means energy to be stored.
         /// </summary>
         /// <param name="response"></param>
         /// <returns></returns>
-        public double RemainingCapacity(Response response)
+        public double RemainingEnergy(Response response)
         {
             switch (response)
             {
@@ -52,22 +51,32 @@ namespace BusinessLogic.Storages
             }
         }
 
-        public void ResetCapacity()
+        /// <summary>
+        /// Minus means energy TO RELASE, plus means energy to be stored.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        public double AvailableEnergy(Response response)
         {
-            _mRemainingCapacity = InitialCapacity;
+            switch (response)
+            {
+                case Response.Charge:
+                    return Math.Min(Capacity, EffectiveEnergyNeededToRestoreFullCapacity());
+                case Response.Discharge:
+                    return Math.Max(-Capacity,-EffectiveEnergyReleasedOnDrainEmpty());
+                default:
+                    throw new ArgumentException("Illegal Response.");
+            }
         }
-
-        public double LimitIn { get; set; }
-        public double LimitOut { get; set; }
 
         private double EffectiveEnergyReleasedOnDrainEmpty()
         {
-            return _mRemainingCapacity * Efficiency;
+            return _mRemainingEnergy * Efficiency;
         }
 
         private double EffectiveEnergyNeededToRestoreFullCapacity()
         {
-            return (Capacity - _mRemainingCapacity) / Efficiency;
+            return (NominalEnergy - _mRemainingEnergy) / Efficiency;
         }
 
         #endregion
@@ -80,20 +89,13 @@ namespace BusinessLogic.Storages
             return -Discharge(-amount);
         }
 
-        public double Restore(Response response)
+        public double InjectMax(Response response)
         {
-            if (response == Response.Charge)
-            {
-                var cost = EffectiveEnergyNeededToRestoreFullCapacity();
-                Refill();
-                return -cost;
-            }
-            else
-            {
-                var cost = EffectiveEnergyReleasedOnDrainEmpty();
-                Drain();
-                return cost;
-            }
+            var max = (response == Response.Charge)
+                ? EffectiveEnergyNeededToRestoreFullCapacity()
+                : - EffectiveEnergyReleasedOnDrainEmpty();
+            var remainder = Inject(max);
+            return -(max - remainder);
         }
 
         /// <summary>
@@ -103,16 +105,24 @@ namespace BusinessLogic.Storages
         /// <returns> the energy which was not stored </returns>
         private double Discharge(double toDischarge)
         {
-            toDischarge /= Efficiency;
-            if ((_mRemainingCapacity - toDischarge) < 0)
+            var extra = 0.0;
+            // Take capacity into account.
+            if (toDischarge > Capacity)
             {
-                var remainder = toDischarge - _mRemainingCapacity;
-                Drain();
-                return (remainder*Efficiency);
+                extra = toDischarge - Capacity;
+                toDischarge = Capacity;
+            }
+            // Take efficiency into account.
+            toDischarge /= Efficiency;
+            if ((_mRemainingEnergy - toDischarge) < 0)
+            {
+                var remainder = toDischarge - _mRemainingEnergy;
+                _mRemainingEnergy = 0;
+                return (remainder*Efficiency) + extra;
             }
             // There is power; discharge.
-            _mRemainingCapacity -= toDischarge;
-            return 0;
+            _mRemainingEnergy -= toDischarge;
+            return extra;
         }
 
         /// <summary>
@@ -122,28 +132,29 @@ namespace BusinessLogic.Storages
         /// <returns> the energy which was not stored </returns>
         private double Charge(double toCharge)
         {
-            toCharge *= Efficiency;
-            if ((_mRemainingCapacity + toCharge) > Capacity)
+            var extra = 0.0;
+            // Take capacity into account.
+            if (toCharge > Capacity)
             {
-                var excess = (toCharge + _mRemainingCapacity) - Capacity;
-                Refill();
-                return excess/Efficiency;
+                extra = toCharge - Capacity;             
+                toCharge = Capacity;
+            }
+            // Take efficiency into account.
+            toCharge *= Efficiency;
+            if ((_mRemainingEnergy + toCharge) > NominalEnergy)
+            {
+                var excess = (toCharge + _mRemainingEnergy) - NominalEnergy;
+                _mRemainingEnergy = NominalEnergy;
+                return excess/Efficiency + extra;
             }
             // There is still room; just charge.
-            _mRemainingCapacity += toCharge;
-            return 0;
+            _mRemainingEnergy += toCharge;
+            return extra;
         }
 
-        // TODO: Fix refill/drain problems..
-
-        private void Refill()
+        public void ResetEnergy()
         {
-            _mRemainingCapacity = Capacity;
-        }
-
-        private void Drain()
-        {
-            _mRemainingCapacity = 0;
+            _mRemainingEnergy = InitialEnergy;
         }
 
         #endregion
@@ -170,7 +181,7 @@ namespace BusinessLogic.Storages
         public void Sample(int tick)
         {
             if (!_mMeasuring) return;
-            _mTimeSeries.AppendData(_mRemainingCapacity);
+            _mTimeSeries.AppendData(_mRemainingEnergy);
         }
 
         public List<ITimeSeries> CollectTimeSeries()

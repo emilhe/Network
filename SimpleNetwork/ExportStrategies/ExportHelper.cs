@@ -56,7 +56,7 @@ namespace BusinessLogic.ExportStrategies
                 {
                     if (!_mNodes[index].StorageCollection.Contains(_mStorageMap[_mStorageLevel])) continue;
                     _mMismatches[index] += _mNodes[index].StorageCollection.Get(_mStorageMap[_mStorageLevel])
-                        .Restore(_mSystemResponse);
+                        .InjectMax(_mSystemResponse);
                 }
             }
 
@@ -77,7 +77,7 @@ namespace BusinessLogic.ExportStrategies
             var storage =
                 _mNodes.Select(item => item.StorageCollection)
                     .Where(item => item.Contains(_mStorageMap[_mStorageLevel]))
-                    .Select(item => item.Get(_mStorageMap[_mStorageLevel]).RemainingCapacity(_mSystemResponse))
+                    .Select(item => item.Get(_mStorageMap[_mStorageLevel]).AvailableEnergy(_mSystemResponse))
                     .Sum();
 
             switch (_mSystemResponse)

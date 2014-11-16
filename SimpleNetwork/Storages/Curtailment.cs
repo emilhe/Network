@@ -20,12 +20,12 @@ namespace BusinessLogic.Storages
             get { return -1; }
         }
 
-        public double InitialCapacity
+        public double InitialEnergy
         {
             get { return double.PositiveInfinity; }
         }
 
-        public double Capacity
+        public double NominalEnergy
         {
             get { return double.PositiveInfinity; }
         }
@@ -35,22 +35,27 @@ namespace BusinessLogic.Storages
             return _mSample = amount;
         }
 
-        public double Restore(Response response)
+        public double InjectMax(Response response)
         {
             return 0;
         }
 
-        public double RemainingCapacity(Response response)
+        public double RemainingEnergy(Response response)
         {
             return response.Equals(Response.Charge) ? Double.PositiveInfinity : double.NegativeInfinity;
         }
 
-        public void ResetCapacity()
+        public double AvailableEnergy(Response response)
+        {
+            return RemainingEnergy(response);
+        }
+
+        public void ResetEnergy()
         {
             // Not possible.
         }
 
-        public double LimitIn { get { return double.PositiveInfinity; } }
+        public double Capacity { get { return double.PositiveInfinity; } }
         public double LimitOut { get { return double.NegativeInfinity; } }
 
         #region Measurement

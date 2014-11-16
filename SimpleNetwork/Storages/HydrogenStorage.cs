@@ -52,14 +52,14 @@ namespace BusinessLogic.Storages
             get { return _mCore.Efficiency; }
         }
 
-        public double InitialCapacity
+        public double InitialEnergy
         {
-            get { return _mCore.InitialCapacity; }
+            get { return _mCore.InitialEnergy; }
         }
 
-        public double Capacity
+        public double NominalEnergy
         {
-            get { return _mCore.Capacity; }
+            get { return _mCore.NominalEnergy; }
         }
 
         public double Inject(double amount)
@@ -67,31 +67,30 @@ namespace BusinessLogic.Storages
             return ((IStorage)_mCore).Inject(amount);
         }
 
-        public double Restore(Response response)
+        public double InjectMax(Response response)
         {
-            return ((IStorage)_mCore).Restore(response);
+            return ((IStorage)_mCore).InjectMax(response);
         }
 
-        public double RemainingCapacity(Response response)
+        public double RemainingEnergy(Response response)
         {
-            return ((IStorage)_mCore).RemainingCapacity(response);
+            return ((IStorage)_mCore).RemainingEnergy(response);
         }
 
-        public void ResetCapacity()
+        public double AvailableEnergy(Response response)
         {
-            ((IStorage)_mCore).ResetCapacity();
+            return ((IStorage) _mCore).AvailableEnergy(response);
         }
 
-        public double LimitIn
+        public void ResetEnergy()
         {
-            get { return _mCore.LimitIn; }
-            set { _mCore.LimitIn = value; }
+            ((IStorage)_mCore).ResetEnergy();
         }
 
-        public double LimitOut
+        public double Capacity
         {
-            get { return _mCore.LimitOut; }
-            set { _mCore.LimitOut = value; }
+            get { return _mCore.Capacity; }
+            set { _mCore.Capacity = value; }
         }
 
     }

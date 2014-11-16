@@ -52,14 +52,14 @@ namespace BusinessLogic.Storages
             get { return 0; }
         }
 
-        public double InitialCapacity
+        public double InitialEnergy
         {
-            get { return _mCore.InitialCapacity; }
+            get { return _mCore.InitialEnergy; }
         }
 
-        public double Capacity
+        public double NominalEnergy
         {
-            get { return _mCore.Capacity; }
+            get { return _mCore.NominalEnergy; }
         }
 
         public double Inject(double amount)
@@ -68,33 +68,33 @@ namespace BusinessLogic.Storages
             return amount > 0 ? amount : ((IStorage)_mCore).Inject(amount);
         }
 
-        public double Restore(Response response)
+        public double InjectMax(Response response)
         {
             // A backup cannot be charged.
-            return (response == Response.Charge) ? 0 : ((IStorage)_mCore).Restore(response);
+            return (response == Response.Charge) ? 0 : ((IStorage)_mCore).InjectMax(response);
         }
 
-        public double RemainingCapacity(Response response)
+        public double RemainingEnergy(Response response)
         {
             // A backup cannot be charged.
-            return response == Response.Charge ? 0 : ((IStorage)_mCore).RemainingCapacity(response);
+            return response == Response.Charge ? 0 : ((IStorage)_mCore).RemainingEnergy(response);
         }
 
-        public void ResetCapacity()
+        public double AvailableEnergy(Response response)
         {
-            ((IStorage)_mCore).ResetCapacity();
+            return ((IStorage) _mCore).AvailableEnergy(response);
         }
 
-        public double LimitIn
+        public void ResetEnergy()
         {
-            get { return _mCore.LimitIn; }
-            set { _mCore.LimitIn = value; }
+            ((IStorage)_mCore).ResetEnergy();
         }
 
-        public double LimitOut
+        public double Capacity
         {
-            get { return _mCore.LimitOut; }
-            set { _mCore.LimitOut = value; }
+            get { return _mCore.Capacity; }
+            set { _mCore.Capacity = value; }
         }
+
     }
 }

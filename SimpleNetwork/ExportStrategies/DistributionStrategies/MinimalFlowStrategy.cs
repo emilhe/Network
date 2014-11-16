@@ -43,8 +43,8 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
                 }
                 var storage = nodes[idx].StorageCollection.Get(efficiency);
                 // IMPORTANT: Since storages might be losse, it is only legal to charge OR discharge, otherwise energy dissipates.
-                _mLoLims[idx] = (mismatches.Sum() > 0) ? 0 : storage.RemainingCapacity(Response.Discharge);
-                _mHiLims[idx] = (mismatches.Sum() > 0) ? storage.RemainingCapacity(Response.Charge) : 0;
+                _mLoLims[idx] = (mismatches.Sum() > 0) ? 0 : storage.RemainingEnergy(Response.Discharge);
+                _mHiLims[idx] = (mismatches.Sum() > 0) ? storage.RemainingEnergy(Response.Charge) : 0;
             }
 
             // Determine FLOWS using Gurobi optimization.

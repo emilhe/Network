@@ -14,29 +14,29 @@ namespace UnitTest
             var storage = new BasicStorage("Test", 1, 10);
             // Dischare empty storage.
             Assert.AreEqual(-2, storage.Inject(-2));
-            Assert.AreEqual(10, storage.RemainingCapacity(Response.Charge));
-            Assert.AreEqual(0, storage.RemainingCapacity(Response.Discharge));
+            Assert.AreEqual(10, storage.RemainingEnergy(Response.Charge));
+            Assert.AreEqual(0, storage.RemainingEnergy(Response.Discharge));
             // Charge empty storage.
             Assert.AreEqual(0, storage.Inject(4));
-            Assert.AreEqual(6,storage.RemainingCapacity(Response.Charge));
-            Assert.AreEqual(-4, storage.RemainingCapacity(Response.Discharge));
+            Assert.AreEqual(6,storage.RemainingEnergy(Response.Charge));
+            Assert.AreEqual(-4, storage.RemainingEnergy(Response.Discharge));
             // Discarge non-empty storage.
             Assert.AreEqual(0, storage.Inject(-2));
-            Assert.AreEqual(8, storage.RemainingCapacity(Response.Charge));
-            Assert.AreEqual(-2, storage.RemainingCapacity(Response.Discharge));
+            Assert.AreEqual(8, storage.RemainingEnergy(Response.Charge));
+            Assert.AreEqual(-2, storage.RemainingEnergy(Response.Discharge));
             // Overcharge storage.
             Assert.AreEqual(2, storage.Inject(10));
-            Assert.AreEqual(0, storage.RemainingCapacity(Response.Charge));
-            Assert.AreEqual(-10, storage.RemainingCapacity(Response.Discharge));
+            Assert.AreEqual(0, storage.RemainingEnergy(Response.Charge));
+            Assert.AreEqual(-10, storage.RemainingEnergy(Response.Discharge));
         }
 
         [Test]
         public void RestoreTest()
         {
             var storage = new BasicStorage("Test", 1, 12);
-            Assert.AreEqual(0, storage.Restore(Response.Discharge));
-            Assert.AreEqual(-12, storage.Restore(Response.Charge));
-            Assert.AreEqual(12, storage.Restore(Response.Discharge));
+            Assert.AreEqual(0, storage.InjectMax(Response.Discharge));
+            Assert.AreEqual(-12, storage.InjectMax(Response.Charge));
+            Assert.AreEqual(12, storage.InjectMax(Response.Discharge));
         }
 
         [Test]
@@ -47,8 +47,8 @@ namespace UnitTest
             Assert.AreEqual(-12, storage.Inject(-12));
             // Charge/discharge
             Assert.AreEqual(0, storage.Inject(12));
-            Assert.AreEqual(12, storage.RemainingCapacity(Response.Charge));
-            Assert.AreEqual(-3, storage.RemainingCapacity(Response.Discharge));
+            Assert.AreEqual(12, storage.RemainingEnergy(Response.Charge));
+            Assert.AreEqual(-3, storage.RemainingEnergy(Response.Discharge));
             Assert.AreEqual(0, storage.Inject(12));
             // Charge FULL storage (should do nothing).
             Assert.AreEqual(12, storage.Inject(12));
@@ -58,11 +58,11 @@ namespace UnitTest
         public void RestoreEfficiencyTest()
         {
             var storage = new BasicStorage("Test", 0.5, 12);
-            // Restore
-            Assert.AreEqual(0, storage.Restore(Response.Discharge));
-            Assert.AreEqual(-24, storage.Restore(Response.Charge));
-            Assert.AreEqual(0, storage.Restore(Response.Charge));
-            Assert.AreEqual(6, storage.Restore(Response.Discharge));
+            // InjectMax
+            Assert.AreEqual(0, storage.InjectMax(Response.Discharge));
+            Assert.AreEqual(-24, storage.InjectMax(Response.Charge));
+            Assert.AreEqual(0, storage.InjectMax(Response.Charge));
+            Assert.AreEqual(6, storage.InjectMax(Response.Discharge));
         }
 
         [Test]
@@ -72,10 +72,33 @@ namespace UnitTest
             var composite = new CompositeStorage(master);
             var slave = new BasicStorage("Slave", 1, 10);
             composite.AddStorage(slave);
-            // Restore
-            Assert.AreEqual(20, composite.Capacity);
+            // InjectMax
+            Assert.AreEqual(20, composite.NominalEnergy);
             Assert.AreEqual(1, composite.Efficiency);
-            Assert.AreEqual(0, composite.InitialCapacity);
+            Assert.AreEqual(0, composite.InitialEnergy);
         }
+
+        // TODO: Make more charge limit (= capacity) tests :).
+
+        [Test]
+        public void ChargeLimitTest()
+        {
+            var storage = new BasicStorage("Test", 0.5, 12) {Capacity = 12};
+            // InjectMax
+            Assert.AreEqual(24, storage.RemainingEnergy(Response.Charge));
+            Assert.AreEqual(12, storage.Inject(24));
+            Assert.AreEqual(12, storage.RemainingEnergy(Response.Charge));
+        }
+
+        [Test]
+        public void DischargeLimitTest()
+        {
+            var storage = new BasicStorage("Test", 0.5, 12, 12) {Capacity = 3};
+            // InjectMax
+            Assert.AreEqual(-6, storage.RemainingEnergy(Response.Discharge));
+            Assert.AreEqual(-3, storage.Inject(-6));
+            Assert.AreEqual(-3, storage.RemainingEnergy(Response.Discharge));
+        }
+
     }
 }

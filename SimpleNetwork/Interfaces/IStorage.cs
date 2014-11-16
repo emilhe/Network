@@ -24,12 +24,12 @@
         /// <summary>
         /// Initial capacity of the storage.
         /// </summary>
-        double InitialCapacity { get; }
+        double InitialEnergy { get; }
 
         /// <summary>
-        /// Nominal capacity of the storage.
+        /// Nominal energy capacity of the storage.
         /// </summary>
-        double Capacity { get; }
+        double NominalEnergy { get; }
 
         /// <summary>
         /// Injects an amount of energy (positive or negative) into the storage.
@@ -39,33 +39,35 @@
         double Inject(double amount);
 
         /// <summary>
-        /// Restore (= fully charge/discharge) the storage.
+        /// Inject maximum into the storage.
         /// </summary>
         /// <param name="response"> should we charge or discharge? </param>
-        /// <returns> cost of discharge </returns>
-        double Restore(Response response);
+        /// <returns> cost of charge/discharge </returns>
+        double InjectMax(Response response);
 
         /// <summary>
-        /// Remaining capacity for a specific response; charge or dicharge.
+        /// Remaining energy for a specific response; charge or dicharge.
+        /// </summary>
+        /// <param name="response"> needed backup response </param>
+        /// <returns> remaining energy </returns>
+        double RemainingEnergy(Response response);
+
+        /// <summary>
+        /// Available capacity for a specific response; charge or dicharge.
         /// </summary>
         /// <param name="response"> needed backup response </param>
         /// <returns> remaining capacity </returns>
-        double RemainingCapacity(Response response);
+        double AvailableEnergy(Response response);
         
         /// <summary>
         /// Reset capacity (to be used when a new simulation is started).
         /// </summary>
-        void ResetCapacity();
+        void ResetEnergy();
 
         /// <summary>
-        /// The POWER capacity (how much can be discharged in one time step).
+        /// The capacity; how much can be charged/discharged in one time step NOT taking efficiency into account.
         /// </summary>
-        double LimitIn { get; }
-
-        /// <summary>
-        /// The POWER capacity (how much can be discharged in one time step).
-        /// </summary>
-        double LimitOut { get; }
+        double Capacity { get; }
 
     }
 
