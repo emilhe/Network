@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="ExportTest.cs" />
     <Compile Include="FlowOptimizerTest.cs" />
+    <Compile Include="GeneticOptimizationTest.cs" />
     <Compile Include="GridEvaluatorTest.cs" />
     <Compile Include="MismatchOptimizerTest.cs" />
     <Compile Include="PerformanceTest.cs" />
@@ -62,6 +63,10 @@
     <Compile Include="UtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Optimization\Optimization.csproj">
+      <Project>{FFD7147F-25BB-424F-8FF5-A86648812925}</Project>
+      <Name>Optimization</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SimpleImporter\ProtoLogic.csproj">
       <Project>{DD96E036-C8E4-42D4-AD91-12F9F21CA795}</Project>
       <Name>ProtoLogic</Name>

@@ -78,10 +78,28 @@ namespace UnitTest
             Assert.AreEqual(0, composite.InitialEnergy);
         }
 
-        // TODO: Make more charge limit (= capacity) tests :).
-
         [Test]
         public void ChargeLimitTest()
+        {
+            var storage = new BasicStorage("Test", 1, 12) { Capacity = 8 };
+            // InjectMax
+            Assert.AreEqual(12, storage.RemainingEnergy(Response.Charge));
+            Assert.AreEqual(16, storage.Inject(24));
+            Assert.AreEqual(4, storage.RemainingEnergy(Response.Charge));
+        }
+
+        [Test]
+        public void DischargeLimitTest()
+        {
+            var storage = new BasicStorage("Test", 1, 12, 12) { Capacity = 3 };
+            // InjectMax
+            Assert.AreEqual(-12, storage.RemainingEnergy(Response.Discharge));
+            Assert.AreEqual(-3, storage.Inject(-6));
+            Assert.AreEqual(-9, storage.RemainingEnergy(Response.Discharge));
+        }
+
+        [Test]
+        public void ChargeLimitEfficiencyTest()
         {
             var storage = new BasicStorage("Test", 0.5, 12) {Capacity = 12};
             // InjectMax
@@ -91,7 +109,7 @@ namespace UnitTest
         }
 
         [Test]
-        public void DischargeLimitTest()
+        public void DischargeLimitEfficiencyTest()
         {
             var storage = new BasicStorage("Test", 0.5, 12, 12) {Capacity = 3};
             // InjectMax

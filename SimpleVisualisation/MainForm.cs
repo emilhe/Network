@@ -30,6 +30,8 @@ namespace Main
             // Time manger start/interval MUST match time series!
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
+            
+            var data = ProtoStore
 
     //        var data = ProtoStore.LoadEcnData();
     //        var allBio = data.Where(item =>
@@ -61,7 +63,8 @@ namespace Main
             //Configurations.BackupEnergyAbsoluteWithStorage(this);
 
             //Configurations.CompareSources(this);
-            Configurations.CompareFlows(this);
+            //Configurations.CompareFlows(this);
+            Figures.FlowAnalysis(this);
 
             //Configurations.BackupAnalysisWithLinksWitDelta(this);
             //Figures.FlowAnalysisNext(this);

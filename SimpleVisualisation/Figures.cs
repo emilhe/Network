@@ -33,18 +33,29 @@ namespace Main
             ctrl.Execute();
 
             var loadScaling = ConfigurationUtils.LoadScaling(nodes);
-            //var max = loadScaling.Values.Max();
-            //foreach (var key in loadScaling.Keys.ToArray()) loadScaling[key] = loadScaling[key] / max;
             var chart = EuropeChart.DrawEurope(loadScaling, Color.Black, Color.Yellow, Color.DarkGreen);
             chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\MeanLoadDistribution.png");
 
-            // Mismatch distribution.
-            var scaling = ConfigurationUtils.MismatchScaling(nodes);
-            //max = scaling.Values.Max();
-            //foreach (var key in scaling.Keys.ToArray()) scaling[key] = scaling[key] / max;
+            //// Mismatch distribution.
+            //var scaling = ConfigurationUtils.MismatchScaling(nodes);
+            //DeltaScaling(loadScaling, scaling);
+            //chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
+            //chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\MeanMismatchDistribution.png");
+
+            #region Realistic distributions
+
+            var scaling = ConfigurationUtils.HeterogeneousBackupScaling(nodes);
             DeltaScaling(loadScaling, scaling);
-            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
-            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\MeanMismatchDistribution.png");
+            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -20, 45);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\HeterogeneousBackupDistribution.png");
+
+            scaling = ConfigurationUtils.HeterogeneousStorageScaling(nodes);
+            DeltaScaling(loadScaling, scaling);
+            chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -15, 85);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\HeterogeneousStorageDistribution.png");
+
+            #endregion
+
 
             #region Optimal distributions
 
@@ -97,7 +108,11 @@ namespace Main
         private static void DeltaScaling(Dictionary<string, double> loadScaling, Dictionary<string, double> scaling)
         {
             var sum = scaling.Values.Sum();
-            foreach (var key in scaling.Keys.ToArray()) scaling[key] = (scaling[key] / sum - loadScaling[key])* 100;
+            foreach (var key in loadScaling.Keys.ToArray())
+            {
+                if(scaling.ContainsKey(key)) scaling[key] = (scaling[key] / sum - loadScaling[key])* 100;
+                else scaling.Add(key,-loadScaling[key] * 100);
+            }
         }
 
         #endregion
@@ -206,7 +221,7 @@ namespace Main
 
         public static void FlowAnalysis(MainForm main)
         {
-            var ctrl = new SimulationController { InvalidateCache = true };
+            var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
                 new ExportStrategyInput
@@ -216,23 +231,23 @@ namespace Main
             ctrl.NodeFuncs.Add("6h batt (homo), 25TWh hydrogen (homo), 150 TWh hydro (hetero)", s =>
             {
                 var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
-                ConfigurationUtils.SetupHomoStuff(nodes, (int)s.Length, true, true, false);
-                ConfigurationUtils.SetupHeterogeneousBackup(nodes, (int)s.Length);
+                ConfigurationUtils.SetupHomoStuff(nodes, s.Length, true, true, false);
+                ConfigurationUtils.SetupHeterogeneousBackup(nodes, s.Length);
                 return nodes;
             });
             ctrl.NodeFuncs.Add("6h batt (homo), 25TWh hydrogen (hetero), 150 TWh hydro (homo)", s =>
             {
                 var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
-                ConfigurationUtils.SetupHomoStuff(nodes, (int)s.Length, true, false, true);
-                ConfigurationUtils.SetupHeterogeneousStorage(nodes, (int)s.Length);
+                ConfigurationUtils.SetupHomoStuff(nodes, s.Length, true, false, true);
+                ConfigurationUtils.SetupHeterogeneousStorage(nodes, s.Length);
                 return nodes;
             });
             ctrl.NodeFuncs.Add("6h batt (homo), 25TWh hydrogen (hetero), 150 TWh hydro (hetero)", s =>
             {
                 var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
-                ConfigurationUtils.SetupHomoStuff(nodes, (int)s.Length, true, false, false);
-                ConfigurationUtils.SetupHeterogeneousStorage(nodes, (int)s.Length);
-                ConfigurationUtils.SetupHeterogeneousBackup(nodes, (int)s.Length);
+                ConfigurationUtils.SetupHomoStuff(nodes, s.Length, true, false, false);
+                ConfigurationUtils.SetupHeterogeneousStorage(nodes, s.Length);
+                ConfigurationUtils.SetupHeterogeneousBackup(nodes, s.Length);
                 return nodes;
             });
             var outputs = ctrl.EvaluateTs(1.026, 0.65);
@@ -247,23 +262,23 @@ namespace Main
 
             // Create reference histogram.
             homo = Capacities(outputs[0]);
-            var hetSto = Capacities(outputs[1]);
-            FilterValues(homo, hetSto);
-            view.Setup(homo.Keys.ToList());
-            view.AddData(homo.Values.ToArray(), "Homogeneous");
-            view.AddData(hetSto.Values.ToArray(), "Heterogeneous Storage");
-            ChartUtils.SaveChart(view.MainChart, 1000, 500,
-                @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\HeterogeneousStorage.png");
-
-            // Create reference histogram.
-            homo = Capacities(outputs[0]);
-            var hetBac = Capacities(outputs[2]);
+            var hetBac = Capacities(outputs[1]);
             FilterValues(homo, hetBac);
             view.Setup(homo.Keys.ToList());
             view.AddData(homo.Values.ToArray(), "Homogeneous");
             view.AddData(hetBac.Values.ToArray(), "Heterogeneous Backup");
             ChartUtils.SaveChart(view.MainChart, 1000, 500,
                 @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\HeterogeneousBackup.png");
+
+            // Create reference histogram.
+            homo = Capacities(outputs[0]);
+            var hetSto = Capacities(outputs[2]);
+            FilterValues(homo, hetSto);
+            view.Setup(homo.Keys.ToList());
+            view.AddData(homo.Values.ToArray(), "Homogeneous");
+            view.AddData(hetSto.Values.ToArray(), "Heterogeneous Storage");
+            ChartUtils.SaveChart(view.MainChart, 1000, 500,
+                @"C:\Users\Emil\Dropbox\Master Thesis\Thesis\Figures\HeterogeneousStorage.png");
 
             // Create reference histogram.
             homo = Capacities(outputs[0]);

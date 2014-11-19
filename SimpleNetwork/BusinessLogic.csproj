@@ -108,6 +108,7 @@
     <Compile Include="ExportStrategies\DistributionStrategies\SkipFlowStrategy.cs" />
     <Compile Include="Interfaces\IFailureStrategy.cs" />
     <Compile Include="Interfaces\ITickListener.cs" />
+    <Compile Include="LCOE\CostCalculator.cs" />
     <Compile Include="MixController.cs" />
     <Compile Include="SimulationController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />

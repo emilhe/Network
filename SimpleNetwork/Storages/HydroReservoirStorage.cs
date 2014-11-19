@@ -12,9 +12,9 @@ namespace BusinessLogic.Storages
 
         private readonly BasicStorage _mCore;
 
-        public HydroReservoirStorage(double reservoirCapacity, double initialFillingLevel)
+        public HydroReservoirStorage(BasicStorage core)
         {
-            _mCore = new BasicStorage("Hydro reservoir", 1, reservoirCapacity, reservoirCapacity * initialFillingLevel);
+            _mCore = core;
         }
 
         public List<ITimeSeries> CollectTimeSeries()
@@ -71,6 +71,8 @@ namespace BusinessLogic.Storages
 
         public double InjectMax(Response response)
         {
+            // It is NOT possible to discharge the reservoir; the generator is already at max.
+            if (response.Equals(Response.Discharge)) return 0;
             return ((IStorage)_mCore).InjectMax(response);
         }
 
