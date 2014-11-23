@@ -18,8 +18,8 @@ namespace SimpleImporter
 
         public static void Parse(TsSource source)
         {
-            if (source == TsSource.ISET) Base = @"C:\Users\xXx\Documents\ISETdata";
-            if (source == TsSource.VE) Base = @"C:\Users\xXx\Documents\data";
+            if (source == TsSource.ISET) Base = @"C:\data";
+            if (source == TsSource.VE) Base = @"C:\data";
 
             var files = Directory.GetFiles(Base);
             var countries = new List<string>();

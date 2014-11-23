@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using SimpleImporter;
 using BusinessLogic.ExportStrategies;
@@ -52,7 +53,7 @@ namespace Controls
 
         private IDistributionStrategy MapDistribution()
         {
-            return cbFlow.Checked ? (IDistributionStrategy) new MinimalFlowStrategy(null, null) : new SkipFlowStrategy();
+            return cbFlow.Checked ? (IDistributionStrategy) new MinimalFlowStrategy(new List<INode>(), null) : new SkipFlowStrategy();
         }
 
         private void btnRun_Click(object sender, EventArgs e)

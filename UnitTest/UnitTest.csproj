@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CostTest.cs" />
     <Compile Include="ExportTest.cs" />
     <Compile Include="FlowOptimizerTest.cs" />
     <Compile Include="GeneticOptimizationTest.cs" />

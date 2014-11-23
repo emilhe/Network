@@ -1,51 +1,38 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Optimization
 {
-    public class GeneticOptimizer
+    public class GeneticOptimizer<T> where T : IChromosome
     {
 
-        public Func<bool> TerminationCondition { get; set; }
+        public int Generation { get; private set; }
 
-        public int ReuseCount { get; set; }
-        public int KillPercentage { get; set; }
+        private readonly IGeneticOptimizationStrategy<T> _mStrat;
 
-        public GeneticOptimizer(Func<bool> terminationCondition)
+        public GeneticOptimizer(IGeneticOptimizationStrategy<T> geneticOptimizationStrategy)
         {
-            TerminationCondition = terminationCondition;
-
-            ReuseCount = 12;
+            _mStrat = geneticOptimizationStrategy;
         }
 
-        public IChromosome Optimize(IChromosome[] population)
+        public T Optimize(IChromosome[] population)
         {
+            Generation = 0;
 
-            while (!TerminationCondition())
+            while (!_mStrat.TerminationCondition(population))
             {
-                // SELECT: Spawn new chromosomes, but keep the X best of the old ones.
-                for (int i = ReuseCount; i < population.Length; i++)
-                {
-                    population[i] = population[0].Spawn();
-                }
-                // MATE: Mate layouts based
-                var orderedPopulation = population.OrderBy(item => item.Cost);
-                var idx = 0;
-                foreach (var chromosome in orderedPopulation)
-                {
-                    // Do mating.
-                    if (idx < ReuseCount)
-                    {
-                        
-                    }
-
-                }
+                // Do genetic stuff.
+                _mStrat.Select(population);
+                _mStrat.Mate(population);
+                _mStrat.Mutate(population);
+                // Sort by cost.
+                population = population.OrderBy(item => item.Cost).ToArray();
+                // Debug info.
+                var best = population[0].Cost;
+                Generation++;
             }
 
-            return null;
+            return (T) population.First();
         }
 
     }

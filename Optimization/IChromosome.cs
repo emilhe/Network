@@ -8,15 +8,14 @@ namespace Optimization
 {
     public interface IChromosome
     {
-        // Properties.
+        // Cost function.
         double Cost { get; }
 
-        // Actions.
-        IChromosome[] Mate(IChromosome partner);
+        // Mate another chromosome.
+        IChromosome Mate(IChromosome partner);
+        
+        // Mutate according to "species specifications".
         void Mutate();
-
-        // Should be static?
-        IChromosome Spawn();
     }
 }
  

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using BusinessLogic.Nodes;
 using NUnit.Framework;
 using BusinessLogic;
 using BusinessLogic.ExportStrategies;
@@ -9,10 +10,11 @@ using BusinessLogic.TimeSeries;
 
 namespace UnitTest
 {
+     [TestFixture]
     class ExportTest
     {
 
-        private List<Node> _mNodes;
+        private List<CountryNode> _mNodes;
 
         [Test]
         public void NoExportTest()
@@ -76,42 +78,46 @@ namespace UnitTest
 
         private void PreareNodesExcess()
         {
+            var tsDumb = new DenseTimeSeries("Empty ts");
             var ts0 = new DenseTimeSeries("Ts0");
             var ts1 = new DenseTimeSeries("Ts1");
             ts0.AppendData((double)-11 / 3);
             ts1.AppendData(1);
+            tsDumb.AppendData(0);
             var ba0 = new BatteryStorage(1);
             var ba1 = new BatteryStorage(1);
             var hy0 = new HydrogenStorage(1);
             var hy1 = new HydrogenStorage(1);
-            var node0 = new Node("Test0", ts0);
-            var node1 = new Node("Test1", ts1);
+            var node0 = new CountryNode(new ReModel("Test0", ts0, tsDumb, tsDumb));
+            var node1 = new CountryNode(new ReModel("Test1", ts1, tsDumb, tsDumb));
             node0.StorageCollection.Add(ba0);
             node0.StorageCollection.Add(hy0);
             node1.StorageCollection.Add(ba1);
             node1.StorageCollection.Add(hy1);
 
-            _mNodes = new List<Node> { node0, node1 };
+            _mNodes = new List<CountryNode> { node0, node1 };
         }
 
         private void PreareNodesLack()
         {
+            var tsDumb = new DenseTimeSeries("Empty ts");
             var ts0 = new DenseTimeSeries("Ts0");
             var ts1 = new DenseTimeSeries("Ts1");
             ts0.AppendData(-1);
             ts1.AppendData(2);
+            tsDumb.AppendData(0);
             var ba0 = new BatteryStorage(2, 1);
             var ba1 = new BatteryStorage(2, 1);
             var hy0 = new HydrogenStorage(1 , 1);
             var hy1 = new HydrogenStorage(1 , 1);
-            var node0 = new Node("Test0", ts0);
-            var node1 = new Node("Test1", ts1);
+            var node0 = new CountryNode(new ReModel("Test0", ts0, tsDumb, tsDumb));
+            var node1 = new CountryNode(new ReModel("Test1", ts1, tsDumb, tsDumb));
             node0.StorageCollection.Add(ba0);
             node0.StorageCollection.Add(hy0);
             node1.StorageCollection.Add(ba1);
             node1.StorageCollection.Add(hy1);
 
-            _mNodes = new List<Node> {node0, node1};
+            _mNodes = new List<CountryNode> {node0, node1};
         }
 
         private double ReadParam(Simulation sim, string country, string type)

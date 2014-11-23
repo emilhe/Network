@@ -51,6 +51,12 @@
     <Compile Include="Charting\ContourView.Designer.cs">
       <DependentUpon>ContourView.cs</DependentUpon>
     </Compile>
+    <Compile Include="Charting\CostView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Charting\CostView.Designer.cs">
+      <DependentUpon>CostView.cs</DependentUpon>
+    </Compile>
     <Compile Include="Charting\EuropeChart.cs" />
     <Compile Include="Charting\GroupHistogramView.cs">
       <SubType>UserControl</SubType>
@@ -114,6 +120,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Charting\ContourView.resx">
       <DependentUpon>ContourView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Charting\CostView.resx">
+      <DependentUpon>CostView.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Charting\GroupHistogramView.resx">
       <DependentUpon>GroupHistogramView.cs</DependentUpon>

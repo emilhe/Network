@@ -95,12 +95,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessClient.cs" />
+    <Compile Include="Cost\Chromosome.cs" />
     <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
     <Compile Include="ExportStrategies\ExportHelper.cs" />
     <Compile Include="ExportStrategies\ConstrainedFlowExportStrategy.cs" />
     <Compile Include="ExportStrategies\SelfishExportStrategy.cs" />
     <Compile Include="FailureStrategies\AllowBlackoutsStrategy.cs" />
     <Compile Include="FailureStrategies\NoBlackoutStrategy.cs" />
+    <Compile Include="Interfaces\INode.cs" />
     <Compile Include="Interfaces\IMeasureable.cs" />
     <Compile Include="Interfaces\IDistributionStrategy.cs" />
     <Compile Include="ExportStrategies\DistributionStrategies\MinimalFlowStrategy.cs" />
@@ -108,8 +110,12 @@
     <Compile Include="ExportStrategies\DistributionStrategies\SkipFlowStrategy.cs" />
     <Compile Include="Interfaces\IFailureStrategy.cs" />
     <Compile Include="Interfaces\ITickListener.cs" />
-    <Compile Include="LCOE\CostCalculator.cs" />
+    <Compile Include="Cost\BaseCosts.cs" />
+    <Compile Include="Cost\MixChromosome.cs" />
+    <Compile Include="Cost\MixGene.cs" />
     <Compile Include="MixController.cs" />
+    <Compile Include="Nodes\ReModel.cs" />
+    <Compile Include="Nodes\SuperNode.cs" />
     <Compile Include="SimulationController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />
     <Compile Include="Storages\Curtailment.cs" />
@@ -124,10 +130,12 @@
     <Compile Include="NetworkModel.cs" />
     <Compile Include="Interfaces\IExportStrategy.cs" />
     <Compile Include="MixOptimizer.cs" />
-    <Compile Include="Node.cs" />
+    <Compile Include="Nodes\CountryNode.cs" />
+    <Compile Include="Generators\SuperGenerator.cs" />
     <Compile Include="TimeSeries\BasicTimeSeries.cs" />
     <Compile Include="TimeSeries\IndexedTimeSeries.cs" />
     <Compile Include="TimeSeries\Mapping.cs" />
+    <Compile Include="TimeSeries\SuperTimeSeries.cs" />
     <Compile Include="Utils\FlowOptimizer.cs" />
     <Compile Include="Interfaces\IGenerator.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
@@ -155,6 +163,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Optimization\Optimization.csproj">
+      <Project>{FFD7147F-25BB-424F-8FF5-A86648812925}</Project>
+      <Name>Optimization</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SimpleImporter\ProtoLogic.csproj">
       <Project>{DD96E036-C8E4-42D4-AD91-12F9F21CA795}</Project>
       <Name>ProtoLogic</Name>

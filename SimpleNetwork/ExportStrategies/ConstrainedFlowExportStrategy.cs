@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Nodes;
 using BusinessLogic.TimeSeries;
 using BusinessLogic.Utils;
 using Utils;
@@ -19,7 +20,7 @@ namespace BusinessLogic.ExportStrategies
         private readonly EdgeSet _mEdges;
         private readonly ConstrainedFlowOptimizer _mConstrainedFlowOptimizer;
 
-        private List<Node> _mNodes;
+        private List<INode> _mNodes;
         private Response _mSystemResponse;
         private double[] _mMismatches;
         private double[] _mStorageMap;
@@ -29,7 +30,13 @@ namespace BusinessLogic.ExportStrategies
         private readonly double[] _mHiLims;
         private readonly double[,] _mFlows;
 
-        public ConstrainedFlowExportStrategy(List<Node> nodes, EdgeSet edges)
+        // TODO: Remove HACK
+        public ConstrainedFlowExportStrategy(List<CountryNode> nodes, EdgeSet edges)
+            : this(nodes.Select(item => (INode) item).ToList(), edges)
+        {
+        }
+
+        public ConstrainedFlowExportStrategy(List<INode> nodes, EdgeSet edges)
         {
             if (nodes.Count != edges.NodeCount) throw new ArgumentException("Nodes and edges do not match.");
 
@@ -44,7 +51,7 @@ namespace BusinessLogic.ExportStrategies
             _mFlows = new double[nodes.Count,nodes.Count];
         }
 
-        public void Bind(List<Node> nodes, double[] mismatches)
+        public void Bind(List<INode> nodes, double[] mismatches)
         {
             _mNodes = nodes;
             _mMismatches = mismatches;

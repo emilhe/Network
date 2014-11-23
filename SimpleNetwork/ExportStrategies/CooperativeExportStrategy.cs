@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
+using BusinessLogic.Nodes;
 
 namespace BusinessLogic.ExportStrategies
 {
@@ -20,7 +21,7 @@ namespace BusinessLogic.ExportStrategies
             _mHelper.DistributionStrategy = distributionStrategyStrategy;
         }
 
-        public void Bind(List<Node> nodes, double[] mismatches)
+        public void Bind(List<INode> nodes, double[] mismatches)
         {
             _mHelper.Bind(nodes, mismatches);
             _mMismatches = mismatches;

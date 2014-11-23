@@ -73,7 +73,7 @@ namespace SimpleImporter
             "Italy",
             "Slovenia",
             "Spain",
-            "Luxemborg",
+            "Luxembourg",
             "Slovakia",
             "Estonia",
             "Latvia",

@@ -127,7 +127,7 @@ namespace BusinessLogic
             };
             _mSystemTimeSeries = systemTimeSeries.ToDictionary(item => item.Name, item => item);
 
-            // Node time series setup.
+            // CountryNode time series setup.
             _mMeasureables = new List<IMeasureable> {Model.ExportStrategy};
             _mMeasureables.AddRange(Model.Nodes);
             foreach (var measureable in _mMeasureables) measureable.Start();

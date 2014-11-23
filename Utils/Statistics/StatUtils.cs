@@ -41,9 +41,9 @@ namespace Utils.Statistics
         /// <summary>
         /// Calculate the percentile given an ordered double array.
         /// </summary>
-        public static double Percentile(List<double> orderedData, double quantile)
+        public static double Percentile(List<double> orderedData, double percentile)
         {
-            var idx = (int) Math.Ceiling((orderedData.Count-1)*(quantile/100));
+            var idx = (int) Math.Ceiling((orderedData.Count-1)*(percentile/100));
             return orderedData[idx];
         }
 

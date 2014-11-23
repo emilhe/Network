@@ -14,6 +14,11 @@ namespace BusinessLogic.Interfaces
         string Name { get; set; }
 
         /// <summary>
+        /// Number of entries.
+        /// </summary>
+        int Count { get; }
+
+        /// <summary>
         /// Get the value for a specific time stamp.
         /// </summary>
         /// <param name="tick"></param>

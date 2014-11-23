@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Nodes;
 
 namespace BusinessLogic.ExportStrategies
 {
@@ -18,13 +19,13 @@ namespace BusinessLogic.ExportStrategies
         /// </summary>
         public IDistributionStrategy DistributionStrategy { get; set; }
 
-        private List<Node> _mNodes;
+        private List<INode> _mNodes;
         private Response _mSystemResponse;
         private double[] _mMismatches;
         private double[] _mStorageMap;
         private int _mStorageLevel;
 
-        public void Bind(List<Node> nodes, double[] mismatches)
+        public void Bind(List<INode> nodes, double[] mismatches)
         {
             _mNodes = nodes;
             _mMismatches = mismatches;

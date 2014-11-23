@@ -5,6 +5,7 @@ using BusinessLogic;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.Generators;
+using BusinessLogic.Nodes;
 using BusinessLogic.Storages;
 using BusinessLogic.TimeSeries;
 using NUnit.Framework;
@@ -19,19 +20,13 @@ namespace UnitTest
         public void TwoNodeTest()
         {
             // Setup stuff.        
-            var tsOneLoad = new DenseTimeSeries("Node 1 LoadTs");
-            var tsTwoLoad = new DenseTimeSeries("Node 2 LoadTs");
-            var tsOneGen = new DenseTimeSeries("Node 1 GenTs");
-            var tsTwoGen = new DenseTimeSeries("Node 2 GenTs");
-            var genOne = new TimeSeriesGenerator("Node 1 Gen", tsOneGen);
-            var genTwo = new TimeSeriesGenerator("Node 2 Gen", tsTwoGen);
-            var node1 = new Node("Denmark", tsOneLoad);
-            var node2 = new Node("Germany", tsTwoLoad);
-            node1.Generators.Add(genOne);
-            node2.Generators.Add(genTwo);
-            var nodes = new List<Node> { node1, node2 };
-            var edges = BusinessLogic.Utils.Utils.StraightLine(nodes);
-
+            var tsDumb = new DenseTimeSeries("Empty ts");
+            var tsOneLoad = new DenseTimeSeries("CountryNode 1 LoadTs");
+            var tsTwoLoad = new DenseTimeSeries("CountryNode 2 LoadTs");
+            var tsOneGen = new DenseTimeSeries("CountryNode 1 GenTs");
+            var tsTwoGen = new DenseTimeSeries("CountryNode 2 GenTs");
+            var genOne = new TimeSeriesGenerator("CountryNode 1 Gen", tsOneGen);
+            var genTwo = new TimeSeriesGenerator("CountryNode 2 Gen", tsTwoGen);
             // Create fake data: No flow needed.
             tsOneLoad.AppendData(5);
             tsOneLoad.AppendData(5);
@@ -41,6 +36,22 @@ namespace UnitTest
             tsOneGen.AppendData(5);
             tsTwoGen.AppendData(5);
             tsTwoGen.AppendData(5);
+            tsDumb.AppendData(0);
+            tsDumb.AppendData(0);
+            tsDumb.AppendData(0);
+            tsDumb.AppendData(0);
+            tsDumb.AppendData(0);
+            tsDumb.AppendData(0);
+            tsDumb.AppendData(0);
+            tsDumb.AppendData(0);
+            // Create nodes.
+            var node1 = new CountryNode(new ReModel("Denmark", tsOneLoad, tsDumb, tsDumb));
+            var node2 = new CountryNode(new ReModel("Germany", tsTwoLoad, tsDumb, tsDumb));
+            node1.Generators.Add(genOne);
+            node2.Generators.Add(genTwo);
+            var nodes = new List<CountryNode> { node1, node2 };
+            var edges = BusinessLogic.Utils.Utils.StraightLine(nodes);
+
             // Run model.
             RunModel(nodes, edges, 0, 2);
             RunNewModel(nodes, edges, 0, 2);
@@ -85,7 +96,7 @@ namespace UnitTest
             RunNewModel(nodes, edges, 10, 8);
         }
 
-        private void RunModel(List<Node> nodes, EdgeSet edges, double expected, int steps)
+        private void RunModel(List<CountryNode> nodes, EdgeSet edges, double expected, int steps)
         {
             var model = new NetworkModel(nodes, new CooperativeExportStrategy(new MinimalFlowStrategy(nodes, edges)));
             var simulation = new Simulation(model);
@@ -95,7 +106,7 @@ namespace UnitTest
             Assert.AreEqual(expected, capacity, 1e-6);
         }
 
-        private void RunNewModel(List<Node> nodes, EdgeSet edges, double expected, int steps)
+        private void RunNewModel(List<CountryNode> nodes, EdgeSet edges, double expected, int steps)
         {
             var model = new NetworkModel(nodes, new ConstrainedFlowExportStrategy(nodes, edges));
             var simulation = new Simulation(model);

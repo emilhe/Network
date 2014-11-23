@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="GeneticOptimizer.cs" />
     <Compile Include="IChromosome.cs" />
+    <Compile Include="IGeneticOptimizationStrategy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

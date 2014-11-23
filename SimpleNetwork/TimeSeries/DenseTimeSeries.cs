@@ -14,11 +14,13 @@ namespace BusinessLogic.TimeSeries
     public class DenseTimeSeries : ITimeSeries
     {
 
-        private readonly List<double> _mValues;
+        public int Count { get { return _mValues.Count; } }
 
+        private readonly List<double> _mValues;
         private double _mScale = 1;
         private int _mOffset;
 
+        public List<double> Values { get { return _mValues; } }
 
         /// <summary>
         /// Constructor used when data are loaded from external source.
@@ -43,6 +45,11 @@ namespace BusinessLogic.TimeSeries
         public double GetValue(int tick)
         {
             return _mValues[tick + _mOffset] * _mScale;
+        }
+
+        public double GetAverage(int from, int length)
+        {
+            return _mValues.Skip(from).Take(length).Average();
         }
 
         public double GetAverage()

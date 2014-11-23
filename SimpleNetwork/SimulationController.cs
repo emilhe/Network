@@ -8,6 +8,7 @@ using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.FailureStrategies;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Nodes;
 using BusinessLogic.Utils;
 using SimpleImporter;
 using Utils;
@@ -26,16 +27,16 @@ namespace BusinessLogic
         public List<TsSourceInput> Sources { get; set; }
         public List<ExportStrategyInput> ExportStrategies { get; set; }
         // Optional parameters.
-        public Dictionary<string, Func<TsSourceInput, List<Node>>> NodeFuncs { get; set; }
-        public Dictionary<string, Func<List<Node>, EdgeSet>> EdgeFuncs { get; set; }
+        public Dictionary<string, Func<TsSourceInput, List<CountryNode>>> NodeFuncs { get; set; }
+        public Dictionary<string, Func<List<CountryNode>, EdgeSet>> EdgeFuncs { get; set; }
         public Dictionary<string, Func<IFailureStrategy>> FailFuncs { get; set; }
         
         // Current iteration parameters.
         private string _mNodeTag = "";
         private string _mEdgeTag = "";
         private string _mFailTag = "";
-        private EdgeSet _mEdges;        
-        private List<Node> _mNodes;
+        private EdgeSet _mEdges;
+        private List<CountryNode> _mNodes;
         private TsSourceInput _mSrcIn;
         private IFailureStrategy _mFail;
         private ExportStrategyInput _mExpStratIn;
@@ -48,10 +49,11 @@ namespace BusinessLogic
             InvalidateCache = false;
 
             // Default way to construct nodes.
-            NodeFuncs = new Dictionary<string, Func<TsSourceInput, List<Node>>>();
-            NodeFuncs.Add("6h batt (homo), 25TWh hydrogen (homo), 150 TWh hydro-bio (homo)", s => ConfigurationUtils.CreateNodesWithBackup(s.Source, s.Length, s.Offset));
+            NodeFuncs = new Dictionary<string, Func<TsSourceInput, List<CountryNode>>>();
+            NodeFuncs.Add("6h batt (homo), 25TWh hydrogen (homo), 150 TWh hydro-bio (homo)",
+                s => ConfigurationUtils.CreateNodesWithBackup(s.Source, s.Length, s.Offset));
             // Default way to construct edges.
-            EdgeFuncs = new Dictionary<string, Func<List<Node>, EdgeSet>> { { "Europe edges", ConfigurationUtils.GetEuropeEdges } };
+            EdgeFuncs = new Dictionary<string, Func<List<CountryNode>, EdgeSet>> { { "Europe edges", ConfigurationUtils.GetEuropeEdges } };
             // Default way to define failures.
             FailFuncs = new Dictionary<string, Func<IFailureStrategy>>{{"No blackout", () => new NoBlackoutStrategy()}};
 
@@ -228,7 +230,7 @@ namespace BusinessLogic
         {
             var model = new NetworkModel(_mNodes, strategy, _mFail);
             var simulation = new Simulation(model);
-            var mCtrl = new MixController(_mNodes);
+            //var mCtrl = new MixController(_mNodes);
             var watch = new Stopwatch();
 
             // Eval grid.
@@ -236,9 +238,11 @@ namespace BusinessLogic
             {
                 var pen = grid.PenetrationFrom + grid.PenetrationStep * idxs[0];
                 var mix = grid.MixingFrom + grid.MixingStep * idxs[1];
-                mCtrl.SetMix(mix);
-                mCtrl.SetPenetration(pen);
-                mCtrl.Execute();
+                foreach (var node in _mNodes)
+                {
+                    node.Model.Gamma = pen;
+                    node.Model.Alpha = mix;
+                }
                 // Do simulation.
                 watch.Restart();
                 simulation.Simulate((int) (Utils.Utils.HoursInYear*years), false);
@@ -252,14 +256,15 @@ namespace BusinessLogic
         {
             var model = new NetworkModel(_mNodes, strategy, _mFail);
             var simulation = new Simulation(model);
-            var mCtrl = new MixController(_mNodes);
             var watch = new Stopwatch();
             watch.Start();
-            mCtrl.SetPenetration(penetration);
-            mCtrl.SetMix(mixing);
-            mCtrl.Execute();
+                foreach (var node in _mNodes)
+                {
+                    node.Model.Gamma = penetration;
+                    node.Model.Alpha = mixing;
+                }
             simulation.Simulate((int) (Utils.Utils.HoursInYear * years));
-            Console.WriteLine("Mix " + mCtrl.Mixes[0] + "; Penetation " + mCtrl.Penetrations[0] + ": " +
+            Console.WriteLine("Mix " + mixing + "; Penetation " + penetration + ": " +
                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
 
             return simulation.Output;

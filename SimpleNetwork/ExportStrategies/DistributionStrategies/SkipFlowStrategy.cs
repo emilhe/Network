@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Nodes;
 
 namespace BusinessLogic.ExportStrategies.DistributionStrategies
 {
@@ -15,7 +16,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
         /// <summary>
         /// Distribute the power. After distribution, all mismatches will be covered by storage.
         /// </summary>
-        public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency)
+        public void DistributePower(List<INode> nodes, double[] mismatches, double efficiency)
         {
             var toInject = mismatches.Sum();
 

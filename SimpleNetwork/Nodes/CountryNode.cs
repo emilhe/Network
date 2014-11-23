@@ -1,35 +1,41 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using BusinessLogic.Generators;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Storages;
 using Utils;
 
-namespace BusinessLogic
+namespace BusinessLogic.Nodes
 {
 
-    public class Node : IMeasureable, ITickListener
+    public class CountryNode : INode
     {
 
-        public string CountryName { get; set; }
-        public string Abbreviation { get { return CountryInfo.GetAbbrev(CountryName); } }
-        public ITimeSeries LoadTimeSeries { get; private set; }
-        public StorageCollection StorageCollection { get; set; }
+        public string Name { get { return Model.Name; } }
+        public string Abbreviation { get { return CountryInfo.GetAbbrev(Name); } }
+
+        //public ITimeSeries LoadTimeSeries { get { return Model.LoadTimeSeries; } }
+        public ReModel Model { get; set; }
         public List<IGenerator> Generators { get; set; }
+        public StorageCollection StorageCollection { get; set; }
 
-        public double Load { get; private set; }
-            
-        public Node(string name, ITimeSeries loadTimeSeries)
+        private double _mLoad { get; set; }
+    
+        public CountryNode(ReModel model)
         {
-            CountryName = name;
-            LoadTimeSeries = loadTimeSeries;
+            Model = model;
 
-            Generators = new List<IGenerator>();
+            Generators = new List<IGenerator>
+            {
+                new TimeSeriesGenerator("Wind",Model.WindTimeSeries),
+                new TimeSeriesGenerator("Solar",Model.SolarTimeSeries)
+            };
             StorageCollection = new StorageCollection {new Curtailment()};
         }
 
         public double GetDelta()
         {
-            return Generators.Sum(generator => generator.Production) - Load;
+            return Generators.Sum(generator => generator.Production) - _mLoad;
         }
 
         #region Measurement
@@ -48,7 +54,7 @@ namespace BusinessLogic
                 result.AddRange(item.Value.CollectTimeSeries());
             }
             // Bind country dependence.
-            foreach (var ts in result) ts.Properties.Add("Country", CountryName);
+            foreach (var ts in result) ts.Properties.Add("Country", Name);
             return result;
         }
 
@@ -76,10 +82,11 @@ namespace BusinessLogic
 
         public void TickChanged(int tick)
         {
-            Load = LoadTimeSeries.GetValue(tick);
+            _mLoad = Model.LoadTimeSeries.GetValue(tick);
             foreach (var generator in Generators) generator.TickChanged(tick);
             //foreach (var item in StorageCollection) item.Value.TickChanged(tick);
         }
+
     }
 
 }

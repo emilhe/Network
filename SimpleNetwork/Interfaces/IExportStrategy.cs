@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using BusinessLogic.ExportStrategies;
+using BusinessLogic.Nodes;
 
 namespace BusinessLogic.Interfaces
 {
     public interface IExportStrategy : IMeasureable
     {
 
-        void Bind(List<Node> nodes, double[] mismatches);
+        void Bind(List<INode> nodes, double[] mismatches);
         BalanceResult BalanceSystem();
 
     }

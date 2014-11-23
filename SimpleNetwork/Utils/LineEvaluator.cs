@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessLogic.Nodes;
 
 namespace BusinessLogic.Utils
 {
@@ -12,15 +13,17 @@ namespace BusinessLogic.Utils
 
         #region Specific functionality
 
-        public static bool[] EvalSimulation(LineScanParameters gridParams, Simulation simulation, MixController mCtrl, int years = 1)
+        public static bool[] EvalSimulation(LineScanParameters gridParams, Simulation simulation, int years = 1)
         {
             var watch = new Stopwatch();
             // Eval grid.
             return EvalDense(delegate(int idx)
             {
                 var pen = gridParams.PenetrationFrom + gridParams.PenetrationStep * idx;
-                mCtrl.SetPenetration(pen);
-                mCtrl.Execute();
+                foreach (var node in simulation.Model.Nodes)
+                {
+                    ((CountryNode) node).Model.Gamma = pen;
+                }
                 // Do simulation.
                 watch.Restart();
                 simulation.Simulate(8765 * years, false);

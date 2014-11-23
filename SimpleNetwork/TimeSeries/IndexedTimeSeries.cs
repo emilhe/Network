@@ -50,6 +50,11 @@ namespace BusinessLogic.TimeSeries
             set { _mCore.Name = value; }
         }
 
+        public int Count
+        {
+            get { return _mCore.Count; }
+        }
+
         public double GetValue(int tick)
         {
             return ((ITimeSeries) _mCore).GetValue(tick);

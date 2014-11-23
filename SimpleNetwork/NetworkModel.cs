@@ -4,12 +4,13 @@ using System.Linq;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.FailureStrategies;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Nodes;
 
 namespace BusinessLogic
 {
     public class NetworkModel
     {
-        public List<Node> Nodes { get; private set; }
+        public List<INode> Nodes { get; private set; }
         public double Mismatch { get; private set; }
 
         public double Curtailment
@@ -22,12 +23,19 @@ namespace BusinessLogic
             get { return FailureStrategy.Failure; }
         }
 
-        public IFailureStrategy FailureStrategy { get; private set; }
-        public IExportStrategy ExportStrategy { get; private set; }
+        public IFailureStrategy FailureStrategy { get; set; }
+        public IExportStrategy ExportStrategy { get; set; }
         private BalanceResult _mBalanceResult;
         private readonly double[] _mMismatches;
 
-        public NetworkModel(List<Node> nodes, IExportStrategy exportStrategy, IFailureStrategy failureStrategy = null)
+        // TODO: Remove HACK
+        public NetworkModel(List<CountryNode> nodes, IExportStrategy exportStrategy,
+            IFailureStrategy failureStrategy = null)
+            : this(nodes.Select(item => (INode) item).ToList(), exportStrategy, failureStrategy)
+        {
+        }
+
+        public NetworkModel(List<INode> nodes, IExportStrategy exportStrategy, IFailureStrategy failureStrategy = null)
         {
             if (failureStrategy == null) failureStrategy = new NoBlackoutStrategy();
             _mMismatches = new double[nodes.Count];

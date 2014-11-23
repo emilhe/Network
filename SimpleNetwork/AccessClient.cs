@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Generators;
+using BusinessLogic.Interfaces;
+using BusinessLogic.Nodes;
 using BusinessLogic.TimeSeries;
+using NUnit.Framework.Constraints;
 using SimpleImporter;
 using Utils;
 
@@ -12,24 +15,27 @@ namespace BusinessLogic
 
         #region Country data
 
-        public List<Node> GetAllCountryData(TsSource source, int offset = 0)
+        public List<CountryNode> GetAllCountryData(TsSource source, int offset = 0)
         {
             var countries = ProtoStore.LoadCountries();
-            var result = countries.Select(item => new Node(item, GetTs(item, TsType.Load, source, offset))).ToList();
+            var result = new List<CountryNode>(countries.Count);
 
-            foreach (var node in result)
+            foreach (var country in countries)
             {
-                AddGenerator(node, TsType.Wind, source, offset);
-                AddGenerator(node, TsType.Solar, source, offset);
+                var load = GetTs(country, TsType.Load, source, offset);
+                var wind = GetTs(country, TsType.Wind, source, offset);
+                var solar = GetTs(country, TsType.Solar, source, offset);
+                result.Add(new CountryNode(new ReModel(country, load, wind, solar)));
             }
+
             return result;
         }
 
-        private void AddGenerator(Node node, TsType type, TsSource source, int offset)
-        {
-            node.Generators.Add(new TimeSeriesGenerator(type.GetDescription(),
-                GetTs(node.CountryName, type, source, offset)));
-        }
+        //private void AddGenerator(CountryNode countryNode, TsType type, TsSource source, int offset)
+        //{
+        //    countryNode.Generators.Add(new TimeSeriesGenerator(type.GetDescription(),
+        //        GetTs(countryNode.Name, type, source, offset)));
+        //}
 
         private DenseTimeSeries GetTs(string country, TsType type, TsSource source, int offset)
         {

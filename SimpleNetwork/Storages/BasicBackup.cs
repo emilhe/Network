@@ -82,7 +82,8 @@ namespace BusinessLogic.Storages
 
         public double AvailableEnergy(Response response)
         {
-            return ((IStorage) _mCore).AvailableEnergy(response);
+            // A backup cannot be charged.
+            return response == Response.Charge ? 0 : ((IStorage)_mCore).AvailableEnergy(response);
         }
 
         public void ResetEnergy()

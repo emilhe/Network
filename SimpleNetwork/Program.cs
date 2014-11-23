@@ -12,8 +12,8 @@ namespace BusinessLogic
         private static void Main(string[] args)
         {
             //EcnImporter.Parse();
-            //CsvImporter.Parse(TsSource.VE);
-            //NtcImporter.Parse();
+            CsvImporter.Parse(TsSource.ISET);
+            NtcImporter.Parse();
         }
 
     }

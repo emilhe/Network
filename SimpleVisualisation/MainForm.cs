@@ -21,6 +21,7 @@ namespace Main
         private TimeSeriesControl _timeSeriesControl;
         private GroupHistogramView _histogramView;
         private ContourView _contourView;
+        private CostView _costView;
         private PlotView _plotView;
 
         public MainForm()
@@ -31,8 +32,7 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
             
-            var data = ProtoStore
-
+            //Configurations.CostAnalysis.VaryAlpha(this);
     //        var data = ProtoStore.LoadEcnData();
     //        var allBio = data.Where(item =>
     //            item.RowHeader.Equals("Biomass") &&
@@ -64,7 +64,7 @@ namespace Main
 
             //Configurations.CompareSources(this);
             //Configurations.CompareFlows(this);
-            Figures.FlowAnalysis(this);
+            //Figures.FlowAnalysis(this);
 
             //Configurations.BackupAnalysisWithLinksWitDelta(this);
             //Figures.FlowAnalysisNext(this);
@@ -174,6 +174,33 @@ namespace Main
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
         }
+
+        #region Contour view
+
+        public CostView DisplayCost()
+        {
+            if (_costView == null) InitializeCostControl();
+            _costView.Visible = true;
+            if (_contourView != null) _contourView.Visible = false;
+            if (_timeSeriesControl != null) _timeSeriesControl.Visible = false;
+            if (_histogramView != null) _histogramView.Visible = false;
+            if (_plotView != null) _plotView.Visible = false;
+
+            return _costView;
+        }
+
+        private void InitializeCostControl()
+        {
+            _costView = new CostView
+            {
+                Dock = DockStyle.Fill,
+                Location = new Point(0, 0),
+                Name = "CostView",
+            };
+            panel1.Controls.Add(_costView);
+        }
+
+        #endregion
 
         #region Contour view
 

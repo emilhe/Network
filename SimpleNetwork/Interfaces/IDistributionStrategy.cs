@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using BusinessLogic.Nodes;
 
 namespace BusinessLogic.Interfaces
 {
@@ -13,7 +14,7 @@ namespace BusinessLogic.Interfaces
         /// <summary>
         /// Distribute power. This includes chargeing/discharge storage if necessary.
         /// </summary>
-        void DistributePower(List<Node> nodes, double[] mismatches, double efficiency);
+        void DistributePower(List<INode> nodes, double[] mismatches, double efficiency);
 
         /// <summary>
         /// Equalize power. This does NOT include charging/discharging storage.

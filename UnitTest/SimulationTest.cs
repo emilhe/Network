@@ -1,8 +1,11 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using BusinessLogic.Nodes;
+using NUnit.Framework;
 using BusinessLogic;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.Utils;
+using SimpleImporter;
 
 namespace UnitTest
 {
@@ -17,17 +20,20 @@ namespace UnitTest
             var edges = BusinessLogic.Utils.Utils.StraightLine(nodes);
             var model = new NetworkModel(nodes, new ConstrainedFlowExportStrategy(nodes, edges));
             var simulation = new Simulation(model);
-            var mCtrl = new MixController(nodes);
             // Try a simulation which should work.
-            mCtrl.SetMix(0.65);
-            mCtrl.SetPenetration(1.029);
-            mCtrl.Execute();
+            foreach (var node in nodes)
+            {
+                node.Model.Alpha = 0.65;
+                node.Model.Gamma = 1.029;
+            }
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
-            mCtrl.SetMix(0.65);
-            mCtrl.SetPenetration(1.028);
-            mCtrl.Execute();
+            foreach (var node in nodes)
+            {
+                node.Model.Alpha = 0.65;
+                node.Model.Gamma = 1.028;
+            }
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
@@ -39,17 +45,20 @@ namespace UnitTest
             var nodes = ConfigurationUtils.CreateNodesWithBackup();
             var model = new NetworkModel(nodes, new CooperativeExportStrategy(new SkipFlowStrategy()));
             var simulation = new Simulation(model);
-            var mCtrl = new MixController(nodes);
             // Try a simulation which should work.
-            mCtrl.SetMix(0.65);
-            mCtrl.SetPenetration(1.029);
-            mCtrl.Execute();
+            foreach (var node in nodes)
+            {
+                node.Model.Alpha = 0.65;
+                node.Model.Gamma = 1.029;
+            }
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
-            mCtrl.SetMix(0.65);
-            mCtrl.SetPenetration(1.028);
-            mCtrl.Execute();
+            foreach (var node in nodes)
+            {
+                node.Model.Alpha = 0.65;
+                node.Model.Gamma = 1.028;
+            }
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
@@ -62,17 +71,20 @@ namespace UnitTest
             var edges = BusinessLogic.Utils.Utils.StraightLine(nodes);
             var model = new NetworkModel(nodes, new CooperativeExportStrategy(new MinimalFlowStrategy(nodes, edges)));
             var simulation = new Simulation(model);
-            var mCtrl = new MixController(nodes);
             // Try a simulation which should work.
-            mCtrl.SetMix(0.65);
-            mCtrl.SetPenetration(1.029);
-            mCtrl.Execute();
+            foreach (var node in nodes)
+            {
+                node.Model.Alpha = 0.65;
+                node.Model.Gamma = 1.029;
+            }
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
-            mCtrl.SetMix(0.65);
-            mCtrl.SetPenetration(1.0); //28
-            mCtrl.Execute();
+            foreach (var node in nodes)
+            {
+                node.Model.Alpha = 0.65;
+                node.Model.Gamma = 1.0;
+            }
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
@@ -84,17 +96,20 @@ namespace UnitTest
             var nodes = ConfigurationUtils.CreateNodesWithBackup();
             var model = new NetworkModel(nodes, new SelfishExportStrategy(new SkipFlowStrategy()));
             var simulation = new Simulation(model);
-            var mCtrl = new MixController(nodes);
             // Try a simulation which should work.
-            mCtrl.SetMix(0.55);
-            mCtrl.SetPenetration(1.288);
-            mCtrl.Execute();
+            foreach (var node in nodes)
+            {
+                node.Model.Alpha = 0.55;
+                node.Model.Gamma = 1.228;
+            }
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
-            mCtrl.SetMix(0.55);
-            mCtrl.SetPenetration(1.287);
-            mCtrl.Execute();
+            foreach (var node in nodes)
+            {
+                node.Model.Alpha = 0.55;
+                node.Model.Gamma = 1.287;
+            }
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
@@ -106,17 +121,20 @@ namespace UnitTest
             var nodes = ConfigurationUtils.CreateNodesWithBackup();
             var model = new NetworkModel(nodes, new NoExportStrategy());
             var simulation = new Simulation(model);
-            var mCtrl = new MixController(nodes);
             // Try a simulation which should work.
-            mCtrl.SetMix(0.57);
-            mCtrl.SetPenetration(1.536);
-            mCtrl.Execute();
+            foreach (var node in nodes)
+            {
+                node.Model.Alpha = 0.57;
+                node.Model.Gamma = 1.536;
+            }
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
-            mCtrl.SetMix(0.57);
-            mCtrl.SetPenetration(1.534);
-            mCtrl.Execute();
+            foreach (var node in nodes)
+            {
+                node.Model.Alpha = 0.57;
+                node.Model.Gamma = 1.534;
+            }
             simulation.Simulate(8760); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }

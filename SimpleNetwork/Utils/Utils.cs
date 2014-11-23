@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using BusinessLogic.Nodes;
 
 namespace BusinessLogic.Utils
 {
@@ -8,7 +9,7 @@ namespace BusinessLogic.Utils
         public static int HoursInYear = 8766;
         //public static int HoursInYear = 8760;
 
-        public static EdgeSet StraightLine(List<Node> nodes)
+        public static EdgeSet StraightLine(List<CountryNode> nodes)
         {
             var edges = new EdgeSet(nodes.Count);
             // For now, connect the nodes in a straight line.

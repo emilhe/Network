@@ -14,7 +14,9 @@ namespace BusinessLogic.TimeSeries
     /// </summary>
     public class SparseTimeSeries : ITimeSeries
     {
-        
+
+        public int Count { get { return _mValues.Count; } }
+
         private readonly Dictionary<int, double> _mValues;
 
         public SparseTimeSeries(string name, int capacity = 100)
@@ -41,6 +43,7 @@ namespace BusinessLogic.TimeSeries
             var keys = _mValues.Keys.Where(item => item <= tick);
             return !keys.Any() ? double.NaN : GetValue(keys.Last());
         }
+
 
         public double GetValue(int tick)
         {

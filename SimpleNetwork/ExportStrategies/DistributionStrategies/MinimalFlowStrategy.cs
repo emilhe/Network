@@ -2,21 +2,27 @@
 using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Nodes;
 using BusinessLogic.TimeSeries;
 
 namespace BusinessLogic.ExportStrategies.DistributionStrategies
 {
     public class MinimalFlowStrategy : IDistributionStrategy
     {
-        public double Tolerance { get { return 1e-4; } }
+        public double Tolerance { get { return 1e-3; } }
 
         private readonly FlowOptimizer _flowOptimizer;
-        private readonly List<Node> _mNodes;
+        private readonly List<INode> _mNodes;
         private readonly EdgeSet _mEdges;
         private readonly double[] _mLoLims;
         private readonly double[] _mHiLims;
 
-        public MinimalFlowStrategy(List<Node> nodes, EdgeSet edges)
+        //TODO: Remove HACK
+
+        public MinimalFlowStrategy(List<CountryNode> nodes, EdgeSet edges) : this(nodes.Select(item => (INode) item).ToList(), edges) { }
+
+
+        public MinimalFlowStrategy(List<INode> nodes, EdgeSet edges)
         {
             if (nodes.Count != edges.NodeCount) throw new ArgumentException("Nodes and edges do not match.");
 
@@ -30,7 +36,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
             _mHiLims = new double[nodes.Count];
         }
 
-        public void DistributePower(List<Node> nodes, double[] mismatches, double efficiency)
+        public void DistributePower(List<INode> nodes, double[] mismatches, double efficiency)
         {
             // Setup limits.
             for (int idx = 0; idx < nodes.Count; idx++)
@@ -49,7 +55,14 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
 
             // Determine FLOWS using Gurobi optimization.
             _flowOptimizer.SetNodes(mismatches, _mLoLims, _mHiLims);
-            _flowOptimizer.Solve();
+            try
+            {
+                _flowOptimizer.Solve();
+            }
+            catch (Exception e)
+            {
+                // What to do?
+            }
 
             // Charge based on flow optimization results.
             for (int index = 0; index < nodes.Count; index++)
