@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Utils
 {
@@ -196,6 +197,14 @@ namespace Utils
 
         #endregion
 
+        #region Mean load mappings
+
+        // Source: 32 years of VE data.
+        private static readonly Dictionary<string, double> MeanLoad =
+            Parsing.DictionaryFromFile<string, double>(@"C:\proto\MeanLoad.txt");
+
+        #endregion
+
         /// <summary>
         /// Get the country name from the three or two letter abbreviation.
         /// </summary>
@@ -223,6 +232,14 @@ namespace Utils
         }
 
         /// <summary>
+        /// Get the summed wind capacity factors.
+        /// </summary>
+        public static double GetWindCfSum()
+        {
+            return WindCf.Values.Sum();
+        }
+
+        /// <summary>
         /// Get the solar capacity factor for a country.
         /// </summary>
         public static double GetSolarCf(string name)
@@ -230,5 +247,52 @@ namespace Utils
             return SolarCf[name];
         }
 
+        /// <summary>
+        /// Get the summed solar capacity factors.
+        /// </summary>
+        public static double GetSolarCfSum()
+        {
+            return SolarCf.Values.Sum();
+        }
+
+        /// <summary>
+        /// Get the mean load for a country (preprocessed).
+        /// </summary>
+        /// <param name="country"> country name </param>
+        /// <returns> mean load </returns>
+        public static double GetMeanLoad(string country)
+        {
+            return MeanLoad[country];
+        }
+
+        /// <summary>
+        /// Get the summed mean load for europe (preprocessed).
+        /// </summary>
+        /// <returns> mean load </returns>
+        public static double GetMeanLoadSum()
+        {
+            return MeanLoad.Values.Sum();
+        }
+
+        // TODO: Is this OK?
+        public static Dictionary<string, double> GetSolarCf()
+        {
+            return SolarCf;
+        }
+
+        // TODO: Is this OK?
+        public static Dictionary<string, double> GetWindCf()
+        {
+            return WindCf;
+        }
+
+        /// <summary>
+        /// Get the mean load for a country (preprocessed).
+        /// </summary>
+        /// <returns> mean load </returns>
+        public static Dictionary<string, double> GetMeanLoad()
+        {
+            return MeanLoad;
+        }
     }
 }

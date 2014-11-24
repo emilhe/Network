@@ -52,13 +52,12 @@ namespace BusinessLogic
         /// Simulate a number of ticks.
         /// </summary>
         /// <param name="ticks"> number of ticks to simulate </param>
-        /// <param name="log"> is ts should be logged for system paramters </param>
-        public void Simulate(int ticks, bool log = true)
+        /// <param name="logLevel"> how much should be logged? </param>
+        public void Simulate(int ticks, LogLevelEnum logLevel = LogLevelEnum.Full)
         {
             ResetStorages();
             SetupTickListeners();
-            if (log) SetupLoggers();
-            else Reset();
+            SetupLoggers(logLevel);
 
             // Simulation main loop.
             var tick = 0;
@@ -68,15 +67,15 @@ namespace BusinessLogic
                 if (_mDebug) _mWatch.Restart();
                 SignalTickChanged(tick);
                 Model.Evaluate(tick);
-                if (log) SignalLoggers(tick);
+                SignalLoggers(tick, logLevel);
                 if (Model.Failure) _mSuccess = false;
                 if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
                 tick++;
-                if (!log && Model.Failure) break;
+                if (logLevel == LogLevelEnum.None && Model.Failure) break;
                 //if(_mTick % 10000 == 0) Console.WriteLine("Progress: {0} of {1}",_mTick, ticks);
             }
 
-            CreateOutput(log);
+            CreateOutput(logLevel);
         }
 
         /// <summary>
@@ -117,8 +116,14 @@ namespace BusinessLogic
         /// <summary>
         /// Setup loggers.
         /// </summary>
-        private void SetupLoggers()
+        private void SetupLoggers(LogLevelEnum logLevel)
         {
+            if (logLevel == LogLevelEnum.None)
+            {
+                Reset();
+                return;
+            }
+
             // System time series setup.
             var systemTimeSeries = new List<ITimeSeries>
             {
@@ -126,6 +131,8 @@ namespace BusinessLogic
                 new DenseTimeSeries("Curtailment")
             };
             _mSystemTimeSeries = systemTimeSeries.ToDictionary(item => item.Name, item => item);
+
+            if (logLevel == LogLevelEnum.System) return;
 
             // CountryNode time series setup.
             _mMeasureables = new List<IMeasureable> {Model.ExportStrategy};
@@ -144,22 +151,27 @@ namespace BusinessLogic
         /// <summary>
         /// Signal to the measureable to sample.
         /// </summary>
-        private void SignalLoggers(int tick)
+        private void SignalLoggers(int tick, LogLevelEnum logLevel)
         {
+            if (logLevel == LogLevelEnum.None) return;
+
             _mSystemTimeSeries["Mismatch"].AppendData(Model.Mismatch);
             _mSystemTimeSeries["Curtailment"].AppendData(Model.Curtailment);
+
+            if (logLevel == LogLevelEnum.System) return;
+
             foreach (var measureable in _mMeasureables) measureable.Sample(tick);
         }
 
         /// <summary>
         /// Wrap output data.
         /// </summary>
-        private void CreateOutput(bool log)
+        private void CreateOutput(LogLevelEnum logLevel)
         {
             var ts = new List<ITimeSeries>();
-            if(log) ts.AddRange(_mSystemTimeSeries.Values);
-            if (log) ts.AddRange(Model.ExportStrategy.CollectTimeSeries());
-            if (log) ts.AddRange(Model.Nodes.SelectMany(item => item.CollectTimeSeries()));
+            if (logLevel != LogLevelEnum.None) ts.AddRange(_mSystemTimeSeries.Values);
+            if (logLevel == LogLevelEnum.Full) ts.AddRange(Model.ExportStrategy.CollectTimeSeries());
+            if (logLevel == LogLevelEnum.Full) ts.AddRange(Model.Nodes.SelectMany(item => item.CollectTimeSeries()));
 
             Output = new SimulationOutput
             {
@@ -202,6 +214,11 @@ namespace BusinessLogic
         /// </summary>
         public Dictionary<string, string> Properties { get; set; } 
 
+    }
+
+    public enum LogLevelEnum
+    {
+        None = 0, System = 1, Full = 2
     }
 
 }

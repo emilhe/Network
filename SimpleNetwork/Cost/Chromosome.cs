@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BusinessLogic.LCOE;
 
 namespace BusinessLogic.Cost
 {
     public class Chromosome : IList<MixGene>
     {
 
+        public List<string> Names { get; private set; } 
         public List<MixGene> Genes { get; private set; }
 
         public double Alpha
@@ -43,6 +43,20 @@ namespace BusinessLogic.Cost
             for (int i = 0; i < count; i++) Genes.Add(new MixGene { Alpha = alpha, Gamma = gamma });
         }
 
+        public Chromosome(List<string> countries , double alpha = 0, double gamma = 0)
+        {
+            Names = countries;
+            Genes = new List<MixGene>(countries.Count);
+            if (alpha == 0 && gamma == 0) return;
+            // Optionary; initialize with default values.
+            for (int i = 0; i < countries.Count; i++) Genes.Add(new MixGene { Alpha = alpha, Gamma = gamma });
+        }
+
+        public MixGene this[string name]
+        {
+            get { return Genes[Names.IndexOf(name)]; }
+            set { Genes[Names.IndexOf(name)] = value; }
+        }
         #region Delegation
 
         public IEnumerator<MixGene> GetEnumerator()

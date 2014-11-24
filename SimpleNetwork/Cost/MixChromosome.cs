@@ -1,5 +1,4 @@
 ﻿using System;
-using BusinessLogic.LCOE;
 using Optimization;
 
 namespace BusinessLogic.Cost

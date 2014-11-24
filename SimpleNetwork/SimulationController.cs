@@ -245,7 +245,7 @@ namespace BusinessLogic
                 }
                 // Do simulation.
                 watch.Restart();
-                simulation.Simulate((int) (Utils.Utils.HoursInYear*years), false);
+                simulation.Simulate((int) (Utils.Utils.HoursInYear*years), LogLevelEnum.None);
                 Console.WriteLine("Mix " + mix + "; Penetation " + pen + ": " +
                                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
                 return simulation.Output.Success;

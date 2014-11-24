@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic.Cost;
-using BusinessLogic.LCOE;
 using NUnit.Framework;
 
 namespace UnitTest
@@ -25,7 +24,7 @@ namespace UnitTest
              var setup = watch.ElapsedMilliseconds;
              watch.Restart();
              // Act.
-             var cost = costCalc.SystemCostWithoutLinks(genes);
+             var cost = costCalc.DetailedSystemCostWithoutLinks(genes);
              // Assert.
              var eval = watch.ElapsedMilliseconds;
              //Assert.AreEqual(0,cost);

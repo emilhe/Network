@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.Interfaces;
-using BusinessLogic.LCOE;
 using BusinessLogic.Nodes;
 using BusinessLogic.TimeSeries;
 using NUnit.Framework;
@@ -54,7 +54,6 @@ namespace BusinessLogic.Cost
         /// </summary>
         public Dictionary<string, double> SystemCost(Chromosome chromosome)
         {
-            // TODO: Optimize this such that ONLY necessary information is recorded.
             AdaptSystem(chromosome);
 
             _mSim.Model = _mWithFlowModel;
@@ -66,21 +65,37 @@ namespace BusinessLogic.Cost
         /// <summary>
         /// System coost not taking links into consideration (fast to evaluate).
         /// </summary>
-        public Dictionary<string, double> SystemCostWithoutLinks(Chromosome chromosome)
+        public Dictionary<string, double> DetailedSystemCostWithoutLinks(Chromosome chromosome)
         {
             AdaptSystem(chromosome);
             // Run simulation.
             _mSim.Model = _mSkipFlowModel;
-            _mSim.Simulate(Utils.Utils.HoursInYear);
+            _mSim.Simulate(Utils.Utils.HoursInYear, LogLevelEnum.System);
             // Calculate cost elements.
-            var costs = new Dictionary<string, double>();
-            foreach (var cost in BaseCosts()) costs.Add(cost.Key, cost.Value);
+            var costs = BaseCosts().ToDictionary(cost => cost.Key, cost => cost.Value);
             foreach (var cost in BackupCost(_mSim.Output)) costs.Add(cost.Key, cost.Value);
             // Scale costs to get LCOE.
             var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum()*Utils.Utils.HoursInYear*AnnualizationFactor;
             foreach (var key in costs.Keys.ToArray()) costs[key] = costs[key] / scaling;
 
             return costs;
+        }
+
+        /// <summary>
+        /// System coost not taking links into consideration (fast to evaluate).
+        /// </summary>
+        public double SystemCostWithoutLinks(Chromosome chromosome)
+        {
+            AdaptSystem(chromosome);
+            // Run simulation.
+            _mSim.Model = _mSkipFlowModel;
+            _mSim.Simulate(Utils.Utils.HoursInYear, LogLevelEnum.System);
+            // Calculate cost elements.
+            var cost = BaseCosts().Values.Sum() + BackupCost(_mSim.Output).Values.Sum();
+            // Scale costs to get LCOE.
+            var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum() * Utils.Utils.HoursInYear * AnnualizationFactor;
+
+            return cost/scaling;
         }
 
         #endregion
@@ -128,7 +143,7 @@ namespace BusinessLogic.Cost
                 windCapacity += model.Gamma*model.Alpha * model.AvgLoad / CountryInfo.GetWindCf(model.Name);
                 solarCapacity += model.Gamma * (1 - model.Alpha) * model.AvgLoad / CountryInfo.GetSolarCf(model.Name);
             }
-
+                
             return new Dictionary<string, double>
             {
                 {"Wind", WindCost(windCapacity)},

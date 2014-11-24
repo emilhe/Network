@@ -32,7 +32,7 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
             
-            //Configurations.CostAnalysis.VaryAlpha(this);
+            Configurations.CostAnalysis.VaryBeta(this);
     //        var data = ProtoStore.LoadEcnData();
     //        var allBio = data.Where(item =>
     //            item.RowHeader.Equals("Biomass") &&

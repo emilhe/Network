@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CsvImporter.cs" />
+    <Compile Include="DerivedData.cs" />
     <Compile Include="EcnImporter.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="NtcImporter.cs" />

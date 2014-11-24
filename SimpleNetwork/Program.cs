@@ -11,9 +11,10 @@ namespace BusinessLogic
         /// <param name="args"></param>
         private static void Main(string[] args)
         {
+            DerivedData.CalculateMeanLoad();
             //EcnImporter.Parse();
-            CsvImporter.Parse(TsSource.ISET);
-            NtcImporter.Parse();
+            //CsvImporter.Parse(TsSource.ISET);
+            //NtcImporter.Parse();
         }
 
     }
