@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using BusinessLogic.Simulation;
 using Controls.Charting;
 using BusinessLogic;
 using BusinessLogic.Interfaces;

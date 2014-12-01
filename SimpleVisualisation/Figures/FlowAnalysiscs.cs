@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BusinessLogic;
 using BusinessLogic.FailureStrategies;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Simulation;
 using BusinessLogic.Utils;
 using Controls.Charting;
 using SimpleImporter;

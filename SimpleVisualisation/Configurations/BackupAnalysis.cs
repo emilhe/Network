@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms.DataVisualization.Charting;
 using BusinessLogic;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Simulation;
 using BusinessLogic.TimeSeries;
 using BusinessLogic.Utils;
 using Controls.Charting;

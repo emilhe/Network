@@ -6,6 +6,7 @@ using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.Generators;
 using BusinessLogic.Nodes;
+using BusinessLogic.Simulation;
 using BusinessLogic.Storages;
 using BusinessLogic.TimeSeries;
 using NUnit.Framework;
@@ -99,7 +100,7 @@ namespace UnitTest
         private void RunModel(List<CountryNode> nodes, EdgeSet edges, double expected, int steps)
         {
             var model = new NetworkModel(nodes, new CooperativeExportStrategy(new MinimalFlowStrategy(nodes, edges)));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             simulation.Simulate(steps);
             var flowTs = simulation.Output.TimeSeries.First(item => item.Properties.ContainsKey("Flow"));
             var capacity = StatUtils.CalcCapacity(flowTs.GetAllValues().OrderBy(item => item).ToList());
@@ -109,7 +110,7 @@ namespace UnitTest
         private void RunNewModel(List<CountryNode> nodes, EdgeSet edges, double expected, int steps)
         {
             var model = new NetworkModel(nodes, new ConstrainedFlowExportStrategy(nodes, edges));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             simulation.Simulate(steps);
             var flowTs = simulation.Output.TimeSeries.First(item => item.Properties.ContainsKey("Flow"));
             double capacity = 0;

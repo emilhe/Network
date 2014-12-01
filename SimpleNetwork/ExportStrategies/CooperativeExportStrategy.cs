@@ -21,7 +21,7 @@ namespace BusinessLogic.ExportStrategies
             _mHelper.DistributionStrategy = distributionStrategyStrategy;
         }
 
-        public void Bind(List<INode> nodes, double[] mismatches)
+        public void Bind(IList<INode> nodes, double[] mismatches)
         {
             _mHelper.Bind(nodes, mismatches);
             _mMismatches = mismatches;

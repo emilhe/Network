@@ -6,6 +6,7 @@ using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
+using BusinessLogic.Simulation;
 using BusinessLogic.Utils;
 using SimpleImporter;
 using Utils;
@@ -216,12 +217,12 @@ namespace Main.Configurations
 
             // Find out how good it is.
             var model = new NetworkModel(nodes, new CooperativeExportStrategy(new SkipFlowStrategy()));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             //var mCtrl = new MixController(nodes);
             LineEvaluator.EvalSimulation(lineParams, simulation, 8);
         }
 
-        public static Simulation Optimization(List<INode> nodes)
+        public static SimulationCore Optimization(List<INode> nodes)
         {
             //var opt = new MixOptimizer(nodes);
             //opt.OptimizeIndividually();
@@ -230,12 +231,12 @@ namespace Main.Configurations
             //opt.OptimizeLocally();
 
             var model = new NetworkModel(nodes, new CooperativeExportStrategy(new SkipFlowStrategy()));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             for (var pen = 1.02; pen <= 1.10; pen += 0.0025)
             {
                 //mCtrl.SetPenetration(pen);
                 //mCtrl.Execute();
-                foreach (var node in simulation.Model.Nodes)
+                foreach (var node in simulation.Nodes)
                 {
                     ((CountryNode)node).Model.Gamma = pen;
                 }

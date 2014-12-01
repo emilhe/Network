@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Nodes;
+using BusinessLogic.Simulation;
 using NUnit.Framework;
 using BusinessLogic;
 using BusinessLogic.ExportStrategies;
@@ -21,7 +22,7 @@ namespace UnitTest
         {
             PreareNodesExcess();
             var model = new NetworkModel(_mNodes, new NoExportStrategy());
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             simulation.Simulate(1);
             
             Assert.AreEqual(false, simulation.Output.Success);
@@ -36,7 +37,7 @@ namespace UnitTest
         {
             PreareNodesExcess();
             var model = new NetworkModel(_mNodes, new SelfishExportStrategy(new SkipFlowStrategy()));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             simulation.Simulate(1);
 
             Assert.AreEqual(true, simulation.Output.Success);
@@ -51,7 +52,7 @@ namespace UnitTest
         {
             PreareNodesLack();
             var model = new NetworkModel(_mNodes, new SelfishExportStrategy(new SkipFlowStrategy()));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             simulation.Simulate(1);
 
             Assert.AreEqual(false, simulation.Output.Success);
@@ -66,7 +67,7 @@ namespace UnitTest
         {
             PreareNodesExcess();
             var model = new NetworkModel(_mNodes, new CooperativeExportStrategy(new SkipFlowStrategy()));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             simulation.Simulate(1);
 
             Assert.AreEqual(true, simulation.Output.Success);
@@ -120,7 +121,7 @@ namespace UnitTest
             _mNodes = new List<CountryNode> {node0, node1};
         }
 
-        private double ReadParam(Simulation sim, string country, string type)
+        private double ReadParam(SimulationCore sim, string country, string type)
         {
             var ts = sim.Output.TimeSeries.Where(
                 item => item.Properties.ContainsKey("Country") && item.Properties["Country"].Equals(country) &&

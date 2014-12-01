@@ -2,33 +2,47 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
 
-namespace BusinessLogic
+namespace BusinessLogic.Simulation
 {
-    public class Simulation
+    public class SimulationCore : ISimulation
     {
 
         #region Fields
 
-        // System fields.
         private Dictionary<string, ITimeSeries> _mSystemTimeSeries;
         private readonly Stopwatch _mWatch;
         private readonly bool _mDebug;
         private bool _mSuccess;
 
-        // Current iteration fields.
         private List<ITickListener> _mTickListeners; 
-        private List<IMeasureable> _mMeasureables;
+        private readonly NetworkModel _mModel;
 
         #endregion
 
-        /// <summary>
-        /// The simulation model.
-        /// </summary>
-        public NetworkModel Model { get; set; }
+        #region Model delegation
+
+        public IList<INode> Nodes
+        {
+            get { return _mModel.Nodes; }
+            set { _mModel.Nodes = value; }
+        }
+
+        public IFailureStrategy FailureStrategy
+        {
+            get { return _mModel.FailureStrategy; }
+            set { _mModel.FailureStrategy = value; }
+        }
+
+        public IExportStrategy ExportStrategy
+        {
+            get { return _mModel.ExportStrategy; }
+            set { _mModel.ExportStrategy = value; }
+        }
+
+        #endregion
 
         /// <summary>
         /// The latest simulation output (if any).
@@ -40,10 +54,10 @@ namespace BusinessLogic
         /// </summary>
         /// <param name="model"> model to evaluate </param>
         /// <param name="debug"> if true, debug info is printed to console </param>
-        public Simulation(NetworkModel model, bool debug = false)
+        public SimulationCore(NetworkModel model, bool debug = false)
         {
             _mDebug = debug;
-            Model = model;
+            _mModel = model;
 
             if (_mDebug) {_mWatch = new Stopwatch();}
         }
@@ -58,20 +72,21 @@ namespace BusinessLogic
             ResetStorages();
             SetupTickListeners();
             SetupLoggers(logLevel);
+            FailureStrategy.Reset();
 
-            // Simulation main loop.
+            // SimulationCore main loop.
             var tick = 0;
             _mSuccess = true;
             while (tick < ticks)
             {
                 if (_mDebug) _mWatch.Restart();
                 SignalTickChanged(tick);
-                Model.Evaluate(tick);
+                _mModel.Evaluate(tick);
                 SignalLoggers(tick, logLevel);
-                if (Model.Failure) _mSuccess = false;
+                if (_mModel.Failure) _mSuccess = false;
                 if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
                 tick++;
-                if (logLevel == LogLevelEnum.None && Model.Failure) break;
+                if (logLevel == LogLevelEnum.None && _mModel.Failure) break;
                 //if(_mTick % 10000 == 0) Console.WriteLine("Progress: {0} of {1}",_mTick, ticks);
             }
 
@@ -83,7 +98,7 @@ namespace BusinessLogic
         /// </summary>
         private void ResetStorages()
         {
-            foreach (var item in Model.Nodes.SelectMany(item => item.StorageCollection))
+            foreach (var item in Nodes.SelectMany(item => item.StorageCollection))
             {
                 item.Value.ResetEnergy();
             }
@@ -97,10 +112,9 @@ namespace BusinessLogic
             _mSystemTimeSeries = null;
 
             // Reset node time series.
-            foreach (var node in Model.Nodes) node.Clear();
+            foreach (var node in Nodes) node.Clear();
             // Reset edge time series.
-            Model.ExportStrategy.Clear();
-            Model.FailureStrategy.Reset();
+            ExportStrategy.Clear();
         }
 
         /// <summary>
@@ -109,9 +123,8 @@ namespace BusinessLogic
         private void SetupTickListeners()
         {
             _mTickListeners = new List<ITickListener>();
-            _mTickListeners.AddRange(Model.Nodes);
+            _mTickListeners.AddRange(Nodes);
         }
-
 
         /// <summary>
         /// Setup loggers.
@@ -134,10 +147,11 @@ namespace BusinessLogic
 
             if (logLevel == LogLevelEnum.System) return;
 
-            // CountryNode time series setup.
-            _mMeasureables = new List<IMeasureable> {Model.ExportStrategy};
-            _mMeasureables.AddRange(Model.Nodes);
-            foreach (var measureable in _mMeasureables) measureable.Start();
+            ExportStrategy.Start();
+
+            if (logLevel == LogLevelEnum.Flow) return;
+
+            foreach (var node in Nodes) node.Start();
         }
 
         /// <summary>
@@ -155,12 +169,16 @@ namespace BusinessLogic
         {
             if (logLevel == LogLevelEnum.None) return;
 
-            _mSystemTimeSeries["Mismatch"].AppendData(Model.Mismatch);
-            _mSystemTimeSeries["Curtailment"].AppendData(Model.Curtailment);
+            _mSystemTimeSeries["Mismatch"].AppendData(_mModel.Mismatch);
+            _mSystemTimeSeries["Curtailment"].AppendData(_mModel.Curtailment);
 
             if (logLevel == LogLevelEnum.System) return;
 
-            foreach (var measureable in _mMeasureables) measureable.Sample(tick);
+            ExportStrategy.Sample(tick);
+
+            if (logLevel == LogLevelEnum.Flow) return;
+
+            foreach (var node in Nodes) node.Sample(tick);
         }
 
         /// <summary>
@@ -169,9 +187,10 @@ namespace BusinessLogic
         private void CreateOutput(LogLevelEnum logLevel)
         {
             var ts = new List<ITimeSeries>();
-            if (logLevel != LogLevelEnum.None) ts.AddRange(_mSystemTimeSeries.Values);
-            if (logLevel == LogLevelEnum.Full) ts.AddRange(Model.ExportStrategy.CollectTimeSeries());
-            if (logLevel == LogLevelEnum.Full) ts.AddRange(Model.Nodes.SelectMany(item => item.CollectTimeSeries()));
+            var level = (int) logLevel;
+            if (level > 0) ts.AddRange(_mSystemTimeSeries.Values);
+            if (level > 1) ts.AddRange(ExportStrategy.CollectTimeSeries());
+            if (level > 2) ts.AddRange(Nodes.SelectMany(item => item.CollectTimeSeries()));
 
             Output = new SimulationOutput
             {
@@ -218,7 +237,7 @@ namespace BusinessLogic
 
     public enum LogLevelEnum
     {
-        None = 0, System = 1, Full = 2
+        None = 0, System = 1, Flow = 2, Full = 3
     }
 
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using BusinessLogic.Generators;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
+using BusinessLogic.Simulation;
 using BusinessLogic.TimeSeries;
 using NUnit.Framework.Constraints;
 using SimpleImporter;

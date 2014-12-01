@@ -16,7 +16,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
         /// <summary>
         /// Distribute the power. After distribution, all mismatches will be covered by storage.
         /// </summary>
-        public void DistributePower(List<INode> nodes, double[] mismatches, double efficiency)
+        public void DistributePower(IList<INode> nodes, double[] mismatches, double efficiency)
         {
             var toInject = mismatches.Sum();
 

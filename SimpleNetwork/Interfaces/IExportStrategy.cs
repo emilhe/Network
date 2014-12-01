@@ -7,7 +7,7 @@ namespace BusinessLogic.Interfaces
     public interface IExportStrategy : IMeasureable
     {
 
-        void Bind(List<INode> nodes, double[] mismatches);
+        void Bind(IList<INode> nodes, double[] mismatches);
         BalanceResult BalanceSystem();
 
     }

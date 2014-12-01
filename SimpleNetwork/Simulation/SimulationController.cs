@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.FailureStrategies;
@@ -13,13 +10,14 @@ using BusinessLogic.Utils;
 using SimpleImporter;
 using Utils;
 
-namespace BusinessLogic
+namespace BusinessLogic.Simulation
 {
     public class SimulationController
     {
 
         public bool CacheEnabled { get; set; }
         public bool InvalidateCache { get; set; }
+        public LogLevelEnum LogLevel { get; set; } // Dangerous when using cache, NOT included so far.
 
         #region Input parameters
 
@@ -47,6 +45,7 @@ namespace BusinessLogic
         {
             CacheEnabled = true;
             InvalidateCache = false;
+            LogLevel = LogLevelEnum.Full;
 
             // Default way to construct nodes.
             NodeFuncs = new Dictionary<string, Func<TsSourceInput, List<CountryNode>>>();
@@ -229,7 +228,7 @@ namespace BusinessLogic
         private bool[,] RunSimulation(IExportStrategy strategy, double years, GridScanParameters grid)
         {
             var model = new NetworkModel(_mNodes, strategy, _mFail);
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             //var mCtrl = new MixController(_mNodes);
             var watch = new Stopwatch();
 
@@ -255,7 +254,7 @@ namespace BusinessLogic
         private SimulationOutput RunSimulation(IExportStrategy strategy, double years, double penetration, double mixing)
         {
             var model = new NetworkModel(_mNodes, strategy, _mFail);
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             var watch = new Stopwatch();
             watch.Start();
                 foreach (var node in _mNodes)
@@ -263,7 +262,7 @@ namespace BusinessLogic
                     node.Model.Gamma = penetration;
                     node.Model.Alpha = mixing;
                 }
-            simulation.Simulate((int) (Utils.Utils.HoursInYear * years));
+            simulation.Simulate((int) (Utils.Utils.HoursInYear * years), LogLevel);
             Console.WriteLine("Mix " + mixing + "; Penetation " + penetration + ": " +
                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
 

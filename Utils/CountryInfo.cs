@@ -22,7 +22,7 @@ namespace Utils
             {"NO", "Norway"},
             {"NL", "Netherlands"},
             {"LV", "Latvia"},
-            {"LU", "Luxemborg"},
+            {"LU", "Luxembourg"},
             {"LT", "Lithuania"},
             {"IT", "Italy"},
             {"IE", "Ireland"},

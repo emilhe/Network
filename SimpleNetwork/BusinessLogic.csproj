@@ -11,6 +11,8 @@
     <AssemblyName>BusinessLogic</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -78,6 +80,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\gurobi563\win64\bin\Gurobi56.NET.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
@@ -110,13 +116,14 @@
     <Compile Include="ExportStrategies\DistributionStrategies\SkipFlowStrategy.cs" />
     <Compile Include="Interfaces\IFailureStrategy.cs" />
     <Compile Include="Interfaces\ITickListener.cs" />
-    <Compile Include="Cost\BaseCosts.cs" />
+    <Compile Include="Cost\CostCalculator.cs" />
     <Compile Include="Cost\MixChromosome.cs" />
     <Compile Include="Cost\MixGene.cs" />
+    <Compile Include="Simulation\ISimulation.cs" />
     <Compile Include="MixController.cs" />
     <Compile Include="Nodes\ReModel.cs" />
     <Compile Include="Nodes\SuperNode.cs" />
-    <Compile Include="SimulationController.cs" />
+    <Compile Include="Simulation\SimulationController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />
     <Compile Include="Storages\Curtailment.cs" />
     <Compile Include="Generators\HydroReservoirGenerator.cs" />
@@ -141,7 +148,7 @@
     <Compile Include="Interfaces\IStorage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Simulation.cs" />
+    <Compile Include="Simulation\SimulationCore.cs" />
     <Compile Include="Storages\BasicBackup.cs" />
     <Compile Include="Storages\BasicStorage.cs" />
     <Compile Include="Storages\BatteryStorage.cs" />
@@ -178,6 +185,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

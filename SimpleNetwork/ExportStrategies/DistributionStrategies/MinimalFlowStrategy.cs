@@ -36,7 +36,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
             _mHiLims = new double[nodes.Count];
         }
 
-        public void DistributePower(List<INode> nodes, double[] mismatches, double efficiency)
+        public void DistributePower(IList<INode> nodes, double[] mismatches, double efficiency)
         {
             // Setup limits.
             for (int idx = 0; idx < nodes.Count; idx++)
@@ -94,8 +94,10 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
                 for (int j = i; j < _mNodes.Count; j++)
                 {
                     if (!_mEdges.Connected(i, j)) continue;
-                    _mFlowTimeSeriesMap.Add(i + _mNodes.Count*j,
-                        new DenseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation));
+                    var ts = new DenseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation);
+                    ts.Properties.Add("From", _mNodes[i].Name);
+                    ts.Properties.Add("To", _mNodes[j].Name);
+                    _mFlowTimeSeriesMap.Add(i + _mNodes.Count * j, ts);
                 }
             }
 

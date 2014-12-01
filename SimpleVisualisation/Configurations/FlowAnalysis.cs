@@ -4,10 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic;
+using BusinessLogic.Simulation;
 using BusinessLogic.Utils;
 using SimpleImporter;
 using Utils;
 using Utils.Statistics;
+using ExportStrategyInput = BusinessLogic.Simulation.ExportStrategyInput;
+using TsSourceInput = BusinessLogic.Simulation.TsSourceInput;
 
 namespace Main.Configurations
 {

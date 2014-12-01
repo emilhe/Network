@@ -14,8 +14,8 @@ namespace Utils.Statistics
         {
             var orderedValues = values.OrderBy(item => item).ToList();
 
-            var min = Math.Abs(Percentile(orderedValues, 0.5));
-            var max = Math.Abs(Percentile(orderedValues, 99.5));
+            var min = Math.Abs(FastPercentile(orderedValues, 0.5));
+            var max = Math.Abs(FastPercentile(orderedValues, 99.5));
 
             return Math.Max(min, max);
         }
@@ -37,11 +37,20 @@ namespace Utils.Statistics
             return Math.Max(Math.Abs(values.Min()), Math.Abs(values.Max()));
         }
 
+        /// <summary>
+        /// Calculate the percentile given an ordered double array.
+        /// </summary>
+        public static double Percentile(List<double> values, double percentile)
+        {
+            var orderedValues = values.OrderBy(item => item).ToList();
+            var idx = (int)Math.Ceiling((orderedValues.Count - 1) * (percentile / 100));
+            return orderedValues[idx];
+        }
 
         /// <summary>
         /// Calculate the percentile given an ordered double array.
         /// </summary>
-        public static double Percentile(List<double> orderedData, double percentile)
+        private static double FastPercentile(List<double> orderedData, double percentile)
         {
             var idx = (int) Math.Ceiling((orderedData.Count-1)*(percentile/100));
             return orderedData[idx];

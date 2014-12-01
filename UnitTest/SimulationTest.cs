@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using BusinessLogic.Nodes;
+using BusinessLogic.Simulation;
 using NUnit.Framework;
 using BusinessLogic;
 using BusinessLogic.ExportStrategies;
@@ -19,7 +20,7 @@ namespace UnitTest
             var nodes = ConfigurationUtils.CreateNodesWithBackup();
             var edges = BusinessLogic.Utils.Utils.StraightLine(nodes);
             var model = new NetworkModel(nodes, new ConstrainedFlowExportStrategy(nodes, edges));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             // Try a simulation which should work.
             foreach (var node in nodes)
             {
@@ -44,7 +45,7 @@ namespace UnitTest
             // Basic initialization
             var nodes = ConfigurationUtils.CreateNodesWithBackup();
             var model = new NetworkModel(nodes, new CooperativeExportStrategy(new SkipFlowStrategy()));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             // Try a simulation which should work.
             foreach (var node in nodes)
             {
@@ -70,7 +71,7 @@ namespace UnitTest
             var nodes = ConfigurationUtils.CreateNodesWithBackup();
             var edges = BusinessLogic.Utils.Utils.StraightLine(nodes);
             var model = new NetworkModel(nodes, new CooperativeExportStrategy(new MinimalFlowStrategy(nodes, edges)));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             // Try a simulation which should work.
             foreach (var node in nodes)
             {
@@ -95,7 +96,7 @@ namespace UnitTest
             // Basic initialization
             var nodes = ConfigurationUtils.CreateNodesWithBackup();
             var model = new NetworkModel(nodes, new SelfishExportStrategy(new SkipFlowStrategy()));
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             // Try a simulation which should work.
             foreach (var node in nodes)
             {
@@ -120,7 +121,7 @@ namespace UnitTest
             // Basic initialization
             var nodes = ConfigurationUtils.CreateNodesWithBackup();
             var model = new NetworkModel(nodes, new NoExportStrategy());
-            var simulation = new Simulation(model);
+            var simulation = new SimulationCore(model);
             // Try a simulation which should work.
             foreach (var node in nodes)
             {

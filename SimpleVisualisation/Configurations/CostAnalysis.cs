@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms.VisualStyles;
 using BusinessLogic;
 using BusinessLogic.Cost;
+using Controls.Charting;
 using SimpleImporter;
 using Utils;
 
@@ -13,6 +14,53 @@ namespace Main.Configurations
 {
     class CostAnalysis
     {
+
+        #region Detailed beta analysis
+
+        // Gamma fixed = 1
+        public static void Beta0(MainForm main, bool inclTrans = false)
+        {
+            var view = BetaCalc(main, 10, 0, inclTrans);
+            ChartUtils.SaveChart(view.MainChart, 1000, 800,
+                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\TransmissionBeta0ACDC.png");
+        }
+
+        // Gamma fixed = 1
+        public static void Beta16(MainForm main, bool inclTrans = false)
+        {
+            var view = BetaCalc(main, 20, 16, inclTrans);
+            ChartUtils.SaveChart(view.MainChart, 1000, 800,
+                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\TransmissionBeta16ACDC.png");
+        }
+
+        private static CostView BetaCalc(MainForm main, int res, double beta, bool inclTrans)
+        {
+            var delta = 1 / ((double)res);
+            var sources = new List<string> { "Transmission", "Wind", "Solar", "Backup", "Fuel" };
+            var costCalc = new CostCalculator();
+            Dictionary<string, double[]> data = sources.ToDictionary(name => name, name => new double[res+1]);
+            var alphas = new double[res + 1];
+
+            // Main loop.
+            for (int j = 0; j <= res; j++)
+            {
+                // Calculate costs.
+                alphas[j] = j*delta;
+                // Append costs to data structure.
+                foreach (var item in costCalc.DetailedSystemCosts(BetaScaling(1, alphas[j], beta), inclTrans))
+                {
+                    data[item.Key][j] = item.Value;
+                }
+            }
+
+            // Setup view.
+            var view = main.DisplayCost();
+            view.AddData(data, alphas);
+            view.MainChart.ChartAreas[0].AxisX.Title = "Mixing";
+            return view;
+        }
+
+        #endregion
 
         // Gamma fixed = 1.0
         public static void VaryBeta(MainForm main)
@@ -31,7 +79,7 @@ namespace Main.Configurations
                 for (int i = 0; i < alphaRes; i++)
                 {         
                     alphas[i] = (i+1) * delta;
-                    points[i] = costCalc.SystemCostWithoutLinks(BetaScaling(1, alphas[i], betas[j]));
+                    points[i] = costCalc.SystemCost(BetaScaling(1, alphas[i], betas[j]));
                 }
                 data.Add(string.Format("Beta = {0}",betas[j]), points);
             }
@@ -45,35 +93,7 @@ namespace Main.Configurations
             view.MainChart.ChartAreas[0].AxisY.Minimum = 40;
             view.MainChart.ChartAreas[0].AxisX.Title = "Alpha";
         }
-        
-        // Gamma fixed = 1
-        public static void VaryAlpha(MainForm main)
-        {
-            var res = 20;
-            var delta = 1 / ((double)res);
-            var sources = new List<string> {"Wind", "Solar", "Backup", "Fuel"};
-            var countries = ProtoStore.LoadCountries();
-            var costCalc = new CostCalculator();
-            var chromosome = new Chromosome(countries, 0, 1.0);
-            // Calculate costs and prepare data structures.
-            Dictionary<string, double[]> data = sources.ToDictionary(name => name, name => new double[res + 1]);
-            var alphas = new double[res + 1];
-            // Main loop.
-            for (int j = 0; j <= res; j++)
-            {
-                // Calculate costs.
-                alphas[j] = j * delta;
-                chromosome.Alpha = alphas[j];
-                // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCostWithoutLinks(chromosome)) data[item.Key][j] = item.Value;
-            }
-
-            // Setup view.
-            var view = main.DisplayCost();
-            view.AddData(data, alphas);
-            view.MainChart.ChartAreas[0].AxisX.Title = "Mixing";
-        }
-
+       
         // Alpha fixed = 0.8
         public static void VaryGamma(MainForm main)
         {
@@ -93,7 +113,7 @@ namespace Main.Configurations
                 gammas[j] = 0.5 + j * delta;
                 chromosome.Gamma = gammas[j];
                 // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCostWithoutLinks(chromosome)) data[item.Key][j] = item.Value;
+                foreach (var item in costCalc.DetailedSystemCosts(chromosome)) data[item.Key][j] = item.Value;
             }
 
             // Setup view.
@@ -102,34 +122,8 @@ namespace Main.Configurations
             view.MainChart.ChartAreas[0].AxisX.Title = "Penetration";
         }
 
-        // Gamma fixed = 1
-        public static void Beta16(MainForm main)
-        {
-            var res = 20;
-            var delta = 1 / ((double)res);
-            var sources = new List<string> { "Wind", "Solar", "Backup", "Fuel" };
-            var costCalc = new CostCalculator();
-            // Calculate costs and prepare data structures.
-            Dictionary<string, double[]> data = sources.ToDictionary(name => name, name => new double[res]);
-            var alphas = new double[res + 1];
-            // Main loop.
-            for (int j = 0; j < res; j++)
-            {
-                // Calculate costs.
-                alphas[j] = (j+1) * delta;
-                // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCostWithoutLinks(BetaScaling(1, alphas[j], 16)))
-                    data[item.Key][j] = item.Value;
-            }
-
-            // Setup view.
-            var view = main.DisplayCost();
-            view.AddData(data, alphas);
-            view.MainChart.ChartAreas[0].AxisX.Title = "Mixing";
-        }
-
         /// <summary>
-        /// Calculate chromosome for a given beta scaling. Note that the result is NOT defined for alpha = 0.
+        /// Calculate chromosome for a given beta scaling.
         /// </summary>
         /// <param name="gamma"> system gamma </param>
         /// <param name="alpha"> system alpha </param>
@@ -137,6 +131,9 @@ namespace Main.Configurations
         /// <returns> scaled chromosome </returns>
         private static Chromosome BetaScaling(double gamma, double alpha, double beta)
         {
+            // The result is NOT defined in alpha = 0.
+            if (Math.Abs(alpha) < 1e-5) alpha = 1e-5;
+
             var contries = ProtoStore.LoadCountries();
             var chromosome = new Chromosome(contries, alpha, gamma);
             var cfW = CountryInfo.GetWindCf();

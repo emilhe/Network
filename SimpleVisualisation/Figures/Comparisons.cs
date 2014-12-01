@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BusinessLogic;
+using BusinessLogic.Simulation;
 using BusinessLogic.Utils;
 using Controls.Charting;
 using SimpleImporter;
+using ExportStrategyInput = BusinessLogic.Simulation.ExportStrategyInput;
+using TsSourceInput = BusinessLogic.Simulation.TsSourceInput;
 
 namespace Main.Figures
 {

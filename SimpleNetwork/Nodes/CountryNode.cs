@@ -14,7 +14,6 @@ namespace BusinessLogic.Nodes
         public string Name { get { return Model.Name; } }
         public string Abbreviation { get { return CountryInfo.GetAbbrev(Name); } }
 
-        //public ITimeSeries LoadTimeSeries { get { return Model.LoadTimeSeries; } }
         public ReModel Model { get; set; }
         public List<IGenerator> Generators { get; set; }
         public StorageCollection StorageCollection { get; set; }

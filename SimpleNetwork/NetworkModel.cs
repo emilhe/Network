@@ -10,7 +10,45 @@ namespace BusinessLogic
 {
     public class NetworkModel
     {
-        public List<INode> Nodes { get; private set; }
+
+        private IExportStrategy _mExportStrategy;
+        private BalanceResult _mBalanceResult;
+        private IList<INode> _mNodes;
+        private double[] _mMismatches;
+
+        #region Public properties (exposed by simulation core).
+
+        public IList<INode> Nodes
+        {
+            get { return _mNodes; }
+            set
+            {
+                _mNodes = value;
+                _mMismatches = new double[_mNodes.Count];
+                if(ExportStrategy != null) ExportStrategy.Bind(_mNodes, _mMismatches);
+            }
+        }
+
+        public IExportStrategy ExportStrategy
+        {
+            get
+            {
+                return _mExportStrategy;
+            }
+            set
+            {
+                _mExportStrategy = value;
+                _mMismatches = new double[_mNodes.Count];
+                if(_mNodes != null) _mExportStrategy.Bind(_mNodes, _mMismatches);
+            }
+        }
+
+        public IFailureStrategy FailureStrategy { get; set; }
+
+        #endregion
+
+        #region Simulation parameters
+
         public double Mismatch { get; private set; }
 
         public double Curtailment
@@ -23,10 +61,9 @@ namespace BusinessLogic
             get { return FailureStrategy.Failure; }
         }
 
-        public IFailureStrategy FailureStrategy { get; set; }
-        public IExportStrategy ExportStrategy { get; set; }
-        private BalanceResult _mBalanceResult;
-        private readonly double[] _mMismatches;
+        #endregion
+
+        #region Construction
 
         // TODO: Remove HACK
         public NetworkModel(List<CountryNode> nodes, IExportStrategy exportStrategy,
@@ -46,6 +83,8 @@ namespace BusinessLogic
             ExportStrategy.Bind(Nodes, _mMismatches);
 
         }
+
+        #endregion
 
         public void Evaluate(int tick)
         {

@@ -6,6 +6,7 @@ using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
+using BusinessLogic.Simulation;
 using BusinessLogic.TimeSeries;
 using NUnit.Framework;
 using SimpleImporter;
@@ -17,15 +18,14 @@ namespace BusinessLogic.Cost
     public class CostCalculator
     {
 
-        private const int _modelYear = 2002;
+        private const int ModelYear = 2002;
 
         private const double Rate = 4;
         private static double _mAnnualizationFactor;
 
-        private readonly NetworkModel _mSkipFlowModel;
-        private readonly NetworkModel _mWithFlowModel;
-        private readonly List<CountryNode> _mNodes;        
-        private readonly Simulation _mSim;
+        private readonly List<CountryNode> _mNodes;
+        private readonly SimulationCore _mSimSkipFlow; 
+        private readonly SimulationCore _mSimWithFlow;
 
         private static double AnnualizationFactor
         {
@@ -40,40 +40,31 @@ namespace BusinessLogic.Cost
 
         public CostCalculator()
         {
-            const int offset = _modelYear - 1979;
+            const int offset = ModelYear - 1979;
 
+            // TODO: Check if this works?
             _mNodes = ConfigurationUtils.CreateNodes(TsSource.VE, offset);
-            _mSkipFlowModel = new NetworkModel(_mNodes, new CooperativeExportStrategy(new SkipFlowStrategy()));
-            _mWithFlowModel = new NetworkModel(_mNodes,
-                new ConstrainedFlowExportStrategy(_mNodes, ConfigurationUtils.GetEuropeEdges(_mNodes)));
-            _mSim = new Simulation(_mSkipFlowModel);
+            _mSimSkipFlow =
+                new SimulationCore(new NetworkModel(_mNodes, new CooperativeExportStrategy(new SkipFlowStrategy())));
+            _mSimWithFlow =
+                new SimulationCore(new NetworkModel(_mNodes,
+                    new ConstrainedFlowExportStrategy(_mNodes, ConfigurationUtils.GetEuropeEdges(_mNodes))));
         }
 
         /// <summary>
-        /// System cost taking links into consideration (slow to evaluate).
+        /// Detailed system cost (what goes where included).
         /// </summary>
-        public Dictionary<string, double> SystemCost(Chromosome chromosome)
-        {
-            AdaptSystem(chromosome);
-
-            _mSim.Model = _mWithFlowModel;
-            _mSim.Simulate(Utils.Utils.HoursInYear);
-
-            return null;
-        }
-
-        /// <summary>
-        /// System coost not taking links into consideration (fast to evaluate).
-        /// </summary>
-        public Dictionary<string, double> DetailedSystemCostWithoutLinks(Chromosome chromosome)
+        public Dictionary<string, double> DetailedSystemCosts(Chromosome chromosome, bool includeTransmission = false)
         {
             AdaptSystem(chromosome);
             // Run simulation.
-            _mSim.Model = _mSkipFlowModel;
-            _mSim.Simulate(Utils.Utils.HoursInYear, LogLevelEnum.System);
+            var sim = includeTransmission ? _mSimWithFlow : _mSimSkipFlow;
+            sim.Simulate(Utils.Utils.HoursInYear, includeTransmission ? LogLevelEnum.Flow : LogLevelEnum.System);
             // Calculate cost elements.
-            var costs = BaseCosts().ToDictionary(cost => cost.Key, cost => cost.Value);
-            foreach (var cost in BackupCost(_mSim.Output)) costs.Add(cost.Key, cost.Value);
+            var costs = new Dictionary<string, double>();
+            if (includeTransmission) costs.Add("Transmission", TransmissionCost(sim.Output));
+            foreach (var cost in BaseCosts()) costs.Add(cost.Key, cost.Value);
+            foreach (var cost in BackupCost(sim.Output)) costs.Add(cost.Key, cost.Value);
             // Scale costs to get LCOE.
             var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum()*Utils.Utils.HoursInYear*AnnualizationFactor;
             foreach (var key in costs.Keys.ToArray()) costs[key] = costs[key] / scaling;
@@ -82,16 +73,16 @@ namespace BusinessLogic.Cost
         }
 
         /// <summary>
-        /// System coost not taking links into consideration (fast to evaluate).
+        /// Overall system cost.
         /// </summary>
-        public double SystemCostWithoutLinks(Chromosome chromosome)
+        public double SystemCost(Chromosome chromosome, bool includeTransmission = false)
         {
             AdaptSystem(chromosome);
             // Run simulation.
-            _mSim.Model = _mSkipFlowModel;
-            _mSim.Simulate(Utils.Utils.HoursInYear, LogLevelEnum.System);
+            var sim = includeTransmission ? _mSimWithFlow : _mSimSkipFlow;
+            sim.Simulate(Utils.Utils.HoursInYear, includeTransmission ? LogLevelEnum.Flow : LogLevelEnum.System);
             // Calculate cost elements.
-            var cost = BaseCosts().Values.Sum() + BackupCost(_mSim.Output).Values.Sum();
+            var cost = BaseCosts().Values.Sum() + BackupCost(sim.Output).Values.Sum() + TransmissionCost(sim.Output);
             // Scale costs to get LCOE.
             var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum() * Utils.Utils.HoursInYear * AnnualizationFactor;
 
@@ -113,7 +104,16 @@ namespace BusinessLogic.Cost
         // Cost of transmission network.
         private double TransmissionCost(SimulationOutput output)
         {
-            return 0;
+            var flowTs = output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
+            var cost = 0.0;
+
+            foreach (var ts in flowTs)
+            {
+                var capacity = StatUtils.CalcCapacity(ts.GetAllValues());
+                cost += capacity * Costs.GetLinkCost(ts.Properties["From"], ts.Properties["To"], true);
+            }
+
+            return cost;
         }
 
         // Cost of backup facilities.

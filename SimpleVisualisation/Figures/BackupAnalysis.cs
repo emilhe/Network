@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Simulation;
 using BusinessLogic.TimeSeries;
 using Controls.Charting;
 using SimpleImporter;

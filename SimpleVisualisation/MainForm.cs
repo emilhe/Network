@@ -11,7 +11,9 @@ using BusinessLogic.Generators;
 using Controls;
 using Controls.Charting;
 using BusinessLogic;
+using Main.Figures;
 using SimpleImporter;
+using Utils;
 
 namespace Main
 {
@@ -31,27 +33,30 @@ namespace Main
             // Time manger start/interval MUST match time series!
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
-            
-            Configurations.CostAnalysis.VaryBeta(this);
-    //        var data = ProtoStore.LoadEcnData();
-    //        var allBio = data.Where(item =>
-    //            item.RowHeader.Equals("Biomass") &&
-    //            item.ColumnHeader.Equals("Gross electricity generation") &&
-    //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
-    //        var allHydro = data.Where(item =>
-    //            item.RowHeader.Equals("Hydropower") &&
-    //            item.ColumnHeader.Equals("Gross electricity generation") &&
-    //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
-    //        var allHydroPump =
-    //            data.Where(item =>
-    //            item.RowHeader.Equals("Pumped storage hydropower") &&
-    //            item.ColumnHeader.Equals("Gross electricity generation") &&
-    //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
-    //        var allHydroPump2 =
-    //data.Where(item =>
-    //item.RowHeader.Equals("Pumped storage hydropower") &&
-    //item.ColumnHeader.Equals("Installed capacity") &&
-    //item.Year.Equals(2010)).Select(item => item.Value).Sum();
+
+            ModelYearAnalysis.ErrorAnalysis(this, true);
+
+            //ModelYearAnalysis.BackupAnalysis(this);
+
+            //        var data = ProtoStore.LoadEcnData();
+            //        var allBio = data.Where(item =>
+            //            item.RowHeader.Equals("Biomass") &&
+            //            item.ColumnHeader.Equals("Gross electricity generation") &&
+            //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            //        var allHydro = data.Where(item =>
+            //            item.RowHeader.Equals("Hydropower") &&
+            //            item.ColumnHeader.Equals("Gross electricity generation") &&
+            //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            //        var allHydroPump =
+            //            data.Where(item =>
+            //            item.RowHeader.Equals("Pumped storage hydropower") &&
+            //            item.ColumnHeader.Equals("Gross electricity generation") &&
+            //            item.Year.Equals(2010)).Select(item => item.Value).Sum();
+            //        var allHydroPump2 =
+            //data.Where(item =>
+            //item.RowHeader.Equals("Pumped storage hydropower") &&
+            //item.ColumnHeader.Equals("Installed capacity") &&
+            //item.Year.Equals(2010)).Select(item => item.Value).Sum();
 
             //Configurations.CompareSources(this);
             //Configurations.CompareSources(this);

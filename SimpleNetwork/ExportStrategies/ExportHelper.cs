@@ -19,13 +19,13 @@ namespace BusinessLogic.ExportStrategies
         /// </summary>
         public IDistributionStrategy DistributionStrategy { get; set; }
 
-        private List<INode> _mNodes;
+        private IList<INode> _mNodes;
         private Response _mSystemResponse;
         private double[] _mMismatches;
         private double[] _mStorageMap;
         private int _mStorageLevel;
 
-        public void Bind(List<INode> nodes, double[] mismatches)
+        public void Bind(IList<INode> nodes, double[] mismatches)
         {
             _mNodes = nodes;
             _mMismatches = mismatches;

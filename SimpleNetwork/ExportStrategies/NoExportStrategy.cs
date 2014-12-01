@@ -8,7 +8,7 @@ namespace BusinessLogic.ExportStrategies
     {
         private readonly ExportHelper _mHelper = new ExportHelper();
 
-        public void Bind(List<INode> nodes, double[] mismatches)
+        public void Bind(IList<INode> nodes, double[] mismatches)
         {
             _mHelper.Bind(nodes, mismatches);
         }
