@@ -9,5 +9,6 @@ namespace BusinessLogic.Interfaces
     {
         DateTime TimeStamp { get; }
         double Value { get; }
+        int Tick { get; }
     }
 }

@@ -10,6 +10,7 @@ namespace BusinessLogic.TimeSeries
     {
         public DateTime TimeStamp { get; private set; }
         public double Value { get; private set; }
+        public int Tick { get { return 0; } }
 
         public BasicTimeSeriesItem(DateTime time, double value)
         {

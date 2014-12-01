@@ -10,6 +10,7 @@ namespace BusinessLogic.TimeSeries
     {
         public DateTime TimeStamp { get { return TimeManager.Instance().GetTime(_mTick); } }
         public double Value { get; private set; }
+        public int Tick { get{return _mTick;}}
 
         private readonly int _mTick;
 

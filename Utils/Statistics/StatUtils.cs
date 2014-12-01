@@ -10,7 +10,7 @@ namespace Utils.Statistics
         /// <summary>
         /// The capacity is maximum of the absolute value of the 0.5% and the 99.5% quantiles.
         /// </summary>
-        public static double CalcCapacity(List<double> values)
+        public static double CalcCapacity(IEnumerable<double> values)
         {
             var orderedValues = values.OrderBy(item => item).ToList();
 
