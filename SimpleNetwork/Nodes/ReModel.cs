@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
@@ -54,6 +55,13 @@ namespace BusinessLogic.Nodes
 
             Alpha = 0.5;
             Gamma = 1.0;
+        }
+
+        public void SetOffset(int ticks)
+        {
+            LoadTimeSeries.SetOffset(ticks);
+            WindTimeSeries.SetOffset(ticks);
+            SolarTimeSeries.SetOffset(ticks);
         }
 
         private void UpdateScaling()

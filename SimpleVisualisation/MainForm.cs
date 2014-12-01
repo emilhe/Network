@@ -11,6 +11,7 @@ using BusinessLogic.Generators;
 using Controls;
 using Controls.Charting;
 using BusinessLogic;
+using Main.Configurations;
 using Main.Figures;
 using SimpleImporter;
 using Utils;
@@ -34,7 +35,8 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
 
-            ModelYearAnalysis.ErrorAnalysis(this, true);
+            //ModelYearAnalysis.ErrorAnalysis(this, true);
+            CostAnalysis.VaryBeta(this);
 
             //ModelYearAnalysis.BackupAnalysis(this);
 

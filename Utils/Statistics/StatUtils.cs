@@ -40,7 +40,7 @@ namespace Utils.Statistics
         /// <summary>
         /// Calculate the percentile given an ordered double array.
         /// </summary>
-        public static double Percentile(List<double> values, double percentile)
+        public static double Percentile(IEnumerable<double> values, double percentile)
         {
             var orderedValues = values.OrderBy(item => item).ToList();
             var idx = (int)Math.Ceiling((orderedValues.Count - 1) * (percentile / 100));

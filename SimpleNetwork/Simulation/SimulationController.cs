@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using BusinessLogic.Cost;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.FailureStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
 using BusinessLogic.Utils;
+using Newtonsoft.Json;
 using SimpleImporter;
 using Utils;
 
@@ -61,6 +63,37 @@ namespace BusinessLogic.Simulation
         }
 
         #region Execution
+
+        public List<SimulationOutput> EvaluateTs(Chromosome genes)
+        {
+            return Execute(update =>
+            {
+                var prop = GetProperties(genes);
+                SimulationOutput result = null;
+
+                // Try to load from disk (unless cache is invalidated)
+                if (CacheEnabled && !InvalidateCache)
+                {
+                    result = AccessClient.LoadSimulationOutput(prop.UniqueKey().ToString());
+                }
+
+                // If no result is found, calculate it.
+                if (result == null)
+                {
+                    update();
+                    result = RunSimulation(MapFromInput(_mExpStratIn), _mSrcIn.Length, genes);
+                    foreach (var property in prop) result.Properties.Add(property.Key, property.Value);
+
+                    // If cache is enabled, save the result.
+                    if (CacheEnabled)
+                    {
+                        AccessClient.SaveSimulationOutput(result, prop.UniqueKey().ToString());
+                    }
+                }
+
+                return result;
+            });
+        }
 
         public List<SimulationOutput> EvaluateTs(double penetration, double mixing)
         {
@@ -164,6 +197,13 @@ namespace BusinessLogic.Simulation
 
         #endregion
 
+        private Dictionary<string, string> GetProperties(Chromosome genes)
+        {
+            var result = DefaultProperties();
+            result.Add("Chromosome", JsonConvert.SerializeObject(genes));
+            return result;
+        }
+
         private Dictionary<string, string> GetProperties(double penetration, double mixing)
         {
             var result = DefaultProperties();
@@ -257,13 +297,31 @@ namespace BusinessLogic.Simulation
             var simulation = new SimulationCore(model);
             var watch = new Stopwatch();
             watch.Start();
+            foreach (var node in _mNodes)
+            {
+                node.Model.Gamma = penetration;
+                node.Model.Alpha = mixing;
+            }
+            simulation.Simulate((int)(Utils.Utils.HoursInYear * years), LogLevel);
+            Console.WriteLine("Mix " + mixing + "; Penetation " + penetration + ": " +
+                  watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
+
+            return simulation.Output;
+        }
+
+        private SimulationOutput RunSimulation(IExportStrategy strategy, double years, Chromosome genes)
+        {
+            var model = new NetworkModel(_mNodes, strategy, _mFail);
+            var simulation = new SimulationCore(model);
+            var watch = new Stopwatch();
+            watch.Start();
                 foreach (var node in _mNodes)
                 {
-                    node.Model.Gamma = penetration;
-                    node.Model.Alpha = mixing;
+                    node.Model.Gamma = genes[node.Name].Gamma;
+                    node.Model.Alpha = genes[node.Name].Alpha;
                 }
             simulation.Simulate((int) (Utils.Utils.HoursInYear * years), LogLevel);
-            Console.WriteLine("Mix " + mixing + "; Penetation " + penetration + ": " +
+            Console.WriteLine("Chromosome: " +
                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
 
             return simulation.Output;

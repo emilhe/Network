@@ -18,14 +18,15 @@ namespace BusinessLogic.Cost
     public class CostCalculator
     {
 
-        private const int ModelYear = 2002;
+        private readonly ModelYearConfig _mConfig;
 
         private const double Rate = 4;
         private static double _mAnnualizationFactor;
 
         private readonly List<CountryNode> _mNodes;
-        private readonly SimulationCore _mSimSkipFlow; 
-        private readonly SimulationCore _mSimWithFlow;
+        private readonly SimulationController _mBeCtrl;
+        private readonly SimulationController _mBcCtrl;
+        private readonly SimulationController _mTcCtrl; 
 
         private static double AnnualizationFactor
         {
@@ -38,17 +39,61 @@ namespace BusinessLogic.Cost
 
         #region Public interface
 
+        // Per default the alpha \in [0.5-1.0] and gamma \in [1:2] profile is loaded.
         public CostCalculator()
+            : this(Extensions.FromJsonFile<ModelYearConfig>(@"C:\proto\noStorageAlpha0.5to1Gamma1to2.txt"))
         {
-            const int offset = ModelYear - 1979;
+        }
 
-            // TODO: Check if this works?
-            _mNodes = ConfigurationUtils.CreateNodes(TsSource.VE, offset);
-            _mSimSkipFlow =
-                new SimulationCore(new NetworkModel(_mNodes, new CooperativeExportStrategy(new SkipFlowStrategy())));
-            _mSimWithFlow =
-                new SimulationCore(new NetworkModel(_mNodes,
-                    new ConstrainedFlowExportStrategy(_mNodes, ConfigurationUtils.GetEuropeEdges(_mNodes))));
+        public CostCalculator(ModelYearConfig config)
+        {
+            _mConfig = config;
+            // Backup energy controller.
+            _mBeCtrl = new SimulationController();
+            _mBeCtrl.ExportStrategies.Add(new ExportStrategyInput
+            {
+                ExportStrategy = ExportStrategy.Cooperative,
+                DistributionStrategy = DistributionStrategy.SkipFlow
+            });
+            _mBeCtrl.LogLevel = LogLevelEnum.System;
+            _mBeCtrl.Sources.Add(new TsSourceInput {Length = 1, Offset = _mConfig.Parameters["be"].Key});
+            _mBeCtrl.NodeFuncs.Clear();
+            _mBeCtrl.NodeFuncs.Add("No storage", input =>
+            {
+                foreach (var node in _mNodes) node.Model.SetOffset((int) input.Offset*Utils.Utils.HoursInYear);
+                return _mNodes;
+            });
+            // Backup capacity controller.
+            _mBcCtrl = new SimulationController();
+            _mBcCtrl.ExportStrategies.Add(new ExportStrategyInput
+            {
+                ExportStrategy = ExportStrategy.Cooperative,
+                DistributionStrategy = DistributionStrategy.SkipFlow
+            });
+            _mBcCtrl.LogLevel = LogLevelEnum.System;
+            _mBcCtrl.Sources.Add(new TsSourceInput {Length = 1, Offset = _mConfig.Parameters["bc"].Key});
+            _mBcCtrl.NodeFuncs.Clear();
+            _mBcCtrl.NodeFuncs.Add("No storage", input =>
+            {
+                foreach (var node in _mNodes) node.Model.SetOffset((int) input.Offset*Utils.Utils.HoursInYear);
+                return _mNodes;
+            });
+            // Transmission capacity controller.
+            _mTcCtrl = new SimulationController();
+            _mTcCtrl.ExportStrategies.Add(new ExportStrategyInput
+            {
+                ExportStrategy = ExportStrategy.ConstrainedFlow
+            });
+            _mTcCtrl.LogLevel = LogLevelEnum.Flow;
+            _mTcCtrl.Sources.Add(new TsSourceInput {Length = 1, Offset = _mConfig.Parameters["tc"].Key});
+            _mTcCtrl.NodeFuncs.Clear();
+            _mTcCtrl.NodeFuncs.Add("No storage", input =>
+            {
+                foreach (var node in _mNodes) node.Model.SetOffset((int) input.Offset*Utils.Utils.HoursInYear);
+                return _mNodes;
+            });
+
+            _mNodes = ConfigurationUtils.CreateNodes(TsSource.VE);
         }
 
         /// <summary>
@@ -56,15 +101,11 @@ namespace BusinessLogic.Cost
         /// </summary>
         public Dictionary<string, double> DetailedSystemCosts(Chromosome chromosome, bool includeTransmission = false)
         {
-            AdaptSystem(chromosome);
-            // Run simulation.
-            var sim = includeTransmission ? _mSimWithFlow : _mSimSkipFlow;
-            sim.Simulate(Utils.Utils.HoursInYear, includeTransmission ? LogLevelEnum.Flow : LogLevelEnum.System);
             // Calculate cost elements.
             var costs = new Dictionary<string, double>();
-            if (includeTransmission) costs.Add("Transmission", TransmissionCost(sim.Output));
-            foreach (var cost in BaseCosts()) costs.Add(cost.Key, cost.Value);
-            foreach (var cost in BackupCost(sim.Output)) costs.Add(cost.Key, cost.Value);
+            if (includeTransmission) costs.Add("Transmission", TransmissionCapacityCost(chromosome));
+            foreach (var cost in BaseCosts(chromosome)) costs.Add(cost.Key, cost.Value);
+            foreach (var cost in BackupCosts(chromosome)) costs.Add(cost.Key, cost.Value);
             // Scale costs to get LCOE.
             var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum()*Utils.Utils.HoursInYear*AnnualizationFactor;
             foreach (var key in costs.Keys.ToArray()) costs[key] = costs[key] / scaling;
@@ -77,12 +118,9 @@ namespace BusinessLogic.Cost
         /// </summary>
         public double SystemCost(Chromosome chromosome, bool includeTransmission = false)
         {
-            AdaptSystem(chromosome);
-            // Run simulation.
-            var sim = includeTransmission ? _mSimWithFlow : _mSimSkipFlow;
-            sim.Simulate(Utils.Utils.HoursInYear, includeTransmission ? LogLevelEnum.Flow : LogLevelEnum.System);
             // Calculate cost elements.
-            var cost = BaseCosts().Values.Sum() + BackupCost(sim.Output).Values.Sum() + TransmissionCost(sim.Output);
+            var cost = BaseCosts(chromosome).Values.Sum() + BackupCosts(chromosome).Values.Sum();
+            if (includeTransmission) cost += TransmissionCapacityCost(chromosome);
             // Scale costs to get LCOE.
             var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum() * Utils.Utils.HoursInYear * AnnualizationFactor;
 
@@ -91,57 +129,71 @@ namespace BusinessLogic.Cost
 
         #endregion
 
-        private void AdaptSystem(Chromosome genes)
-        {
-            // Adapt the system (scale time series data).
-            for (int i = 0; i < genes.Count; i++)
-            {
-                _mNodes[i].Model.Alpha = genes[i].Alpha;
-                _mNodes[i].Model.Gamma = genes[i].Gamma;
-            }
-        }
+        #region Data evaluation
 
         // Cost of transmission network.
-        private double TransmissionCost(SimulationOutput output)
+        private double TransmissionCapacityCost(Chromosome chromosome)
         {
-            var flowTs = output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
-            var cost = 0.0;
+            var config = _mConfig.Parameters["tc"];
 
+            // Run simulation.
+            var data = _mTcCtrl.EvaluateTs(chromosome);
+            // Extract system values.
+            var flowTs = data[0].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
+            var cost = 0.0;
             foreach (var ts in flowTs)
             {
                 var capacity = StatUtils.CalcCapacity(ts.GetAllValues());
                 cost += capacity * Costs.GetLinkCost(ts.Properties["From"], ts.Properties["To"], true);
             }
 
-            return cost;
+            return cost * config.Value;
         }
 
         // Cost of backup facilities.
-        private Dictionary<string, double> BackupCost(SimulationOutput output)
+        private double BackupCapacity(Chromosome chromosome)
         {
-            // Extract system values.
-            var curtailment = (DenseTimeSeries) output.TimeSeries.First(item => item.Name.Equals("Curtailment"));
-            var balanceNeeds = curtailment.Values.Where(item => item < 0).Select(item => -item).OrderBy(item => item).ToList();
-            // Calculate the needs.
-            var capacity = StatUtils.Percentile(balanceNeeds, 99);
-            var energy = balanceNeeds.Sum();
+            var config = _mConfig.Parameters["bc"];
 
-            return BackupCost(capacity, energy);
+            // Run simulation.
+            var data = _mBcCtrl.EvaluateTs(chromosome);
+            // Extract system values.
+            var curtailment = (DenseTimeSeries)data[0].TimeSeries.First(item => item.Name.Equals("Curtailment"));
+            var balanceNeeds = curtailment.Values.Where(item => item < 0).Select(item => -item).OrderBy(item => item);
+
+            return StatUtils.Percentile(balanceNeeds, 99) * config.Value;
         }
+
+        // Cost of backup facilities.
+        private double BackupEnergy(Chromosome chromosome)
+        {
+            var config = _mConfig.Parameters["be"];
+
+            // Run simulation.
+            var data = _mBeCtrl.EvaluateTs(chromosome);
+            // Extract system values.
+            var curtailment = (DenseTimeSeries)data[0].TimeSeries.First(item => item.Name.Equals("Curtailment"));
+            var balanceNeeds = curtailment.Values.Where(item => item < 0).Select(item => -item).OrderBy(item => item).ToList();
+
+            return balanceNeeds.Sum() * config.Value;
+        }
+
+        #endregion
 
         #region Cost calculations
 
         // Cost of wind/solar facilities.
-        private Dictionary<string, double> BaseCosts()
+        private Dictionary<string, double> BaseCosts(Chromosome chromosome)
         {
             var windCapacity = 0.0;
             var solarCapacity = 0.0;
 
-            foreach (var model in _mNodes.Select(item => item.Model))
+            foreach (var node in _mNodes.Select(item => item.Model))
             {
+                var gene = chromosome[node.Name];
                 // Calculate capacities.
-                windCapacity += model.Gamma*model.Alpha * model.AvgLoad / CountryInfo.GetWindCf(model.Name);
-                solarCapacity += model.Gamma * (1 - model.Alpha) * model.AvgLoad / CountryInfo.GetSolarCf(model.Name);
+                windCapacity += gene.Gamma * gene.Alpha * node.AvgLoad / CountryInfo.GetWindCf(node.Name);
+                solarCapacity += gene.Gamma * (1 - gene.Alpha) * node.AvgLoad / CountryInfo.GetSolarCf(node.Name);
             }
                 
             return new Dictionary<string, double>
@@ -151,13 +203,24 @@ namespace BusinessLogic.Cost
             };
         }
 
-        private static Dictionary<string, double> BackupCost(double capacity, double energy)
+        // Cost of backup facilities and fuel.
+        private Dictionary<string, double> BackupCosts(Chromosome chromosome)
         {
             return new Dictionary<string, double>
             {
-                {"Backup", capacity*(Costs.CCGT.CapExFixed*1e6 + Costs.CCGT.OpExFixed*1e3*AnnualizationFactor)},
-                {"Fuel", energy*Costs.CCGT.OpExVariable*AnnualizationFactor}
+                {"Backup", BackupCapacityCost(BackupCapacity(chromosome))},
+                {"Fuel", BackupEnergyCost(BackupEnergy(chromosome))}
             };
+        }
+
+        private static double BackupEnergyCost(double energy)
+        {
+            return energy*Costs.CCGT.OpExVariable*AnnualizationFactor;
+        }
+
+        private static double BackupCapacityCost(double capacity)
+        {
+            return capacity*(Costs.CCGT.CapExFixed*1e6 + Costs.CCGT.OpExFixed*1e3*AnnualizationFactor);
         }
 
         private static double WindCost(double capacity)
@@ -179,4 +242,14 @@ namespace BusinessLogic.Cost
             return (1 - Math.Pow((1 + (rate/100.0)), -30))/(rate/100.0);
         }
     }
+
+    public class ModelYearConfig
+    {
+        public double AlphaMin { get; set; }
+        public double AlphaMax { get; set; }
+        public double GammaMin { get; set; }
+        public double GammaMax { get; set; }
+        public Dictionary<string, KeyValuePair<int, double>> Parameters { get; set; }
+    }
+
 }

@@ -22,7 +22,8 @@ namespace Main.Configurations
         {
             var view = BetaCalc(main, 10, 0, inclTrans);
             ChartUtils.SaveChart(view.MainChart, 1000, 800,
-                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\TransmissionBeta0ACDC.png");
+                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\Test.png");
+                //@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\TransmissionBeta0ACDC.png");
         }
 
         // Gamma fixed = 1
@@ -30,7 +31,7 @@ namespace Main.Configurations
         {
             var view = BetaCalc(main, 20, 16, inclTrans);
             ChartUtils.SaveChart(view.MainChart, 1000, 800,
-                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\TransmissionBeta16ACDC.png");
+                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\Test2.png");
         }
 
         private static CostView BetaCalc(MainForm main, int res, double beta, bool inclTrans)
@@ -99,7 +100,7 @@ namespace Main.Configurations
         {
             var res = 20;
             var delta = 1 / ((double)res);
-            var sources = new List<string> { "Wind", "Solar", "Backup", "Fuel" };
+            var sources = new List<string> { "Transmission", "Wind", "Solar", "Backup", "Fuel" };
             var countries = ProtoStore.LoadCountries();
             var costCalc = new CostCalculator();
             var chromosome = new Chromosome(countries, 0.8, 0.5);
@@ -113,7 +114,7 @@ namespace Main.Configurations
                 gammas[j] = 0.5 + j * delta;
                 chromosome.Gamma = gammas[j];
                 // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCosts(chromosome)) data[item.Key][j] = item.Value;
+                foreach (var item in costCalc.DetailedSystemCosts(chromosome, true)) data[item.Key][j] = item.Value;
             }
 
             // Setup view.
