@@ -120,7 +120,7 @@ namespace BusinessLogic.ExportStrategies
                 _mMismatches[index] = _mConstrainedFlowOptimizer.NodeOptimum[index];
 
                 if (!_mNodes[index].StorageCollection.Contains(efficiency)) continue;
-                _mNodes[index].StorageCollection.Get(efficiency).Inject(-_mConstrainedFlowOptimizer.StorageOptimum[index]);
+                _mNodes[index].StorageCollection.Inject(-_mConstrainedFlowOptimizer.StorageOptimum[index]);
             }
 
             // Save flow result temporarily.

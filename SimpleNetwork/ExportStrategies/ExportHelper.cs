@@ -63,7 +63,10 @@ namespace BusinessLogic.ExportStrategies
 
             // Calculate curtailment.
             result.Curtailment = 0.0;
-            if (_mStorageMap[_mStorageLevel] == -1) result.Curtailment = _mMismatches.Sum();
+            if (_mStorageMap[_mStorageLevel] == -1)
+            {
+                result.Curtailment = _mMismatches.Sum();
+            }
             result.Failure = (result.Curtailment < 0);
 
             return result;

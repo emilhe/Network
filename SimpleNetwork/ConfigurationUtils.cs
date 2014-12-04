@@ -79,14 +79,14 @@ namespace BusinessLogic
 
         public static void SetupOptimalBackup(List<CountryNode> nodes, int years)
         {
-            var opts = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalOptimalBackupBatteryAndHydrogenWithLinks.txt");
+            var opts = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalOptimalBackupBatteryAndHydrogenWithLinks.txt");
 
             SetupBackup(nodes, years, opts, "Optimal backup");
         }
 
         public static void SetupOptimalBackupDelta(List<CountryNode> nodes, int years)
         {
-            var opts = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogenDelta.txt");
+            var opts = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogenDelta.txt");
 
             SetupBackup(nodes, years, opts, "Optimal backup");
         }

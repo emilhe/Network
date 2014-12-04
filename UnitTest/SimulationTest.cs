@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using BusinessLogic.Nodes;
 using BusinessLogic.Simulation;
 using NUnit.Framework;
@@ -25,17 +26,17 @@ namespace UnitTest
             foreach (var node in nodes)
             {
                 node.Model.Alpha = 0.65;
-                node.Model.Gamma = 1.029;
+                node.Model.Gamma = 1.028;
             }
-            simulation.Simulate(8760); // One year.
+            simulation.Simulate(8766); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
             foreach (var node in nodes)
             {
                 node.Model.Alpha = 0.65;
-                node.Model.Gamma = 1.028;
+                node.Model.Gamma = 1.027;
             }
-            simulation.Simulate(8760); // One year.
+            simulation.Simulate(8766); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
 
@@ -50,17 +51,17 @@ namespace UnitTest
             foreach (var node in nodes)
             {
                 node.Model.Alpha = 0.65;
-                node.Model.Gamma = 1.029;
+                node.Model.Gamma = 1.028;
             }
-            simulation.Simulate(8760); // One year.
+            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
             foreach (var node in nodes)
             {
                 node.Model.Alpha = 0.65;
-                node.Model.Gamma = 1.028;
+                node.Model.Gamma = 1.027;
             }
-            simulation.Simulate(8760); // One year.
+            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
 
@@ -76,17 +77,17 @@ namespace UnitTest
             foreach (var node in nodes)
             {
                 node.Model.Alpha = 0.65;
-                node.Model.Gamma = 1.029;
+                node.Model.Gamma = 1.028;
             }
-            simulation.Simulate(8760); // One year.
+            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
             foreach (var node in nodes)
             {
                 node.Model.Alpha = 0.65;
-                node.Model.Gamma = 1.0;
+                node.Model.Gamma = 1.027;
             }
-            simulation.Simulate(8760); // One year.
+            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
 
@@ -101,17 +102,17 @@ namespace UnitTest
             foreach (var node in nodes)
             {
                 node.Model.Alpha = 0.55;
-                node.Model.Gamma = 1.228;
+                node.Model.Gamma = 1.328;
             }
-            simulation.Simulate(8760); // One year.
+            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
             foreach (var node in nodes)
             {
                 node.Model.Alpha = 0.55;
-                node.Model.Gamma = 1.287;
+                node.Model.Gamma = 1.187;
             }
-            simulation.Simulate(8760); // One year.
+            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
 
@@ -128,15 +129,15 @@ namespace UnitTest
                 node.Model.Alpha = 0.57;
                 node.Model.Gamma = 1.536;
             }
-            simulation.Simulate(8760); // One year.
+            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
             foreach (var node in nodes)
             {
                 node.Model.Alpha = 0.57;
-                node.Model.Gamma = 1.534;
+                node.Model.Gamma = 1.530;
             }
-            simulation.Simulate(8760); // One year.
+            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
 

@@ -18,16 +18,16 @@ namespace UnitTest
          [Test]
          public void HelloWorld()
          {
-             // ReBirth population.
-             var n = 50;
-             var strategy = new GeneticNodeOptimizationStrategy(new CostCalculator());
-             var population = new IChromosome[n];
-             for (int i = 0; i < population.Length; i++) population[i] = strategy.Spawn();
-             // Find optimum.
-             var optimizer = new GeneticOptimizer<NodeChromosome>(strategy);
-             var optimum = optimizer.Optimize(population);
-             optimum.ToJsonFile(@"C:\proto\genetic.txt");
-             Assert.AreEqual("Hello World!", optimum.ToString());
+             //// ReBirth population.
+             //var n = 50;
+             //var strategy = new GeneticNodeOptimizationStrategy(new CostCalculator());
+             //var population = new IChromosome[n];
+             //for (int i = 0; i < population.Length; i++) population[i] = strategy.Spawn();
+             //// Find optimum.
+             //var optimizer = new GeneticOptimizer<NodeChromosome>(strategy);
+             //var optimum = optimizer.Optimize(population);
+             //optimum.ToJsonFile(@"C:\proto\genetic.txt");
+             //Assert.AreEqual("Hello World!", optimum.ToString());
          }
 
     }

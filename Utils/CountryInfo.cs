@@ -201,7 +201,7 @@ namespace Utils
 
         // Source: 32 years of VE data.
         private static readonly Dictionary<string, double> MeanLoad =
-            Parsing.DictionaryFromFile<string, double>(@"C:\proto\MeanLoad.txt");
+            FileUtils.DictionaryFromFile<string, double>(@"C:\proto\MeanLoad.txt");
 
         #endregion
 

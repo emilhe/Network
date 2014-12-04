@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Interfaces;
@@ -9,6 +10,7 @@ namespace BusinessLogic.Storages
     {
 
         private readonly Dictionary<double, IStorage> _mStorageMap;
+        private IOrderedEnumerable<double> _orderedKeys;
 
         public StorageCollection()
         {
@@ -20,6 +22,7 @@ namespace BusinessLogic.Storages
             if (!_mStorageMap.ContainsKey(storage.Efficiency))
             {
                 _mStorageMap.Add(storage.Efficiency, storage);
+                _orderedKeys = _mStorageMap.Keys.OrderByDescending(item => item);
                 return;
             }
 
@@ -31,6 +34,8 @@ namespace BusinessLogic.Storages
                 _mStorageMap[storage.Efficiency] = composite;
             }
             composite.AddStorage(storage);
+
+            _orderedKeys = _mStorageMap.Keys.OrderByDescending(item => item);
         }
 
         public bool Contains(double efficiency)
@@ -43,15 +48,21 @@ namespace BusinessLogic.Storages
             return _mStorageMap[efficiency];
         }
 
-        //public Dictionary<double, IStorage>.ValueCollection Storages()
-        //{
-        //    return _mStorageMap.Values;
-        //}
-
-        //public Dictionary<double, IStorage>.KeyCollection Efficiencies()
-        //{
-        //    return _mStorageMap.Keys;
-        //}
+        /// <summary>
+        /// Injects an amount of energy (positive or negative) into the most efficient storage available.
+        /// </summary>
+        /// <param name="amount"> amount of energy </param>
+        /// <returns> remaining energy </returns>
+        public double Inject(double amount)
+        {
+            var remaining = amount;
+            foreach (var key in _orderedKeys)
+            {
+                remaining = _mStorageMap[key].Inject(amount);
+                if (Math.Abs(remaining) < 1e-5) break;
+            }
+            return remaining;
+        }
 
         public IEnumerator<KeyValuePair<double, IStorage>> GetEnumerator()
         {

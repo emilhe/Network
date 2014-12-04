@@ -53,43 +53,43 @@ namespace Main.Figures
             #region Optimal distributions
 
             // Optimal distribution [TESt].
-            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogenDelta.txt");
+            scaling = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogenDelta.txt");
             DeltaScaling(loadScaling, scaling);
             chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
             chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalBatteryHydrogenDelta.png");
 
             // Optimal distribution.
-            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalNoStorageNoLinks.txt");
+            scaling = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalNoStorageNoLinks.txt");
             DeltaScaling(loadScaling, scaling);
             chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -8, 8);
             chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalNoStorageNoLinksNorm.png");
 
             // Optimal distribution without links.
-            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryNoLinks.txt");
+            scaling = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryNoLinks.txt");
             DeltaScaling(loadScaling, scaling);
             chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -8, 8);
             chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalBatteryNoLinksNorm.png");
 
             // Optimal distribution without links.
-            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogenNoLinks.txt");
+            scaling = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogenNoLinks.txt");
             DeltaScaling(loadScaling, scaling);
             chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -8, 8);
             chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalBatteryHydrogenNoLinksNorm.png");
 
             // Optimal distribution.
-            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalNoStorage.txt");
+            scaling = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalNoStorage.txt");
             DeltaScaling(loadScaling, scaling);
             chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
             chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalNoStorageNorm.png");
 
             // Optimal distribution without links.
-            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBattery.txt");
+            scaling = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalBattery.txt");
             DeltaScaling(loadScaling, scaling);
             chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
             chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalBatteryNorm.png");
 
             // Optimal distribution without links.
-            scaling = Parsing.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogen.txt");
+            scaling = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogen.txt");
             DeltaScaling(loadScaling, scaling);
             chart = EuropeChart.DrawEurope(scaling, Color.Black, Color.Yellow, Color.DarkRed, -2.5, 2.5);
             chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\OptimalBatteryHydrogenNorm.png");
