@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Utils.Statistics
 {
-    public class StatUtils
+    public class MathUtils
     {
 
         /// <summary>
@@ -56,5 +56,15 @@ namespace Utils.Statistics
             return orderedData[idx];
         }
 
+        public static double[] Linspace(double min, double max, int steps)
+        {
+            var delta = (max - min)/((double) steps-1);
+            var result = new double[steps];
+            for (int i = 0; i < steps; i++)
+            {
+                result[i] = min + delta*i;
+            }
+            return result;
+        }
     }
 }

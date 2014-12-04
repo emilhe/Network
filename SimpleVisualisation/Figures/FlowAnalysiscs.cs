@@ -332,14 +332,14 @@ namespace Main.Figures
         {
             return output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
                         .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-                            flowTimeSeries => StatUtils.CalcCapacity(flowTimeSeries.GetAllValues()));
+                            flowTimeSeries => MathUtils.CalcCapacity(flowTimeSeries.GetAllValues()));
         }
 
         private static Dictionary<string, double> FullCapacities(SimulationOutput output)
         {
             return output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
                         .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-                            flowTimeSeries => StatUtils.CalcFullCapacity(flowTimeSeries.GetAllValues()));
+                            flowTimeSeries => MathUtils.CalcFullCapacity(flowTimeSeries.GetAllValues()));
         }
 
         private static void FilterValues(Dictionary<string, double> val1, Dictionary<string, double> val2, double tolerance = 2)
@@ -390,7 +390,7 @@ namespace Main.Figures
             var homo = Capacities(outputs[0]);
             var homo2 = outputs[0].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
                         .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-                            flowTimeSeries => StatUtils.CalcEmpCapacity(flowTimeSeries.GetAllValues()));
+                            flowTimeSeries => MathUtils.CalcEmpCapacity(flowTimeSeries.GetAllValues()));
             view.Setup(homo.Keys.ToList());
             view.AddData(homo.Values.ToArray(), "Homogeneous, 0.5/99.5 percentile");
             view.AddData(homo2.Values.ToArray(), "Homogeneous, 33% maximum");

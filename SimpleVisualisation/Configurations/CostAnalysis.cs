@@ -48,7 +48,7 @@ namespace Main.Configurations
                 // Calculate costs.
                 alphas[j] = j*delta;
                 // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCosts(BetaScaling(1, alphas[j], beta), inclTrans))
+                foreach (var item in costCalc.DetailedSystemCosts(new NodeDna(1, alphas[j], beta), inclTrans))
                 {
                     data[item.Key][j] = item.Value;
                 }
@@ -64,7 +64,7 @@ namespace Main.Configurations
         #endregion
 
         // Gamma fixed = 1.0
-        public static void VaryBeta(MainForm main)
+        public static void VaryBeta(MainForm main, bool inclTrans = false, string path = null)
         {
             var betas = new double[]{0,1,2,4,8,16,32};
             var alphaRes = 20;
@@ -80,7 +80,7 @@ namespace Main.Configurations
                 for (int i = 0; i < alphaRes; i++)
                 {         
                     alphas[i] = (i+1) * delta;
-                    points[i] = costCalc.SystemCost(BetaScaling(1, alphas[i], betas[j]));
+                    points[i] = costCalc.SystemCost(new NodeDna(alphas[i], 1, betas[j]), inclTrans);
                 }
                 data.Add(string.Format("Beta = {0}",betas[j]), points);
             }
@@ -91,19 +91,27 @@ namespace Main.Configurations
             {
                 view.AddData(alphas, pair.Value, pair.Key, false);                
             }
+            // Add a single point (found using optimization).
+            if (path != null)
+            {
+                var dna = FileUtils.FromJsonFile<NodeDna>(path);
+                view.AddData(new[] { dna.Alpha }, new[] { costCalc.SystemCost(dna, inclTrans) }, "Genetic optimum", true, true);
+            }
             view.MainChart.ChartAreas[0].AxisY.Minimum = 40;
             view.MainChart.ChartAreas[0].AxisX.Title = "Alpha";
+            ChartUtils.SaveChart(view.MainChart, 1000, 800,
+    @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\VaryBetaWithTrans.png");
         }
-       
+
         // Alpha fixed = 0.8
         public static void VaryGamma(MainForm main)
         {
             var res = 20;
             var delta = 1 / ((double)res);
             var sources = new List<string> { "Transmission", "Wind", "Solar", "Backup", "Fuel" };
-            var countries = ProtoStore.LoadCountries();
             var costCalc = new CostCalculator();
-            var chromosome = new Chromosome(countries, 0.8, 0.5);
+            var chromosome = new NodeDna(0.8, 0.5);
+
             // Calculate costs and prepare data structures
             Dictionary<string, double[]> data = sources.ToDictionary(name => name, pair => new double[res + 1]);
             var gammas = new double[res + 1];
@@ -123,40 +131,74 @@ namespace Main.Configurations
             view.MainChart.ChartAreas[0].AxisX.Title = "Penetration";
         }
 
-        /// <summary>
-        /// Calculate chromosome for a given beta scaling.
-        /// </summary>
-        /// <param name="gamma"> system gamma </param>
-        /// <param name="alpha"> system alpha </param>
-        /// <param name="beta"> scaling parameter </param>
-        /// <returns> scaled chromosome </returns>
-        private static Chromosome BetaScaling(double gamma, double alpha, double beta)
+        // Alpha fixed = 0.8
+        public static void PlotShit(MainForm main, NodeDna dna)
         {
-            // The result is NOT defined in alpha = 0.
-            if (Math.Abs(alpha) < 1e-5) alpha = 1e-5;
+            var res = 2;
+            var delta = 1 / ((double)res);
+            var sources = new List<string> { "Transmission", "Wind", "Solar", "Backup", "Fuel" };
+            var countries = ProtoStore.LoadCountries();
+            var costCalc = new CostCalculator();
+            //var chromosome = new NodeDna(countries, 0.8, 0.5);
+            // Calculate costs and prepare data structures
+            Dictionary<string, double[]> data = sources.ToDictionary(name => name, pair => new double[res + 1]);
+            var gammas = new double[res + 1];
+            // Main loop.
+            for (int j = 0; j <= res; j++)
+            {
+                // Calculate costs.
+                gammas[j] = 0.5 + j * delta;
+                //chromosome.Gamma = gammas[j];
+                // Append costs to data structure.
+                foreach (var item in costCalc.DetailedSystemCosts(dna, true)) data[item.Key][j] = item.Value;
+            }
 
-            var contries = ProtoStore.LoadCountries();
-            var chromosome = new Chromosome(contries, alpha, gamma);
-            var cfW = CountryInfo.GetWindCf();
-            var cfS = CountryInfo.GetSolarCf();
-            // Calculated load weighted beta-scaled cf factors.
-            var wSum = 0.0;
-            var sSum = 0.0;
-            foreach (var i in contries)
-            {
-                wSum += CountryInfo.GetMeanLoad(i) * Math.Pow(cfW[i], beta);
-                sSum += CountryInfo.GetMeanLoad(i) * Math.Pow(cfS[i], beta);
-            }
-            // Now calculate alpha i.
-            foreach (var i in contries)
-            {
-                // EMHER: Semi certain about the gamma equaltion. 
-                chromosome[i].Alpha *= 1/(alpha + (1-alpha)*Math.Pow(cfS[i]/cfW[i],beta)*wSum/sSum);
-                // EMHER: Quite certain about the gamma equaltion. 
-                chromosome[i].Gamma *= CountryInfo.GetMeanLoadSum() * alpha / wSum * Math.Pow(cfW[i],beta) / chromosome[i].Alpha;
-            }
-            return chromosome;
+            // Setup view.
+            var view = main.DisplayCost();
+            view.AddData(data, gammas);
+            view.MainChart.ChartAreas[0].AxisX.Title = "Penetration";
         }
+
+        ///// <summary>
+        ///// Calculate chromosome for a given beta scaling.
+        ///// </summary>
+        ///// <param name="gamma"> system gamma </param>
+        ///// <param name="alpha"> system alpha </param>
+        ///// <param name="beta"> scaling parameter </param>
+        ///// <returns> scaled chromosome </returns>
+        //private static NodeDna BetaScaling(double gamma, double alpha, double beta)
+        //{
+        //    // The result is NOT defined in alpha = 0.
+        //    if (Math.Abs(alpha) < 1e-5) alpha = 1e-5;
+
+        //    var contries = ProtoStore.LoadCountries();
+        //    var chromosome = new NodeDna(alpha, gamma);
+        //    var cfW = CountryInfo.GetWindCf();
+        //    var cfS = CountryInfo.GetSolarCf();
+        //    // Calculated load weighted beta-scaled cf factors.
+        //    var wSum = 0.0;
+        //    var sSum = 0.0;
+        //    foreach (var i in contries)
+        //    {
+        //        wSum += CountryInfo.GetMeanLoad(i) * Math.Pow(cfW[i], beta);
+        //        sSum += CountryInfo.GetMeanLoad(i) * Math.Pow(cfS[i], beta);
+        //    }
+        //    // Now calculate alpha i.
+        //    foreach (var i in contries)
+        //    {
+        //        // EMHER: Semi certain about the gamma equaltion. 
+        //        chromosome[i].Alpha *= 1/(alpha + (1-alpha)*Math.Pow(cfS[i]/cfW[i],beta)*wSum/sSum);
+        //        // EMHER: Quite certain about the gamma equaltion. 
+        //        chromosome[i].Gamma *= CountryInfo.GetMeanLoadSum() * alpha / wSum * Math.Pow(cfW[i],beta) / chromosome[i].Alpha;
+        //    }
+        //    // Make sanity check.
+        //    var dAlpha = alpha - chromosome.Alpha;
+        //    var gGamma = gamma - chromosome.Gamma;
+        //    if (Math.Abs(dAlpha) > 1e-6) throw new ArgumentException("Alpha value wrong");
+        //    if (Math.Abs(gGamma) > 1e-6) throw new ArgumentException("Gamma value wrong");
+
+        //    return chromosome;
+        //}
 
     }
 }

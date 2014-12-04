@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic.Cost;
 using NUnit.Framework;
+using Optimization;
+using Utils;
 
 namespace UnitTest
 {
@@ -14,20 +16,18 @@ namespace UnitTest
     {
 
          [Test]
-         public void NoExportTest()
+         public void HelloWorld()
          {
-             // Assign.
-             var watch = new Stopwatch();
-             watch.Start();
-             var costCalc = new CostCalculator();
-             var genes = new Chromosome(30, 0.5, 1);
-             var setup = watch.ElapsedMilliseconds;
-             watch.Restart();
-             // Act.
-             //var cost = costCalc.DetailedSystemCostWithoutLinks(genes);
-             // Assert.
-             var eval = watch.ElapsedMilliseconds;
-             //Assert.AreEqual(0,cost);
+             // ReBirth population.
+             var n = 50;
+             var strategy = new GeneticNodeOptimizationStrategy(new CostCalculator());
+             var population = new IChromosome[n];
+             for (int i = 0; i < population.Length; i++) population[i] = strategy.Spawn();
+             // Find optimum.
+             var optimizer = new GeneticOptimizer<NodeChromosome>(strategy);
+             var optimum = optimizer.Optimize(population);
+             optimum.ToJsonFile(@"C:\proto\genetic.txt");
+             Assert.AreEqual("Hello World!", optimum.ToString());
          }
 
     }

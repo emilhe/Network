@@ -103,7 +103,7 @@ namespace UnitTest
             var simulation = new SimulationCore(model);
             simulation.Simulate(steps);
             var flowTs = simulation.Output.TimeSeries.First(item => item.Properties.ContainsKey("Flow"));
-            var capacity = StatUtils.CalcCapacity(flowTs.GetAllValues().OrderBy(item => item).ToList());
+            var capacity = MathUtils.CalcCapacity(flowTs.GetAllValues().OrderBy(item => item).ToList());
             Assert.AreEqual(expected, capacity, 1e-6);
         }
 
@@ -116,7 +116,7 @@ namespace UnitTest
             double capacity = 0;
             try
             {
-                capacity = StatUtils.CalcCapacity(flowTs.GetAllValues().OrderBy(item => item).ToList());
+                capacity = MathUtils.CalcCapacity(flowTs.GetAllValues().OrderBy(item => item).ToList());
             }
             catch (Exception ex)
             {

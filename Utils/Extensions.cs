@@ -11,18 +11,6 @@ namespace Utils
 {
     public static class Extensions
     {
-
-        public static double[] Linspace(double min, double max, int steps)
-        {
-            var delta = (max - min)/((double) steps-1);
-            var result = new double[steps];
-            for (int i = 0; i < steps; i++)
-            {
-                result[i] = min + delta*i;
-            }
-            return result;
-        } 
-
         #region Hash extensions
 
         public static int UniqueKey<T, TU>(this Dictionary<T, TU> source)
@@ -37,6 +25,50 @@ namespace Utils
                 }
                 return hash;
             }
+        }
+
+        #endregion
+
+        #region Input/output extensions
+
+        public static void ToJsonFile(this object obj, string path)
+        {
+            File.WriteAllText(path, JsonConvert.SerializeObject(obj));
+        }
+
+        // Matlab interface.
+
+        public static void ToFile(this double[,] matrix, string path)
+        {
+            var separator = " ";
+            var builder = new StringBuilder();
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrix.GetLength(1); j++)
+                {
+                    builder.Append(matrix[i, j]);
+                    if (j < matrix.GetLength(1) - 1) builder.Append(separator);
+                }
+                builder.AppendLine();
+            }
+
+            File.WriteAllText(path, MatrixToString(matrix));
+        }
+
+        private static string MatrixToString(double[,] matrix)
+        {
+            var separator = " ";
+            var builder = new StringBuilder();
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrix.GetLength(1); j++)
+                {
+                    builder.Append(matrix[i, j]);
+                    if (j < matrix.GetLength(1) - 1) builder.Append(separator);
+                }
+                builder.AppendLine();
+            }
+            return builder.ToString();
         }
 
         #endregion
@@ -104,55 +136,6 @@ namespace Utils
 
         #endregion
 
-        #region Input/output extensions
-
-        public static void ToJsonFile(this object obj, string path)
-        {
-            File.WriteAllText(path, JsonConvert.SerializeObject(obj));
-        }
-
-        public static T FromJsonFile<T>(string path)
-        {
-            return JsonConvert.DeserializeObject<T>(File.ReadAllText(path));
-        }
-
-
-        // Matlab interface.
-        public static void ToFile(this double[,] matrix, string path)
-        {
-            var separator = " ";
-            var builder = new StringBuilder();
-            for (int i = 0; i < matrix.GetLength(0); i++)
-            {
-                for (int j = 0; j < matrix.GetLength(1); j++)
-                {
-                    builder.Append(matrix[i, j]);
-                    if (j < matrix.GetLength(1) - 1) builder.Append(separator);
-                }
-                builder.AppendLine();
-            }
-
-            File.WriteAllText(path, MatrixToString(matrix));
-        }
-
-        private static string MatrixToString(double[,] matrix)
-        {
-            var separator = " ";
-            var builder = new StringBuilder();
-            for (int i = 0; i < matrix.GetLength(0); i++)
-            {
-                for (int j = 0; j < matrix.GetLength(1); j++)
-                {
-                    builder.Append(matrix[i, j]);
-                    if (j < matrix.GetLength(1) - 1) builder.Append(separator);
-                }
-                builder.AppendLine();
-            }
-            return builder.ToString();
-        }
-
-        #endregion
-
         #region Deprecated
 
         public static void ToFile<T, V>(this Dictionary<T, V> dictionary, string path)
@@ -170,13 +153,12 @@ namespace Utils
         public static T Parse<T>(string s) where T : IConvertible
         {
             if (typeof (T) == typeof (string)) return (T) Convert.ChangeType(s, typeof (T));
-            if (typeof (T) == typeof (double)) return (T) Convert.ChangeType(double.Parse(s), typeof (T));
-            if (typeof (T) == typeof (double)) return (T) Convert.ChangeType(double.Parse(s), typeof (T));
-            if (typeof (T) == typeof (int)) return (T) Convert.ChangeType(int.Parse(s), typeof (T));
-            throw new ArgumentException(string.Format("{0} is not supported by ditionary parsing.", typeof (T)));
+            if (typeof (T) == typeof (double)) return (T) Convert.ChangeType(Double.Parse(s), typeof (T));
+            if (typeof (T) == typeof (double)) return (T) Convert.ChangeType(Double.Parse(s), typeof (T));
+            if (typeof (T) == typeof (int)) return (T) Convert.ChangeType(Int32.Parse(s), typeof (T));
+            throw new ArgumentException(String.Format("{0} is not supported by ditionary parsing.", typeof (T)));
         }
 
         #endregion
-
     }
 }

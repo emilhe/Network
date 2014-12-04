@@ -17,6 +17,7 @@ namespace BusinessLogic.Simulation
     public class SimulationController
     {
 
+        public bool PrintDebugInfo { get; set; }
         public bool CacheEnabled { get; set; }
         public bool InvalidateCache { get; set; }
         public LogLevelEnum LogLevel { get; set; } // Dangerous when using cache, NOT included so far.
@@ -64,7 +65,7 @@ namespace BusinessLogic.Simulation
 
         #region Execution
 
-        public List<SimulationOutput> EvaluateTs(Chromosome genes)
+        public List<SimulationOutput> EvaluateTs(NodeDna genes)
         {
             return Execute(update =>
             {
@@ -197,10 +198,10 @@ namespace BusinessLogic.Simulation
 
         #endregion
 
-        private Dictionary<string, string> GetProperties(Chromosome genes)
+        private Dictionary<string, string> GetProperties(NodeDna genes)
         {
             var result = DefaultProperties();
-            result.Add("Chromosome", JsonConvert.SerializeObject(genes));
+            result.Add("NodeDna", JsonConvert.SerializeObject(genes));
             return result;
         }
 
@@ -285,7 +286,7 @@ namespace BusinessLogic.Simulation
                 // Do simulation.
                 watch.Restart();
                 simulation.Simulate((int) (Utils.Utils.HoursInYear*years), LogLevelEnum.None);
-                Console.WriteLine("Mix " + mix + "; Penetation " + pen + ": " +
+                if(PrintDebugInfo) Console.WriteLine("Mix " + mix + "; Penetation " + pen + ": " +
                                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
                 return simulation.Output.Success;
             }, new[] { grid.PenetrationSteps, grid.MixingSteps });
@@ -303,13 +304,13 @@ namespace BusinessLogic.Simulation
                 node.Model.Alpha = mixing;
             }
             simulation.Simulate((int)(Utils.Utils.HoursInYear * years), LogLevel);
-            Console.WriteLine("Mix " + mixing + "; Penetation " + penetration + ": " +
+            if (PrintDebugInfo) Console.WriteLine("Mix " + mixing + "; Penetation " + penetration + ": " +
                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
 
             return simulation.Output;
         }
 
-        private SimulationOutput RunSimulation(IExportStrategy strategy, double years, Chromosome genes)
+        private SimulationOutput RunSimulation(IExportStrategy strategy, double years, NodeDna genes)
         {
             var model = new NetworkModel(_mNodes, strategy, _mFail);
             var simulation = new SimulationCore(model);
@@ -321,7 +322,7 @@ namespace BusinessLogic.Simulation
                     node.Model.Alpha = genes[node.Name].Alpha;
                 }
             simulation.Simulate((int) (Utils.Utils.HoursInYear * years), LogLevel);
-            Console.WriteLine("Chromosome: " +
+            if (PrintDebugInfo) Console.WriteLine("NodeDna: " +
                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
 
             return simulation.Output;

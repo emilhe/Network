@@ -90,6 +90,7 @@
     <Compile Include="Figures\EuropeMaps.cs" />
     <Compile Include="Figures\FlowAnalysiscs.cs" />
     <Compile Include="Figures\ModelYearAnalysis.cs" />
+    <Compile Include="Optimization.cs" />
     <Compile Include="Quick.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -130,6 +131,10 @@
     <ProjectReference Include="..\Module\Controls.csproj">
       <Project>{1A045F9E-6824-4349-BE4B-2E0F7E1338C1}</Project>
       <Name>Controls</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Optimization\Optimization.csproj">
+      <Project>{ffd7147f-25bb-424f-8ff5-a86648812925}</Project>
+      <Name>Optimization</Name>
     </ProjectReference>
     <ProjectReference Include="..\SimpleImporter\ProtoLogic.csproj">
       <Project>{dd96e036-c8e4-42d4-ad91-12f9f21ca795}</Project>

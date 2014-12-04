@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using BusinessLogic.Cost;
 using BusinessLogic.Generators;
 using Controls;
 using Controls.Charting;
@@ -35,8 +36,12 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
 
+            //var chromosome = FileUtils.FromJsonFile<NodeDna>(@"C:\proto\genetic.txt");
+            //CostAnalysis.PlotShit(this, chromosome);
+
             //ModelYearAnalysis.ErrorAnalysis(this, true);
-            CostAnalysis.VaryBeta(this);
+            Optimization.SimulatedAnnealing();
+            //CostAnalysis.VaryBeta(this, true, @"C:\proto\genetic1000.txt");
 
             //ModelYearAnalysis.BackupAnalysis(this);
 

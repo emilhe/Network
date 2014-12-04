@@ -1,6 +1,6 @@
 ﻿namespace BusinessLogic.Cost
 {
-    public class MixGene
+    public class NodeGene
     {
 
         public double Alpha { get; set; }

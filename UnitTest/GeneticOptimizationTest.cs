@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Optimization;
+using Utils;
 
 namespace UnitTest
 {
@@ -28,13 +29,15 @@ namespace UnitTest
 
         class GeneticStringOptimizationStrategy : IGeneticOptimizationStrategy<HelloWorldChromosome>
         {
-            private const int _mMin = 0;
-            private const int _mMax = 255;
-            private static readonly Random _mRnd = new Random((int)DateTime.Now.Ticks);
 
-            private const int _mChildCount = 75;            
-            private const int _mEliteCount = 15;
-            private const int _mEliteMixCount = 1;
+            private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);
+            
+            private const int Min = 0;
+            private const int Max = 255;
+
+            private const int ChildCount = 75;            
+            private const int EliteCount = 15;
+            private const int EliteMixCount = 1;
 
             public bool TerminationCondition(IChromosome[] chromosomes)
             {
@@ -44,7 +47,7 @@ namespace UnitTest
             public void Select(IChromosome[] chromosomes)
             {
                 // Kill bad candidates.
-                for (int i = _mEliteCount; i < _mEliteCount + _mEliteMixCount; i++) chromosomes[i] = Spawn();
+                for (int i = EliteCount; i < EliteCount + EliteMixCount; i++) chromosomes[i] = Spawn();
             }
 
             public void Mate(IChromosome[] chromosomes)
@@ -52,15 +55,15 @@ namespace UnitTest
                 var offspring = new IChromosome[chromosomes.Length*2];
 
                 // Find children.
-                for (int i = 0; i < _mChildCount; i++)
+                for (int i = 0; i < ChildCount; i++)
                 {
-                    var father = chromosomes[(int) (_mRnd.NextDouble()*(_mEliteCount+_mEliteMixCount - 1))];
-                    var mother = chromosomes[(int) (_mRnd.NextDouble()*(_mEliteCount+_mEliteMixCount - 1))];
+                    var father = chromosomes[(int) (Rnd.NextDouble()*(EliteCount+EliteMixCount - 1))];
+                    var mother = chromosomes[(int) (Rnd.NextDouble()*(EliteCount+EliteMixCount - 1))];
                     offspring[i] = father.Mate(mother);
                 }
 
                 // Fill in children + randoms.
-                for (int i = 0; i < _mChildCount; i++)
+                for (int i = 0; i < ChildCount; i++)
                 {
                     chromosomes[i] = (i < offspring.Length) ? offspring[i] : Spawn();
                 }
@@ -74,7 +77,7 @@ namespace UnitTest
             public static HelloWorldChromosome Spawn()
             {
                 var charArray = new char[12];
-                for (int i = 0; i < charArray.Length; i++) charArray[i] = Convert.ToChar(_mRnd.Next(_mMin, _mMax));
+                for (int i = 0; i < charArray.Length; i++) charArray[i] = Convert.ToChar(Rnd.Next(Min, Max));
                 return new HelloWorldChromosome(new string(charArray));
             }
 

@@ -18,6 +18,8 @@ namespace BusinessLogic.Cost
     public class CostCalculator
     {
 
+        public List<string> Names { get { return _mNodes.Select(item => item.Name).ToList(); } }
+
         private readonly ModelYearConfig _mConfig;
 
         private const double Rate = 4;
@@ -41,7 +43,7 @@ namespace BusinessLogic.Cost
 
         // Per default the alpha \in [0.5-1.0] and gamma \in [1:2] profile is loaded.
         public CostCalculator()
-            : this(Extensions.FromJsonFile<ModelYearConfig>(@"C:\proto\noStorageAlpha0.5to1Gamma1to2.txt"))
+            : this(FileUtils.FromJsonFile<ModelYearConfig>(@"C:\proto\noStorageAlpha0.5to1Gamma1to2.txt"))
         {
         }
 
@@ -99,13 +101,13 @@ namespace BusinessLogic.Cost
         /// <summary>
         /// Detailed system cost (what goes where included).
         /// </summary>
-        public Dictionary<string, double> DetailedSystemCosts(Chromosome chromosome, bool includeTransmission = false)
+        public Dictionary<string, double> DetailedSystemCosts(NodeDna nodeDna, bool includeTransmission = false)
         {
             // Calculate cost elements.
             var costs = new Dictionary<string, double>();
-            if (includeTransmission) costs.Add("Transmission", TransmissionCapacityCost(chromosome));
-            foreach (var cost in BaseCosts(chromosome)) costs.Add(cost.Key, cost.Value);
-            foreach (var cost in BackupCosts(chromosome)) costs.Add(cost.Key, cost.Value);
+            if (includeTransmission) costs.Add("Transmission", TransmissionCapacityCost(nodeDna));
+            foreach (var cost in BaseCosts(nodeDna)) costs.Add(cost.Key, cost.Value);
+            foreach (var cost in BackupCosts(nodeDna)) costs.Add(cost.Key, cost.Value);
             // Scale costs to get LCOE.
             var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum()*Utils.Utils.HoursInYear*AnnualizationFactor;
             foreach (var key in costs.Keys.ToArray()) costs[key] = costs[key] / scaling;
@@ -116,11 +118,11 @@ namespace BusinessLogic.Cost
         /// <summary>
         /// Overall system cost.
         /// </summary>
-        public double SystemCost(Chromosome chromosome, bool includeTransmission = false)
+        public double SystemCost(NodeDna nodeDna, bool includeTransmission = false)
         {
             // Calculate cost elements.
-            var cost = BaseCosts(chromosome).Values.Sum() + BackupCosts(chromosome).Values.Sum();
-            if (includeTransmission) cost += TransmissionCapacityCost(chromosome);
+            var cost = BaseCosts(nodeDna).Values.Sum() + BackupCosts(nodeDna).Values.Sum();
+            if (includeTransmission) cost += TransmissionCapacityCost(nodeDna);
             // Scale costs to get LCOE.
             var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum() * Utils.Utils.HoursInYear * AnnualizationFactor;
 
@@ -132,18 +134,18 @@ namespace BusinessLogic.Cost
         #region Data evaluation
 
         // Cost of transmission network.
-        private double TransmissionCapacityCost(Chromosome chromosome)
+        private double TransmissionCapacityCost(NodeDna nodeDna)
         {
             var config = _mConfig.Parameters["tc"];
 
             // Run simulation.
-            var data = _mTcCtrl.EvaluateTs(chromosome);
+            var data = _mTcCtrl.EvaluateTs(nodeDna);
             // Extract system values.
             var flowTs = data[0].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
             var cost = 0.0;
             foreach (var ts in flowTs)
             {
-                var capacity = StatUtils.CalcCapacity(ts.GetAllValues());
+                var capacity = MathUtils.CalcCapacity(ts.GetAllValues());
                 cost += capacity * Costs.GetLinkCost(ts.Properties["From"], ts.Properties["To"], true);
             }
 
@@ -151,26 +153,26 @@ namespace BusinessLogic.Cost
         }
 
         // Cost of backup facilities.
-        private double BackupCapacity(Chromosome chromosome)
+        private double BackupCapacity(NodeDna nodeDna)
         {
             var config = _mConfig.Parameters["bc"];
 
             // Run simulation.
-            var data = _mBcCtrl.EvaluateTs(chromosome);
+            var data = _mBcCtrl.EvaluateTs(nodeDna);
             // Extract system values.
             var curtailment = (DenseTimeSeries)data[0].TimeSeries.First(item => item.Name.Equals("Curtailment"));
             var balanceNeeds = curtailment.Values.Where(item => item < 0).Select(item => -item).OrderBy(item => item);
 
-            return StatUtils.Percentile(balanceNeeds, 99) * config.Value;
+            return MathUtils.Percentile(balanceNeeds, 99) * config.Value;
         }
 
         // Cost of backup facilities.
-        private double BackupEnergy(Chromosome chromosome)
+        private double BackupEnergy(NodeDna nodeDna)
         {
             var config = _mConfig.Parameters["be"];
 
             // Run simulation.
-            var data = _mBeCtrl.EvaluateTs(chromosome);
+            var data = _mBeCtrl.EvaluateTs(nodeDna);
             // Extract system values.
             var curtailment = (DenseTimeSeries)data[0].TimeSeries.First(item => item.Name.Equals("Curtailment"));
             var balanceNeeds = curtailment.Values.Where(item => item < 0).Select(item => -item).OrderBy(item => item).ToList();
@@ -183,14 +185,14 @@ namespace BusinessLogic.Cost
         #region Cost calculations
 
         // Cost of wind/solar facilities.
-        private Dictionary<string, double> BaseCosts(Chromosome chromosome)
+        private Dictionary<string, double> BaseCosts(NodeDna nodeDna)
         {
             var windCapacity = 0.0;
             var solarCapacity = 0.0;
 
             foreach (var node in _mNodes.Select(item => item.Model))
             {
-                var gene = chromosome[node.Name];
+                var gene = nodeDna[node.Name];
                 // Calculate capacities.
                 windCapacity += gene.Gamma * gene.Alpha * node.AvgLoad / CountryInfo.GetWindCf(node.Name);
                 solarCapacity += gene.Gamma * (1 - gene.Alpha) * node.AvgLoad / CountryInfo.GetSolarCf(node.Name);
@@ -204,12 +206,12 @@ namespace BusinessLogic.Cost
         }
 
         // Cost of backup facilities and fuel.
-        private Dictionary<string, double> BackupCosts(Chromosome chromosome)
+        private Dictionary<string, double> BackupCosts(NodeDna nodeDna)
         {
             return new Dictionary<string, double>
             {
-                {"Backup", BackupCapacityCost(BackupCapacity(chromosome))},
-                {"Fuel", BackupEnergyCost(BackupEnergy(chromosome))}
+                {"Backup", BackupCapacityCost(BackupCapacity(nodeDna))},
+                {"Fuel", BackupEnergyCost(BackupEnergy(nodeDna))}
             };
         }
 

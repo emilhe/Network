@@ -126,11 +126,11 @@ namespace Main.Configurations
             //var capacity =
             //    data[0]._mTimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
             //        .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-            //            flowTimeSeries => StatUtils.CalcCapacity(flowTimeSeries.GetAllValues().ToList()));
+            //            flowTimeSeries => MathUtils.CalcCapacity(flowTimeSeries.GetAllValues().ToList()));
             //var capacityNoExt =
             //    data[1]._mTimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
             //        .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-            //            flowTimeSeries => StatUtils.CalcEmpCapacity(flowTimeSeries.GetAllValues().ToList()));
+            //            flowTimeSeries => MathUtils.CalcEmpCapacity(flowTimeSeries.GetAllValues().ToList()));
 
             //// View data.
             //var view = main.DisplayHistogram();

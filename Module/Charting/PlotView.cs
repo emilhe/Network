@@ -22,22 +22,24 @@ namespace Controls.Charting
             MainChart.Series.Clear();
         }
 
-        public void AddData(double[] x, double[] y, string name, bool addPoints = true)
+        public void AddData(double[] x, double[] y, string name, bool addPoints = true, bool skipLine = false)
         {
-            // Construct new time series.
-            var line = new Series(name) { ChartType = SeriesChartType.Line };
-            for (int i = 0; i < x.Length; i++)
+            if (!skipLine)
             {
-                line.Points.AddXY(x[i], y[i]);
+                var line = new Series(name) { ChartType = SeriesChartType.Line };
+                for (int i = 0; i < x.Length; i++)
+                {
+                    line.Points.AddXY(x[i], y[i]);
+                }
+                chart.Series.Add(line);
             }
-            chart.Series.Add(line);
 
             if (addPoints)
             {
                 var points = new Series(name + ", points") { ChartType = SeriesChartType.Point };
                 for (int i = 0; i < x.Length; i++)
                 {
-                    line.Points.AddXY(x[i], y[i]);
+                    points.Points.AddXY(x[i], y[i]);
                 }
                 chart.Series.Add(points);
             }

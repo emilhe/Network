@@ -101,7 +101,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessClient.cs" />
-    <Compile Include="Cost\Chromosome.cs" />
+    <Compile Include="Cost\GeneticNodeOptimizationStrategy.cs" />
+    <Compile Include="Cost\NodeDna.cs" />
+    <Compile Include="Cost\SaNodeOptimizationStrategy.cs" />
     <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
     <Compile Include="ExportStrategies\ExportHelper.cs" />
     <Compile Include="ExportStrategies\ConstrainedFlowExportStrategy.cs" />
@@ -117,8 +119,8 @@
     <Compile Include="Interfaces\IFailureStrategy.cs" />
     <Compile Include="Interfaces\ITickListener.cs" />
     <Compile Include="Cost\CostCalculator.cs" />
-    <Compile Include="Cost\MixChromosome.cs" />
-    <Compile Include="Cost\MixGene.cs" />
+    <Compile Include="Cost\NodeChromosome.cs" />
+    <Compile Include="Cost\NodeGene.cs" />
     <Compile Include="Simulation\ISimulation.cs" />
     <Compile Include="MixController.cs" />
     <Compile Include="Nodes\ReModel.cs" />

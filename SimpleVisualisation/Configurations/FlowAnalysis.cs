@@ -80,11 +80,11 @@ namespace Main.Configurations
             var capacityHomo =
                 data[0].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
                     .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-                        flowTimeSeries => StatUtils.CalcCapacity(flowTimeSeries.GetAllValues().ToList()));
+                        flowTimeSeries => MathUtils.CalcCapacity(flowTimeSeries.GetAllValues().ToList()));
             var capacityHetro =
                 data[1].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
                     .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-                        flowTimeSeries => StatUtils.CalcCapacity(flowTimeSeries.GetAllValues().ToList()));
+                        flowTimeSeries => MathUtils.CalcCapacity(flowTimeSeries.GetAllValues().ToList()));
 
             // View data.
             var view = main.DisplayHistogram();
@@ -147,7 +147,7 @@ namespace Main.Configurations
                 var capacities =
                     output.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
                         .ToDictionary(flowTimeSeries => flowTimeSeries.Name,
-                            flowTimeSeries => StatUtils.CalcCapacity(flowTimeSeries.GetAllValues()));
+                            flowTimeSeries => MathUtils.CalcCapacity(flowTimeSeries.GetAllValues()));
                 //var maxVals =
                 //    output._mTimeSeries.Where(item => item.Properties.ContainsKey("Flow"))
                 //        .Select(flowTimeSeries => flowTimeSeries.GetAllValues().Select(item => Math.Abs(item)).Max())

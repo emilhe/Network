@@ -49,10 +49,11 @@
     <Compile Include="Costs.cs" />
     <Compile Include="CountryInfo.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="FileUtils.cs" />
     <Compile Include="Parsing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Statistics\DataBinTable.cs" />
-    <Compile Include="Statistics\StatUtils.cs" />
+    <Compile Include="Statistics\MathUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
