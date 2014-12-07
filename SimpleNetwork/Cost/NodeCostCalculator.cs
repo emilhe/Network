@@ -1,25 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using BusinessLogic.ExportStrategies;
-using BusinessLogic.ExportStrategies.DistributionStrategies;
-using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
 using BusinessLogic.Simulation;
 using BusinessLogic.TimeSeries;
-using NUnit.Framework;
+using Optimization;
 using SimpleImporter;
 using Utils;
 using Utils.Statistics;
 
 namespace BusinessLogic.Cost
 {
-    public class CostCalculator
+    public class NodeCostCalculator : INodeCostCalculator
     {
 
         public List<string> Names { get { return _mNodes.Select(item => item.Name).ToList(); } }
-
+        
         private readonly ModelYearConfig _mConfig;
 
         private const double Rate = 4;
@@ -42,12 +38,12 @@ namespace BusinessLogic.Cost
         #region Public interface
 
         // Per default the alpha \in [0.5-1.0] and gamma \in [1:2] profile is loaded.
-        public CostCalculator()
-            : this(FileUtils.FromJsonFile<ModelYearConfig>(@"C:\proto\noStorageAlpha0.5to1Gamma1to2.txt"))
+        public NodeCostCalculator(bool cache = true)
+            : this(FileUtils.FromJsonFile<ModelYearConfig>(@"C:\proto\noStorageAlpha0.5to1Gamma1to2.txt"), cache)
         {
         }
 
-        public CostCalculator(ModelYearConfig config)
+        public NodeCostCalculator(ModelYearConfig config, bool cache = true)
         {
             _mConfig = config;
             // Backup energy controller.
@@ -65,6 +61,7 @@ namespace BusinessLogic.Cost
                 foreach (var node in _mNodes) node.Model.SetOffset((int) input.Offset*Utils.Utils.HoursInYear);
                 return _mNodes;
             });
+            _mBeCtrl.CacheEnabled = cache;
             // Backup capacity controller.
             _mBcCtrl = new SimulationController();
             _mBcCtrl.ExportStrategies.Add(new ExportStrategyInput
@@ -80,6 +77,7 @@ namespace BusinessLogic.Cost
                 foreach (var node in _mNodes) node.Model.SetOffset((int) input.Offset*Utils.Utils.HoursInYear);
                 return _mNodes;
             });
+            _mBcCtrl.CacheEnabled = cache;
             // Transmission capacity controller.
             _mTcCtrl = new SimulationController();
             _mTcCtrl.ExportStrategies.Add(new ExportStrategyInput
@@ -94,6 +92,7 @@ namespace BusinessLogic.Cost
                 foreach (var node in _mNodes) node.Model.SetOffset((int) input.Offset*Utils.Utils.HoursInYear);
                 return _mNodes;
             });
+            _mTcCtrl.CacheEnabled = cache;
 
             _mNodes = ConfigurationUtils.CreateNodes(TsSource.VE);
         }
@@ -101,13 +100,13 @@ namespace BusinessLogic.Cost
         /// <summary>
         /// Detailed system cost (what goes where included).
         /// </summary>
-        public Dictionary<string, double> DetailedSystemCosts(NodeDna nodeDna, bool includeTransmission = false)
+        public Dictionary<string, double> DetailedSystemCosts(NodeGenes nodeGenes, bool includeTransmission = false)
         {
-            // Calculate cost elements.
+            // Calculate    cost elements.
             var costs = new Dictionary<string, double>();
-            if (includeTransmission) costs.Add("Transmission", TransmissionCapacityCost(nodeDna));
-            foreach (var cost in BaseCosts(nodeDna)) costs.Add(cost.Key, cost.Value);
-            foreach (var cost in BackupCosts(nodeDna)) costs.Add(cost.Key, cost.Value);
+            if (includeTransmission) costs.Add("Transmission", TransmissionCapacityCost(nodeGenes));
+            foreach (var cost in BaseCosts(nodeGenes)) costs.Add(cost.Key, cost.Value);
+            foreach (var cost in BackupCosts(nodeGenes)) costs.Add(cost.Key, cost.Value);
             // Scale costs to get LCOE.
             var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum()*Utils.Utils.HoursInYear*AnnualizationFactor;
             foreach (var key in costs.Keys.ToArray()) costs[key] = costs[key] / scaling;
@@ -118,11 +117,11 @@ namespace BusinessLogic.Cost
         /// <summary>
         /// Overall system cost.
         /// </summary>
-        public double SystemCost(NodeDna nodeDna, bool includeTransmission = false)
+        public double SystemCost(NodeGenes nodeGenes, bool includeTransmission = false)
         {
             // Calculate cost elements.
-            var cost = BaseCosts(nodeDna).Values.Sum() + BackupCosts(nodeDna).Values.Sum();
-            if (includeTransmission) cost += TransmissionCapacityCost(nodeDna);
+            var cost = BaseCosts(nodeGenes).Values.Sum() + BackupCosts(nodeGenes).Values.Sum();
+            if (includeTransmission) cost += TransmissionCapacityCost(nodeGenes);
             // Scale costs to get LCOE.
             var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum() * Utils.Utils.HoursInYear * AnnualizationFactor;
 
@@ -134,12 +133,12 @@ namespace BusinessLogic.Cost
         #region Data evaluation
 
         // Cost of transmission network.
-        private double TransmissionCapacityCost(NodeDna nodeDna)
+        private double TransmissionCapacityCost(NodeGenes nodeGenes)
         {
             var config = _mConfig.Parameters["tc"];
 
             // Run simulation.
-            var data = _mTcCtrl.EvaluateTs(nodeDna);
+            var data = _mTcCtrl.EvaluateTs(nodeGenes);
             // Extract system values.
             var flowTs = data[0].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
             var cost = 0.0;
@@ -153,12 +152,12 @@ namespace BusinessLogic.Cost
         }
 
         // Cost of backup facilities.
-        private double BackupCapacity(NodeDna nodeDna)
+        private double BackupCapacity(NodeGenes nodeGenes)
         {
             var config = _mConfig.Parameters["bc"];
 
             // Run simulation.
-            var data = _mBcCtrl.EvaluateTs(nodeDna);
+            var data = _mBcCtrl.EvaluateTs(nodeGenes);
             // Extract system values.
             var curtailment = (DenseTimeSeries)data[0].TimeSeries.First(item => item.Name.Equals("Curtailment"));
             var balanceNeeds = curtailment.Values.Where(item => item < 0).Select(item => -item).OrderBy(item => item);
@@ -167,12 +166,12 @@ namespace BusinessLogic.Cost
         }
 
         // Cost of backup facilities.
-        private double BackupEnergy(NodeDna nodeDna)
+        private double BackupEnergy(NodeGenes nodeGenes)
         {
             var config = _mConfig.Parameters["be"];
 
             // Run simulation.
-            var data = _mBeCtrl.EvaluateTs(nodeDna);
+            var data = _mBeCtrl.EvaluateTs(nodeGenes);
             // Extract system values.
             var curtailment = (DenseTimeSeries)data[0].TimeSeries.First(item => item.Name.Equals("Curtailment"));
             var balanceNeeds = curtailment.Values.Where(item => item < 0).Select(item => -item).OrderBy(item => item).ToList();
@@ -185,14 +184,14 @@ namespace BusinessLogic.Cost
         #region Cost calculations
 
         // Cost of wind/solar facilities.
-        private Dictionary<string, double> BaseCosts(NodeDna nodeDna)
+        private Dictionary<string, double> BaseCosts(NodeGenes nodeGenes)
         {
             var windCapacity = 0.0;
             var solarCapacity = 0.0;
 
             foreach (var node in _mNodes.Select(item => item.Model))
             {
-                var gene = nodeDna[node.Name];
+                var gene = nodeGenes[node.Name];
                 // Calculate capacities.
                 windCapacity += gene.Gamma * gene.Alpha * node.AvgLoad / CountryInfo.GetWindCf(node.Name);
                 solarCapacity += gene.Gamma * (1 - gene.Alpha) * node.AvgLoad / CountryInfo.GetSolarCf(node.Name);
@@ -206,12 +205,12 @@ namespace BusinessLogic.Cost
         }
 
         // Cost of backup facilities and fuel.
-        private Dictionary<string, double> BackupCosts(NodeDna nodeDna)
+        private Dictionary<string, double> BackupCosts(NodeGenes nodeGenes)
         {
             return new Dictionary<string, double>
             {
-                {"Backup", BackupCapacityCost(BackupCapacity(nodeDna))},
-                {"Fuel", BackupEnergyCost(BackupEnergy(nodeDna))}
+                {"Backup", BackupCapacityCost(BackupCapacity(nodeGenes))},
+                {"Fuel", BackupEnergyCost(BackupEnergy(nodeGenes))}
             };
         }
 

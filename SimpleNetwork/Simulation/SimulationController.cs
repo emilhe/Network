@@ -65,7 +65,7 @@ namespace BusinessLogic.Simulation
 
         #region Execution
 
-        public List<SimulationOutput> EvaluateTs(NodeDna genes)
+        public List<SimulationOutput> EvaluateTs(NodeGenes genes)
         {
             return Execute(update =>
             {
@@ -198,10 +198,10 @@ namespace BusinessLogic.Simulation
 
         #endregion
 
-        private Dictionary<string, string> GetProperties(NodeDna genes)
+        private Dictionary<string, string> GetProperties(NodeGenes genes)
         {
             var result = DefaultProperties();
-            result.Add("NodeDna", JsonConvert.SerializeObject(genes));
+            result.Add("NodeGenes", JsonConvert.SerializeObject(genes));
             return result;
         }
 
@@ -310,7 +310,7 @@ namespace BusinessLogic.Simulation
             return simulation.Output;
         }
 
-        private SimulationOutput RunSimulation(IExportStrategy strategy, double years, NodeDna genes)
+        private SimulationOutput RunSimulation(IExportStrategy strategy, double years, NodeGenes genes)
         {
             var model = new NetworkModel(_mNodes, strategy, _mFail);
             var simulation = new SimulationCore(model);
@@ -322,7 +322,7 @@ namespace BusinessLogic.Simulation
                     node.Model.Alpha = genes[node.Name].Alpha;
                 }
             simulation.Simulate((int) (Utils.Utils.HoursInYear * years), LogLevel);
-            if (PrintDebugInfo) Console.WriteLine("NodeDna: " +
+            if (PrintDebugInfo) Console.WriteLine("NodeGenes: " +
                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
 
             return simulation.Output;

@@ -6,11 +6,17 @@ using System.Threading.Tasks;
 
 namespace Optimization
 {
-    public interface ICost
+    public interface ISolution
     {
 
         // Cost function.
         double Cost { get; }
+
+        // Mutate according to "species specifications".
+        void Mutate();
+
+        // Mutate according to "species specifications".
+        ISolution Clone();
 
     }
 }

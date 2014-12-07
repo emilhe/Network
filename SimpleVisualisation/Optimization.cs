@@ -10,40 +10,41 @@ namespace Main
         public static void Genetic()
         {
             // ReBirth population.
-            var n = 500;
-            var calc = new CostCalculator();
-            var strategy = new GeneticNodeOptimizationStrategy(calc);
+            var n = 100;
+            var strategy = new GeneticNodeOptimizationStrategy();
             var population = new IChromosome[n];
 
-            for (int i = 0; i < population.Length; i++) population[i] = strategy.Spawn();
+            for (int i = 0; i < population.Length; i++) population[i] = GenePool.Spawn();
 
             // The (so far) best optimum.
             //for (int i = 0; i < population.Length; i++)
             //{
-            //    var dna = new NodeDna(0.5 + 0.5 * i / population.Length, 1, 16);
-            //    population[i] = new NodeChromosome(dna, calc);
+            //    var Genes = new NodeGenes(0.5 + 0.5 * i / population.Length, 1, 16);
+            //    population[i] = new NodeChromosome(Genes, calc);
             //}
 
             // Find optimum.
-            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy);
+            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy)
+            {
+                ParallelCostCalculator = new ParallelCostCalculator(4)
+            };
             var optimum = optimizer.Optimize(population);
-            optimum.Dna.ToJsonFile(@"C:\proto\genetic.txt");
+            optimum.Genes.ToJsonFile(@"C:\proto\geneticWithConstraintK=2.txt");
         }
 
         public static void SimulatedAnnealing()
         {
-            var calc = new CostCalculator();
-            var strategy = new SaNodeOptimizationStrategy(calc);
-            var optimizer = new SaOptimizer<NodeChromosome>(strategy)
+            var optimizer = new SaOptimizer<NodeChromosome>
             {
                 // Performance CRITIAL parameters.
-                Alpha = 0.999,
-                Epsilon = 0.001,
-                Temperature = 100
+                Alpha = 0.9999,
+                Epsilon = 0.1,
+                Temperature = 5
             };
 
-            var optimum = optimizer.Optimize(strategy.Spawn());
-            optimum.Dna.ToJsonFile(@"C:\proto\simulatedAnnealing.txt");
+            var calc = new NodeCostCalculator();
+            var optimum = optimizer.Optimize(new NodeChromosome(new NodeGenes(GenePool.RndGene), calc));
+            optimum.Genes.ToJsonFile(@"C:\proto\simulatedAnnealing.txt");
         }
 
     }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Optimization
 {
-    public class SaOptimizer<T> where T : ICost
+    public class SaOptimizer<T> where T : ISolution
     {
 
         public double Temperature { get; set; }
@@ -15,12 +15,6 @@ namespace Optimization
 
         private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);        
 
-        private readonly ISaOptimizationStrategy<T> _mStrat;
-
-        public SaOptimizer(ISaOptimizationStrategy<T> optimizationStrategy)
-        {
-            _mStrat = optimizationStrategy;
-        }
         public T Optimize(T current)
         {
             var temperature = Temperature;
@@ -30,8 +24,9 @@ namespace Optimization
             while (temperature > Epsilon)
             {
                 iteration++;
-                
-                var next = _mStrat.Spawn();
+
+                var next = (T) current.Clone();
+                next.Mutate();
                 var delta = next.Cost - current.Cost;
 
                 // If the next is better, go for it.

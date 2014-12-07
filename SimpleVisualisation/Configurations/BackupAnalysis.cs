@@ -15,7 +15,7 @@ using Utils;
 
 namespace Main.Configurations
 {
-    class BackupAnalysis
+    public class BackupAnalysis
     {
 
         #region Backup energy

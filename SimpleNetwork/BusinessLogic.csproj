@@ -101,9 +101,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessClient.cs" />
+    <Compile Include="Cost\GenePool.cs" />
     <Compile Include="Cost\GeneticNodeOptimizationStrategy.cs" />
-    <Compile Include="Cost\NodeDna.cs" />
-    <Compile Include="Cost\SaNodeOptimizationStrategy.cs" />
+    <Compile Include="Cost\INodeCostCalculator.cs" />
+    <Compile Include="Cost\NodeGenes.cs" />
+    <Compile Include="Cost\ParallelCostCalculator.cs" />
+    <Compile Include="Cost\ThreadSafeNodeCostCalculator.cs" />
     <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
     <Compile Include="ExportStrategies\ExportHelper.cs" />
     <Compile Include="ExportStrategies\ConstrainedFlowExportStrategy.cs" />
@@ -118,7 +121,7 @@
     <Compile Include="ExportStrategies\DistributionStrategies\SkipFlowStrategy.cs" />
     <Compile Include="Interfaces\IFailureStrategy.cs" />
     <Compile Include="Interfaces\ITickListener.cs" />
-    <Compile Include="Cost\CostCalculator.cs" />
+    <Compile Include="Cost\NodeCostCalculator.cs" />
     <Compile Include="Cost\NodeChromosome.cs" />
     <Compile Include="Cost\NodeGene.cs" />
     <Compile Include="Simulation\ISimulation.cs" />

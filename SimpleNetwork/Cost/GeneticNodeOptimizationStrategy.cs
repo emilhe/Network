@@ -12,28 +12,16 @@ namespace BusinessLogic.Cost
     {
 
         private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);
-        private readonly CostCalculator _mCalc;
 
-        private const int StagnationLimit = 10;
-
-        private const double AlphaMin = 0;
-        private const double AlphaMax = 1;
-        private const double GammaMin = 0;
-        private const double GammaMax = 2;
-
-        private const int ImmortalCount = 1;
+        private const int StagnationLimit = 15;
+        private const int ImmortalCount = 5;
 
         private const double ChildFrac = 0.5;
         private const double EliteFrac = 0.1;
         private const double EliteMixFrac = 0.02;
 
         private double _mLastCost = double.MaxValue;
-        private int _mStagnationCount = 0;
-
-        public GeneticNodeOptimizationStrategy(CostCalculator calc)
-        {
-            _mCalc = calc;
-        }
+        private int _mStagnationCount;
 
         // Iterate until no progress has been made in [StagnationLimit] generations.
         public bool TerminationCondition(IChromosome[] chromosomes)
@@ -54,7 +42,7 @@ namespace BusinessLogic.Cost
         {
             var n = chromosomes.Length;
             // Kill bad candidates (only necessary if EliteMixFrac != 0).
-            for (var i = (int)Math.Ceiling(n * EliteFrac); i < n; i++) chromosomes[i] = Spawn();
+            for (var i = (int)Math.Ceiling(n * EliteFrac); i < n; i++) chromosomes[i] = GenePool.Spawn();
         }
 
         public void Mate(IChromosome[] chromosomes)
@@ -82,41 +70,6 @@ namespace BusinessLogic.Cost
         {
             for (int i = ImmortalCount; i < chromosomes.Length; i++) chromosomes[i].Mutate();
         }
-
-        public IChromosome Spawn()
-        {
-            return new NodeChromosome(new NodeDna(RndGene), _mCalc);
-        }
-
-        #region Gene modification (here to respect limits)
-
-        public static NodeGene RndGene()
-        {
-            return new NodeGene
-            {
-                Alpha = Rnd.NextDouble() * (AlphaMax - AlphaMin) + AlphaMin,
-                Gamma = Rnd.NextDouble() * (GammaMax - GammaMin) + GammaMin
-            };
-        }
-
-        public static void ReSeed(NodeGene gene)
-        {
-            gene.Alpha = Rnd.NextDouble()*(AlphaMax - AlphaMin) + AlphaMin;
-            gene.Gamma = Rnd.NextDouble()*(GammaMax - GammaMin) + GammaMin;
-        }
-
-        public static void Mutate(NodeGene gene)
-        {
-            gene.Alpha = gene.Alpha + 0.05*(0.5 - Rnd.NextDouble());
-            if (gene.Alpha < AlphaMin) gene.Alpha = AlphaMin;
-            if (gene.Alpha > AlphaMax) gene.Alpha = AlphaMax;
-
-            gene.Gamma = gene.Alpha + 0.05 * (0.5 - Rnd.NextDouble());
-            if (gene.Gamma < GammaMin) gene.Gamma = GammaMin;
-            if (gene.Gamma > GammaMax) gene.Gamma = GammaMax;
-        }
-
-        #endregion
 
     }
 }

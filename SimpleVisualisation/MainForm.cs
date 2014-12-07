@@ -36,11 +36,19 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
 
-            //var chromosome = FileUtils.FromJsonFile<NodeDna>(@"C:\proto\genetic.txt");
+            //var chromosome = FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\genetic.txt");
             //CostAnalysis.PlotShit(this, chromosome);
 
+            //var hest = 0;
+
+            // TODO: Make small util method to determine highest beta for a given 
+
+            Optimization.Genetic();
+
+            //M.BackupAnalysis.BackupPerCountry(this);
+
             //ModelYearAnalysis.ErrorAnalysis(this, true);
-            Optimization.SimulatedAnnealing();
+            //Optimization.SimulatedAnnealing();
             //CostAnalysis.VaryBeta(this, true, @"C:\proto\genetic1000.txt");
 
             //ModelYearAnalysis.BackupAnalysis(this);

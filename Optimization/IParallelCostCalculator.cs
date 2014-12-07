@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Optimization
 {
-    public interface ISaOptimizationStrategy<T> where T : ICost
+    public interface IParallelCostCalculator
     {
 
-        T Spawn();
+        void UpdateCost(IChromosome[] chromosomes);
 
     }
 }

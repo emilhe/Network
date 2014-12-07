@@ -9,11 +9,87 @@ using BusinessLogic.Simulation;
 using BusinessLogic.TimeSeries;
 using Controls.Charting;
 using SimpleImporter;
+using Utils;
 
 namespace Main.Figures
 {
     class BackupAnalysis
     {
+
+        public static void BackupPerCountry(MainForm main)
+        {
+            var alpha = 0.8;
+            var penetrations = new[] { 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.75, 2.0, 2.25, 2.5 };
+            var ctrl = new SimulationController
+            {
+                InvalidateCache = false,
+                ExportStrategies = new List<ExportStrategyInput>
+                {
+                    new ExportStrategyInput{ExportStrategy = ExportStrategy.None},
+                    //new ExportStrategyInput{ExportStrategy = ExportStrategy.Cooperative, DistributionStrategy = DistributionStrategy.SkipFlow}
+                },
+                Sources = new List<TsSourceInput>
+                {
+                    new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 32},
+                    //new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 8},
+                }
+            };
+
+            ctrl.NodeFuncs.Clear();
+            ctrl.NodeFuncs.Add("No storage", s =>
+            {
+                var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
+                //ConfigurationUtils.SetupMegaStorage(nodes);
+                return nodes;
+            });
+
+            var timeSeries = ProtoStore.LoadCountries().ToDictionary(item => item, item => new double[penetrations.Length]);
+            timeSeries.Add("All", new double[penetrations.Length]);
+            timeSeries.Add("Average", new double[penetrations.Length]);
+
+            for (int i = 0; i < penetrations.Length; i++)
+            {
+                var data = ctrl.EvaluateTs(penetrations[i], alpha)[0];
+                var countries = data.TimeSeries.
+                    Where(item => item.Name.Contains("Curtailment")).
+                    Where(item => item.Properties.ContainsKey("Country"))
+                    .ToDictionary(item => item.Properties["Country"],
+                        item => item.GetAllValues().Where(dbl => dbl < 0).Select(val => -val).Sum());
+                foreach (var pair in countries)
+                {
+                    timeSeries[pair.Key][i] = pair.Value / (CountryInfo.GetMeanLoad(pair.Key) * 8766 * 32);                    
+                }
+                timeSeries["Average"][i] = countries.Select(item => item.Value).Sum()/
+                                           (CountryInfo.GetMeanLoadSum()*8766*32);
+                timeSeries["All"][i] =
+                    data.TimeSeries.Single(item => item.Name.Equals("Curtailment"))
+                        .GetAllValues()
+                        .Where(dbl => dbl < 0)
+                        .Select(val => -val)
+                        .Sum() / (CountryInfo.GetMeanLoadSum() * 8766 * 32);
+                    
+            }
+
+            var view = main.DisplayPlot();
+            foreach (var result in timeSeries)
+            {
+                view.AddData(penetrations, result.Value, result.Key, false);
+            }
+
+            // Setup view.
+            view.MainChart.ChartAreas[0].AxisX.Title = "Penetration, γ";
+            view.MainChart.ChartAreas[0].AxisY.Title = "Backup energy divided by mean load";
+
+            // Result filtering.
+            var max = timeSeries.First(item => item.Value[0].Equals(timeSeries.Select(dbl => dbl.Value[0]).Max()));
+            foreach (var series in view.MainChart.Series)
+            {
+                if (!series.Name.Equals("All") && !series.Name.Equals("Average") && !series.Name.Equals(max.Key)) continue;
+                series.BorderWidth = 5;
+            }
+
+            ChartUtils.SaveChart(view.MainChart, 1500, 800, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\CountryBackups.png");
+        }
 
         public static void Full(MainForm main)
         {

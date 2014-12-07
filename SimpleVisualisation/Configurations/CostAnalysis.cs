@@ -38,7 +38,7 @@ namespace Main.Configurations
         {
             var delta = 1 / ((double)res);
             var sources = new List<string> { "Transmission", "Wind", "Solar", "Backup", "Fuel" };
-            var costCalc = new CostCalculator();
+            var costCalc = new NodeCostCalculator();
             Dictionary<string, double[]> data = sources.ToDictionary(name => name, name => new double[res+1]);
             var alphas = new double[res + 1];
 
@@ -48,7 +48,7 @@ namespace Main.Configurations
                 // Calculate costs.
                 alphas[j] = j*delta;
                 // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCosts(new NodeDna(1, alphas[j], beta), inclTrans))
+                foreach (var item in costCalc.DetailedSystemCosts(new NodeGenes(1, alphas[j], beta), inclTrans))
                 {
                     data[item.Key][j] = item.Value;
                 }
@@ -69,7 +69,7 @@ namespace Main.Configurations
             var betas = new double[]{0,1,2,4,8,16,32};
             var alphaRes = 20;
             var delta = 1 / ((double)alphaRes);
-            var costCalc = new CostCalculator();
+            var costCalc = new NodeCostCalculator();
             // Calculate costs and prepare data structures.
             var data = new Dictionary<string, double[]>();
             var alphas = new double[alphaRes];
@@ -80,7 +80,7 @@ namespace Main.Configurations
                 for (int i = 0; i < alphaRes; i++)
                 {         
                     alphas[i] = (i+1) * delta;
-                    points[i] = costCalc.SystemCost(new NodeDna(alphas[i], 1, betas[j]), inclTrans);
+                    points[i] = costCalc.SystemCost(new NodeGenes(alphas[i], 1, betas[j]), inclTrans);
                 }
                 data.Add(string.Format("Beta = {0}",betas[j]), points);
             }
@@ -94,7 +94,7 @@ namespace Main.Configurations
             // Add a single point (found using optimization).
             if (path != null)
             {
-                var dna = FileUtils.FromJsonFile<NodeDna>(path);
+                var dna = FileUtils.FromJsonFile<NodeGenes>(path);
                 view.AddData(new[] { dna.Alpha }, new[] { costCalc.SystemCost(dna, inclTrans) }, "Genetic optimum", true, true);
             }
             view.MainChart.ChartAreas[0].AxisY.Minimum = 40;
@@ -109,8 +109,8 @@ namespace Main.Configurations
             var res = 20;
             var delta = 1 / ((double)res);
             var sources = new List<string> { "Transmission", "Wind", "Solar", "Backup", "Fuel" };
-            var costCalc = new CostCalculator();
-            var chromosome = new NodeDna(0.8, 0.5);
+            var costCalc = new NodeCostCalculator();
+            var chromosome = new NodeGenes(0.8, 0.5);
 
             // Calculate costs and prepare data structures
             Dictionary<string, double[]> data = sources.ToDictionary(name => name, pair => new double[res + 1]);
@@ -132,14 +132,14 @@ namespace Main.Configurations
         }
 
         // Alpha fixed = 0.8
-        public static void PlotShit(MainForm main, NodeDna dna)
+        public static void PlotShit(MainForm main, NodeGenes genes)
         {
             var res = 2;
             var delta = 1 / ((double)res);
             var sources = new List<string> { "Transmission", "Wind", "Solar", "Backup", "Fuel" };
             var countries = ProtoStore.LoadCountries();
-            var costCalc = new CostCalculator();
-            //var chromosome = new NodeDna(countries, 0.8, 0.5);
+            var costCalc = new NodeCostCalculator();
+            //var chromosome = new NodeGenes(countries, 0.8, 0.5);
             // Calculate costs and prepare data structures
             Dictionary<string, double[]> data = sources.ToDictionary(name => name, pair => new double[res + 1]);
             var gammas = new double[res + 1];
@@ -150,7 +150,7 @@ namespace Main.Configurations
                 gammas[j] = 0.5 + j * delta;
                 //chromosome.Gamma = gammas[j];
                 // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCosts(dna, true)) data[item.Key][j] = item.Value;
+                foreach (var item in costCalc.DetailedSystemCosts(genes, true)) data[item.Key][j] = item.Value;
             }
 
             // Setup view.
@@ -166,13 +166,13 @@ namespace Main.Configurations
         ///// <param name="alpha"> system alpha </param>
         ///// <param name="beta"> scaling parameter </param>
         ///// <returns> scaled chromosome </returns>
-        //private static NodeDna BetaScaling(double gamma, double alpha, double beta)
+        //private static NodeGenes BetaScaling(double gamma, double alpha, double beta)
         //{
         //    // The result is NOT defined in alpha = 0.
         //    if (Math.Abs(alpha) < 1e-5) alpha = 1e-5;
 
         //    var contries = ProtoStore.LoadCountries();
-        //    var chromosome = new NodeDna(alpha, gamma);
+        //    var chromosome = new NodeGenes(alpha, gamma);
         //    var cfW = CountryInfo.GetWindCf();
         //    var cfS = CountryInfo.GetSolarCf();
         //    // Calculated load weighted beta-scaled cf factors.

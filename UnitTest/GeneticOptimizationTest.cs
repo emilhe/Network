@@ -134,6 +134,11 @@ namespace UnitTest
                     : new HelloWorldChromosome(validPartner.Genes.Substring(0, pivot) + Genes.Substring(pivot));
             }
 
+            public void UpdateCost(object costCalc)
+            {
+                CalculateCost();
+            }
+
             public void Mutate()
             {
                 var destiny = _mRnd.NextDouble();
@@ -141,7 +146,7 @@ namespace UnitTest
 
                 var mutation = Genes.ToCharArray();
                 var idx = _mRnd.Next(0, 12);
-                // Mutate.
+                // TryMutate.
                 if (destiny > 0.05)
                 {
                     mutation[idx] = Convert.ToChar(Math.Max(_mMin, (mutation[idx] + _mRnd.Next(-1, 1))%_mMax));
@@ -155,6 +160,10 @@ namespace UnitTest
                 Genes = new string(mutation);
             }
 
+            public ISolution Clone()
+            {
+                throw new NotImplementedException();
+            }
         }
 
     }
