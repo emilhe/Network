@@ -9,11 +9,18 @@ namespace Optimization
     public class SaOptimizer<T> where T : ISolution
     {
 
+        private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);        
+
         public double Temperature { get; set; }
         public double Epsilon { get; set; }
         public double Alpha { get; set; }
 
-        private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);        
+        private readonly ICostCalculator<T> _mCostCalculator;
+
+        public SaOptimizer(ICostCalculator<T> calc)
+        {
+            _mCostCalculator = calc;
+        }
 
         public T Optimize(T current)
         {
@@ -27,6 +34,7 @@ namespace Optimization
 
                 var next = (T) current.Clone();
                 next.Mutate();
+                _mCostCalculator.UpdateCost(new[] { next });
                 var delta = next.Cost - current.Cost;
 
                 // If the next is better, go for it.

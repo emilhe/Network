@@ -10,9 +10,9 @@ namespace Main
         public static void Genetic()
         {
             // ReBirth population.
-            var n = 100;
+            var n = 1000;
             var strategy = new GeneticNodeOptimizationStrategy();
-            var population = new IChromosome[n];
+            var population = new NodeChromosome[n];
 
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.Spawn();
 
@@ -24,17 +24,14 @@ namespace Main
             //}
 
             // Find optimum.
-            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy)
-            {
-                ParallelCostCalculator = new ParallelCostCalculator(4)
-            };
+            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator());
             var optimum = optimizer.Optimize(population);
             optimum.Genes.ToJsonFile(@"C:\proto\geneticWithConstraintK=2.txt");
         }
 
         public static void SimulatedAnnealing()
         {
-            var optimizer = new SaOptimizer<NodeChromosome>
+            var optimizer = new SaOptimizer<NodeChromosome>(new ParallelCostCalculator())
             {
                 // Performance CRITIAL parameters.
                 Alpha = 0.9999,
@@ -42,8 +39,7 @@ namespace Main
                 Temperature = 5
             };
 
-            var calc = new NodeCostCalculator();
-            var optimum = optimizer.Optimize(new NodeChromosome(new NodeGenes(GenePool.RndGene), calc));
+            var optimum = optimizer.Optimize(new NodeChromosome(new NodeGenes(GenePool.RndGene)));
             optimum.Genes.ToJsonFile(@"C:\proto\simulatedAnnealing.txt");
         }
 

@@ -7,17 +7,18 @@ namespace Optimization
     public class GeneticOptimizer<T> where T : IChromosome
     {
 
-        public IParallelCostCalculator ParallelCostCalculator { get; set; }
         public int Generation { get; private set; }
 
+        private readonly ICostCalculator<T> _mCostCalculator;
         private readonly IGeneticOptimizationStrategy<T> _mStrat;
 
-        public GeneticOptimizer(IGeneticOptimizationStrategy<T> optimizationStrategy)
+        public GeneticOptimizer(IGeneticOptimizationStrategy<T> optimizationStrategy, ICostCalculator<T> costCalculator)
         {
             _mStrat = optimizationStrategy;
+            _mCostCalculator = costCalculator;
         }
 
-        public T Optimize(IChromosome[] population)
+        public T Optimize(T[] population)
         {
             Generation = 0;
             population = OrderPopulation(population);
@@ -42,12 +43,13 @@ namespace Optimization
             return (T) population.First();
         }
 
-        private IChromosome[] OrderPopulation(IChromosome[] unorderedPopulation)
+        private T[] OrderPopulation(T[] unorderedPopulation)
         {
             var start = DateTime.Now;
-            if (ParallelCostCalculator != null) ParallelCostCalculator.UpdateCost(unorderedPopulation);
+            _mCostCalculator.UpdateCost(unorderedPopulation);
             var result = unorderedPopulation.OrderBy(item => item.Cost).ToArray();
             var end = start.Subtract(DateTime.Now).TotalSeconds;
+            Console.WriteLine("Evaluation took {0} seconds.", end);
 
             return result;
         }

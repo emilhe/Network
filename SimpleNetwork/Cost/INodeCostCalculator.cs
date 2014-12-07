@@ -7,7 +7,7 @@ using Optimization;
 
 namespace BusinessLogic.Cost
 {
-    interface INodeCostCalculator : ICostCalculator
+    interface INodeCostCalculator
     {
 
         Dictionary<string, double> DetailedSystemCosts(NodeGenes nodeGenes, bool includeTransmission = false);

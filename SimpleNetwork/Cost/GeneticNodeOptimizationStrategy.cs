@@ -24,7 +24,7 @@ namespace BusinessLogic.Cost
         private int _mStagnationCount;
 
         // Iterate until no progress has been made in [StagnationLimit] generations.
-        public bool TerminationCondition(IChromosome[] chromosomes)
+        public bool TerminationCondition(NodeChromosome[] chromosomes)
         {
             if (Math.Abs(chromosomes[0].Cost - _mLastCost) > 1e-5)
             {
@@ -38,17 +38,17 @@ namespace BusinessLogic.Cost
             return _mStagnationCount == StagnationLimit;
         }
 
-        public void Select(IChromosome[] chromosomes)
+        public void Select(NodeChromosome[] chromosomes)
         {
             var n = chromosomes.Length;
             // Kill bad candidates (only necessary if EliteMixFrac != 0).
             for (var i = (int)Math.Ceiling(n * EliteFrac); i < n; i++) chromosomes[i] = GenePool.Spawn();
         }
 
-        public void Mate(IChromosome[] chromosomes)
+        public void Mate(NodeChromosome[] chromosomes)
         {
             var n = chromosomes.Length;
-            var offspring = new IChromosome[(int)Math.Ceiling(n * ChildFrac)];
+            var offspring = new NodeChromosome[(int)Math.Ceiling(n * ChildFrac)];
 
             // Find children.
             for (int i = 0; i < (int)Math.Ceiling(n * ChildFrac); i++)
@@ -56,7 +56,7 @@ namespace BusinessLogic.Cost
                 //var father = chromosomes[0];
                 var father = chromosomes[(int)(Rnd.NextDouble() * (Math.Ceiling(n * (EliteFrac + EliteMixFrac)) - 1))];
                 var mother = chromosomes[(int)(Rnd.NextDouble() * (Math.Ceiling(n * (EliteFrac + EliteMixFrac)) - 1))];
-                offspring[i] = father.Mate(mother);
+                offspring[i] = (NodeChromosome) father.Mate(mother);
             }
 
             // Fill in children + randoms.
@@ -66,7 +66,7 @@ namespace BusinessLogic.Cost
             }
         }
 
-        public void Mutate(IChromosome[] chromosomes)
+        public void Mutate(NodeChromosome[] chromosomes)
         {
             for (int i = ImmortalCount; i < chromosomes.Length; i++) chromosomes[i].Mutate();
         }

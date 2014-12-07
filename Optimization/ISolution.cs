@@ -18,5 +18,7 @@ namespace Optimization
         // Mutate according to "species specifications".
         ISolution Clone();
 
+        // Update the cost. MUST be done externally.
+        void UpdateCost(object costCalc);
     }
 }

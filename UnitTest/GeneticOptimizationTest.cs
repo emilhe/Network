@@ -39,27 +39,27 @@ namespace UnitTest
             private const int EliteCount = 15;
             private const int EliteMixCount = 1;
 
-            public bool TerminationCondition(IChromosome[] chromosomes)
+            public bool TerminationCondition(HelloWorldChromosome[] chromosomes)
             {
                 return Math.Abs(chromosomes[0].Cost) < 1e-10;
             }
 
-            public void Select(IChromosome[] chromosomes)
+            public void Select(HelloWorldChromosome[] chromosomes)
             {
                 // Kill bad candidates.
                 for (int i = EliteCount; i < EliteCount + EliteMixCount; i++) chromosomes[i] = Spawn();
             }
 
-            public void Mate(IChromosome[] chromosomes)
+            public void Mate(HelloWorldChromosome[] chromosomes)
             {
-                var offspring = new IChromosome[chromosomes.Length*2];
+                var offspring = new HelloWorldChromosome[chromosomes.Length * 2];
 
                 // Find children.
                 for (int i = 0; i < ChildCount; i++)
                 {
                     var father = chromosomes[(int) (Rnd.NextDouble()*(EliteCount+EliteMixCount - 1))];
                     var mother = chromosomes[(int) (Rnd.NextDouble()*(EliteCount+EliteMixCount - 1))];
-                    offspring[i] = father.Mate(mother);
+                    offspring[i] = (HelloWorldChromosome) father.Mate(mother);
                 }
 
                 // Fill in children + randoms.
@@ -69,7 +69,7 @@ namespace UnitTest
                 }
             }
 
-            public void Mutate(IChromosome[] chromosomes)
+            public void Mutate(HelloWorldChromosome[] chromosomes)
             {
                 foreach (var chromosome in chromosomes) chromosome.Mutate();
             }

@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace Optimization
 {
-    public interface ICostCalculator
+    public interface ICostCalculator<T> where T : ISolution
     {
+
+        void UpdateCost(T[] solutions);
+
     }
 }

@@ -20,7 +20,7 @@ namespace UnitTest
          {
              //// ReBirth population.
              //var n = 50;
-             //var strategy = new GeneticNodeOptimizationStrategy(new CostCalculator());
+             //var strategy = new GeneticNodeOptimizationStrategy(new ParallelCostCalculator());
              //var population = new IChromosome[n];
              //for (int i = 0; i < population.Length; i++) population[i] = strategy.Spawn();
              //// Find optimum.

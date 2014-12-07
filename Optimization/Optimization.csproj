@@ -30,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -48,7 +49,6 @@
     <Compile Include="GeneticOptimizer.cs" />
     <Compile Include="IChromosome.cs" />
     <Compile Include="ICostCalculator.cs" />
-    <Compile Include="IParallelCostCalculator.cs" />
     <Compile Include="ISolution.cs" />
     <Compile Include="IGeneticOptimizationStrategy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

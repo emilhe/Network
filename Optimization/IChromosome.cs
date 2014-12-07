@@ -12,8 +12,6 @@ namespace Optimization
         // Mate another chromosome.
         IChromosome Mate(IChromosome partner);
 
-        void UpdateCost(object costCalc);
-
     }
 }
  
