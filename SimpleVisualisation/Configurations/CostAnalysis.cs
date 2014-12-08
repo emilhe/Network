@@ -64,10 +64,62 @@ namespace Main.Configurations
         #endregion
 
         // Gamma fixed = 1.0
-        public static void VaryBeta(MainForm main, bool inclTrans = false, string path = null)
+        public static void BetaWithGenetic(MainForm main, List<int> kValues, bool inclTrans = false)
         {
-            var betas = new double[]{0,1,2,4,8,16,32};
-            var alphaRes = 20;
+
+            var betas = kValues.Select(item => BusinessLogic.Utils.Utils.FindBeta(item, 1e-3)).ToArray();
+            var alphaStart = 0.5;
+            var alphaRes = 10;
+            var delta = (1-alphaStart)/alphaRes;
+            var costCalc = new NodeCostCalculator(true);
+            // Calculate costs and prepare data structures.
+            var data = new List<BetaWrapper>(betas.Length);
+            var alphas = new double[alphaRes+1];
+            // Main loop.
+            for (int j = 0; j < betas.Length; j++)
+            {
+                var points = new double[alphaRes+1];
+                for (int i = 0; i <= alphaRes; i++)
+                {
+                    alphas[i] = alphaStart + (i)*delta;
+                    points[i] = costCalc.SystemCost(new NodeGenes(alphas[i], 1, betas[j]), inclTrans);
+                }
+                data.Add(new BetaWrapper
+                {
+                    BetaX = alphas,
+                    BetaY = points,
+                    K = kValues[j]
+                });
+            }
+            // Add genetic points.
+            for (int i = 0; i < betas.Length; i++)
+            {
+                var genes =
+                    FileUtils.FromJsonFile<NodeGenes>(
+                        string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK={0}.txt",
+                            kValues[i]));
+                data[i].GeneticX = genes.Alpha;
+                data[i].GeneticY = costCalc.SystemCost(genes, inclTrans);
+            }
+            // Add special genetic point.
+            var unlimitedGenes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK=1mio.txt");
+            data.Add(new BetaWrapper { K = -1, GeneticX = unlimitedGenes.Alpha, GeneticY = costCalc.SystemCost(unlimitedGenes, inclTrans) });
+
+            // Setup view.
+            var view = main.DisplayPlot();
+            view.AddData(data);
+            view.MainChart.ChartAreas[0].AxisY.Minimum = 50;
+            view.MainChart.ChartAreas[0].AxisY.Maximum = 100;
+            view.MainChart.ChartAreas[0].AxisX.Title = "Alpha";
+            ChartUtils.SaveChart(view.MainChart, 1300, 800,
+                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\VaryBetaWithGenetic.png");
+        }
+
+        // Gamma fixed = 1.0
+        public static void VaryBeta(MainForm main, bool inclTrans = false, List<string> paths = null)
+        {
+            var betas = new[]{0,1.273,1.920,2.359,2.693};
+            var alphaRes = 10;
             var delta = 1 / ((double)alphaRes);
             var costCalc = new NodeCostCalculator();
             // Calculate costs and prepare data structures.
@@ -82,7 +134,7 @@ namespace Main.Configurations
                     alphas[i] = (i+1) * delta;
                     points[i] = costCalc.SystemCost(new NodeGenes(alphas[i], 1, betas[j]), inclTrans);
                 }
-                data.Add(string.Format("Beta = {0}",betas[j]), points);
+                data.Add(string.Format("Beta = {0} (K={1})",betas[j], j+1), points);
             }
 
             // Setup view.
@@ -92,15 +144,20 @@ namespace Main.Configurations
                 view.AddData(alphas, pair.Value, pair.Key, false);                
             }
             // Add a single point (found using optimization).
-            if (path != null)
+            if (paths != null)
             {
-                var dna = FileUtils.FromJsonFile<NodeGenes>(path);
-                view.AddData(new[] { dna.Alpha }, new[] { costCalc.SystemCost(dna, inclTrans) }, "Genetic optimum", true, true);
+                var idx = 2;
+                foreach (var path in paths)
+                {
+                    var dna = FileUtils.FromJsonFile<NodeGenes>(path);
+                    view.AddData(new[] { dna.Alpha }, new[] { costCalc.SystemCost(dna, inclTrans) }, string.Format("Genetic optimum K={0}",idx), true, true);
+                    idx++;
+                }
             }
             view.MainChart.ChartAreas[0].AxisY.Minimum = 40;
             view.MainChart.ChartAreas[0].AxisX.Title = "Alpha";
             ChartUtils.SaveChart(view.MainChart, 1000, 800,
-    @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\VaryBetaWithTrans.png");
+    @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\VaryBetaWithGenetic.png");
         }
 
         // Alpha fixed = 0.8
@@ -201,4 +258,5 @@ namespace Main.Configurations
         //}
 
     }
+
 }

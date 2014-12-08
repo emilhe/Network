@@ -23,7 +23,7 @@ namespace BusinessLogic.Cost
             }
             get
             {
-                Console.WriteLine("This should never happen [ALPHA accessed]");
+                //Console.WriteLine("This should never happen [ALPHA accessed]");
                 // This is a BIT hacky..
                 var wind = 0.0;
                 var solar = 0.0;
@@ -48,7 +48,7 @@ namespace BusinessLogic.Cost
             }
             get
             {
-                Console.WriteLine("This should never happen [GAMMA accessed]");
+                //Console.WriteLine("This should never happen [GAMMA accessed]");
                 // This is a BIT hacky..
                 var wind = 0.0;
                 var solar = 0.0;
@@ -64,16 +64,17 @@ namespace BusinessLogic.Cost
 
         public NodeGenes()
         {
-            _mGenes = ProtoStore.LoadCountries().ToDictionary(item => item, item => new NodeGene());
+            _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene());
         }
 
         public NodeGenes(double alpha, double gamma, double beta)
         {
-            _mGenes = ProtoStore.LoadCountries().ToDictionary(item => item, item => new NodeGene { Alpha = alpha, Gamma = gamma });
+            _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene { Alpha = alpha, Gamma = gamma });
 
             // The result is NOT defined in alpha = 0.
             if (Math.Abs(alpha) < 1e-5) alpha = 1e-5;
 
+            var lEU = CountryInfo.GetMeanLoadSum();
             var cfW = CountryInfo.GetWindCf();
             var cfS = CountryInfo.GetSolarCf();
             // Calculated load weighted beta-scaled cf factors.
@@ -88,9 +89,9 @@ namespace BusinessLogic.Cost
             foreach (var i in _mGenes.Keys)
             {
                 // EMHER: Semi certain about the gamma equaltion. 
-                _mGenes[i].Alpha *= 1 / (alpha + (1 - alpha) * Math.Pow(cfS[i] / cfW[i], beta) * wSum / sSum);
+                _mGenes[i].Alpha = 1 / (1 + (1 / alpha - 1) * Math.Pow(cfS[i] / cfW[i], beta) * wSum / sSum);
                 // EMHER: Quite certain about the gamma equaltion. 
-                _mGenes[i].Gamma *= CountryInfo.GetMeanLoadSum() * alpha / wSum * Math.Pow(cfW[i], beta) / _mGenes[i].Alpha;
+                _mGenes[i].Gamma = gamma*lEU*(alpha*Math.Pow(cfW[i], beta)/wSum + (1 - alpha)*Math.Pow(cfS[i], beta)/sSum);
             }
             // Make sanity check.
             var dAlpha = alpha - Alpha;
@@ -101,12 +102,12 @@ namespace BusinessLogic.Cost
 
         public NodeGenes(double alpha, double gamma)
         {
-            _mGenes = ProtoStore.LoadCountries().ToDictionary(item => item, item => new NodeGene{Alpha = alpha, Gamma = gamma});
+            _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene{Alpha = alpha, Gamma = gamma});
         }
 
         public NodeGenes(Func<NodeGene> seed)
         {
-            _mGenes = ProtoStore.LoadCountries().ToDictionary(item => item, item => seed());
+            _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => seed());
         }
 
         public NodeGenes(Dictionary<string, NodeGene> genes)
@@ -121,7 +122,7 @@ namespace BusinessLogic.Cost
             
             foreach (var gene in _mGenes)
             {
-                genes.Add(gene.Key, new NodeGene
+                genes.Add(gene.Key, new NodeGene    
                 {
                     Alpha = gene.Value.Alpha,
                     Gamma = gene.Value.Gamma

@@ -39,11 +39,19 @@ namespace Main
             //var chromosome = FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\genetic.txt");
             //CostAnalysis.PlotShit(this, chromosome);
 
+            //var test = new NodeGenes(0.5, 1, 0);
+            //test = new NodeGenes(0.5, 1, 1);
+            //test = new NodeGenes(0.5, 1, 2);
+            //test = new NodeGenes(0.5, 1, 3);
+            //test = new NodeGenes(0.5, 1, 4);
+
+            CostAnalysis.BetaWithGenetic(this, new List<int>{1, 2, 5});
+
             //var hest = 0;
 
             // TODO: Make small util method to determine highest beta for a given 
 
-            Optimization.Genetic();
+            //Optimization.Genetic();
 
             //M.BackupAnalysis.BackupPerCountry(this);
 

@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using BusinessLogic.Cost;
 using BusinessLogic.Nodes;
 
 namespace BusinessLogic.Utils
@@ -19,6 +21,20 @@ namespace BusinessLogic.Utils
                 edges.Connect(i+1, i);
             }
             return edges;
+        }
+
+        public static double FindBeta(double K, double delta)
+        {
+            var beta = 0.0;
+            while (true)
+            {
+                var genes = new NodeGenes(0.8, 1, beta);
+                var gammas = genes.Select(item => item.Value.Gamma).ToArray();
+                if (gammas.Min() < 1 / K) break;
+                if (gammas.Max() > K) break;
+                beta += delta;
+            }
+            return beta - delta;
         }
 
     }

@@ -117,8 +117,8 @@ namespace Utils
             {"Bulgaria", "BGR"},
             {"Belgium", "BEL"},
             {"Austria", "AUT"},
-            {"Cyprus", "CYP"},
-            {"Malta", "MLT"},
+            //{"Cyprus", "CYP"},
+            //{"Malta", "MLT"},
         };
 
         #endregion
@@ -204,6 +204,11 @@ namespace Utils
             FileUtils.DictionaryFromFile<string, double>(@"C:\proto\MeanLoad.txt");
 
         #endregion
+
+        public static List<string> GetCountries()
+        {
+            return CountryCodeMapName.Keys.ToList();
+        } 
 
         /// <summary>
         /// Get the country name from the three or two letter abbreviation.

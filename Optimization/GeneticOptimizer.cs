@@ -22,7 +22,7 @@ namespace Optimization
         {
             Generation = 0;
             population = OrderPopulation(population);
-            var best = population.First().Cost;
+            var best = population[0].Cost;
             Console.WriteLine("Generation {0}, Cost = {1}", Generation, best);
 
             while (!_mStrat.TerminationCondition(population))
@@ -40,7 +40,7 @@ namespace Optimization
                 Console.WriteLine("Generation {0}, Cost = {1}", Generation, best);
             }
 
-            return (T) population.First();
+            return population[0];
         }
 
         private T[] OrderPopulation(T[] unorderedPopulation)
@@ -48,7 +48,7 @@ namespace Optimization
             var start = DateTime.Now;
             _mCostCalculator.UpdateCost(unorderedPopulation);
             var result = unorderedPopulation.OrderBy(item => item.Cost).ToArray();
-            var end = start.Subtract(DateTime.Now).TotalSeconds;
+            var end = DateTime.Now.Subtract(start).TotalSeconds;
             Console.WriteLine("Evaluation took {0} seconds.", end);
 
             return result;

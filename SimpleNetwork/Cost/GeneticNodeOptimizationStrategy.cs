@@ -13,7 +13,7 @@ namespace BusinessLogic.Cost
 
         private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);
 
-        private const int StagnationLimit = 15;
+        private const int StagnationLimit = 10;
         private const int ImmortalCount = 5;
 
         private const double ChildFrac = 0.5;
