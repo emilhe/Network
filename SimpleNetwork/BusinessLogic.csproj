@@ -107,7 +107,6 @@
     <Compile Include="Cost\NodeGenes.cs" />
     <Compile Include="Cost\ParallelCostCalculator.cs" />
     <Compile Include="Cost\SerialCostCalculator.cs" />
-    <Compile Include="Cost\ThreadSafeNodeCostCalculator.cs" />
     <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
     <Compile Include="ExportStrategies\ExportHelper.cs" />
     <Compile Include="ExportStrategies\ConstrainedFlowExportStrategy.cs" />
