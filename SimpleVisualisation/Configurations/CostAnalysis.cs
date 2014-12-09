@@ -88,7 +88,8 @@ namespace Main.Configurations
                 {
                     BetaX = alphas,
                     BetaY = points,
-                    K = kValues[j]
+                    K = kValues[j],
+                    Beta = betas[j]
                 });
             }
             // Add genetic points.

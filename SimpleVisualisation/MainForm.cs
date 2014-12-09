@@ -45,13 +45,13 @@ namespace Main
             //test = new NodeGenes(0.5, 1, 3);
             //test = new NodeGenes(0.5, 1, 4);
 
-            CostAnalysis.BetaWithGenetic(this, new List<int>{1, 2, 5});
+            //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 3, 4, 5 });
 
             //var hest = 0;
 
-            // TODO: Make small util method to determine highest beta for a given 
+            // TODO: Make small util method to determine highest beta for a  given 
 
-            //Optimization.Genetic();
+            Optimization.Genetic();
 
             //M.BackupAnalysis.BackupPerCountry(this);
 

@@ -6,25 +6,19 @@ namespace BusinessLogic.Cost
     public class ThreadSafeNodeCostCalculator : INodeCostCalculator
     {
 
-        public bool Busy { get { return _mBusy; } }
+        public bool Busy { get { return _mBusy; } set { _mBusy = value; } }
 
         private volatile bool _mBusy;
-        private readonly NodeCostCalculator _mCore = new NodeCostCalculator();
+        private readonly NodeCostCalculator _mCore = new NodeCostCalculator(false);
 
         public Dictionary<string, double> DetailedSystemCosts(NodeGenes nodeGenes, bool includeTransmission = false)
         {
-            _mBusy = true;
-            var result =  _mCore.DetailedSystemCosts(nodeGenes, includeTransmission);
-            _mBusy = false;
-            return result;
+            return _mCore.DetailedSystemCosts(nodeGenes, includeTransmission);
         }
 
         public double SystemCost(NodeGenes nodeGenes, bool includeTransmission = false)
         {
-            _mBusy = true;
-            var result = _mCore.SystemCost(nodeGenes, includeTransmission);
-            _mBusy = false;
-            return result;
+            return _mCore.SystemCost(nodeGenes, includeTransmission);
         }
 
     }

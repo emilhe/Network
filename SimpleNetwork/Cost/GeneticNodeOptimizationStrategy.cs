@@ -17,8 +17,8 @@ namespace BusinessLogic.Cost
         private const int ImmortalCount = 5;
 
         private const double ChildFrac = 0.5;
-        private const double EliteFrac = 0.1;
-        private const double EliteMixFrac = 0.02;
+        private const double EliteFrac = 0.15;
+        private const double EliteMixFrac = 0.05;
 
         private double _mLastCost = double.MaxValue;
         private int _mStagnationCount;
@@ -26,7 +26,7 @@ namespace BusinessLogic.Cost
         // Iterate until no progress has been made in [StagnationLimit] generations.
         public bool TerminationCondition(NodeChromosome[] chromosomes)
         {
-            if (Math.Abs(chromosomes[0].Cost - _mLastCost) > 1e-5)
+            if (Math.Abs(chromosomes[0].Cost - _mLastCost) > 1e-3)
             {
                 _mLastCost = chromosomes[0].Cost;
                 _mStagnationCount = 0;
@@ -54,15 +54,18 @@ namespace BusinessLogic.Cost
             for (int i = 0; i < (int)Math.Ceiling(n * ChildFrac); i++)
             {
                 //var father = chromosomes[0];
-                var father = chromosomes[(int)(Rnd.NextDouble() * (Math.Ceiling(n * (EliteFrac + EliteMixFrac)) - 1))];
-                var mother = chromosomes[(int)(Rnd.NextDouble() * (Math.Ceiling(n * (EliteFrac + EliteMixFrac)) - 1))];
+                var fIdx = Math.Ceiling(Rnd.NextDouble()*(Math.Floor(n*(EliteFrac + EliteMixFrac))) - 1);
+                var father = chromosomes[(int) fIdx];
+                var mÌdx = Math.Ceiling(Rnd.NextDouble()*(Math.Floor(n*(EliteFrac + EliteMixFrac))) - 1);
+                var mother = chromosomes[(int)mÌdx];
                 offspring[i] = (NodeChromosome) father.Mate(mother);
             }
 
             // Fill in children + randoms.
             for (int i = (int)Math.Ceiling(n * EliteFrac); i < (int)Math.Ceiling(n * (ChildFrac+EliteFrac)); i++)
             {
-                chromosomes[i] = offspring[i - (int)Math.Ceiling(n * EliteFrac)]; //(i < offspring.Length) ? offspring[i] : Spawn();
+                var offspringIdx = i - (int) Math.Ceiling(n*EliteFrac);
+                chromosomes[i] = offspring[offspringIdx]; //(i < offspring.Length) ? offspring[i] : Spawn();
             }
         }
 

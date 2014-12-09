@@ -163,6 +163,7 @@ namespace Controls.Charting
 
     public class BetaWrapper
     {
+        public double Beta { get; set; }
         public int K { get; set; }
         public double[] BetaX { get; set; }
         public double[] BetaY { get; set; }
@@ -171,7 +172,7 @@ namespace Controls.Charting
 
         public string BetaLabel
         {
-            get { return string.Format("K = {0}, Beta", (K == -1) ? @"∞" : K.ToString()); }
+            get { return string.Format("β = {0}, Beta", (K == -1) ? @"∞" : Beta.ToString("0.00")); }
         }
 
         public string GeneticLabel
