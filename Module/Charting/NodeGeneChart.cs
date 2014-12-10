@@ -20,7 +20,7 @@ namespace Controls.Charting
             ChartUtils.EnableZooming(chart1);
         }
 
-        public void SetData(NodeGenes[] geneCollection)
+        public void SetData(NodeGenes[] geneCollection, bool showDash = true)
         { 
             chart1.Series.Clear();
             
@@ -60,6 +60,15 @@ namespace Controls.Charting
             chart1.ChartAreas[0].AxisX.LabelStyle.Angle = 0; 
             
             RenderAxis();
+
+            if (!showDash) return;
+
+            // Add norm line.
+            var norm = new Series { Color = Color.Black, ChartType = SeriesChartType.Line, BorderDashStyle = ChartDashStyle.Dash, BorderWidth = 3 };
+            var xValues = chart1.Series.SelectMany(item => item.Points).Select(item => item.XValue);
+            norm.Points.AddXY(0, 1);
+            norm.Points.AddXY(geneCollection[0].Count, 1);
+            chart1.Series.Add(norm);
         }
 
         private void RenderAxis()
