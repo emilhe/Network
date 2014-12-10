@@ -229,6 +229,14 @@ namespace Utils
         }
 
         /// <summary>
+        /// Get three letter abbreviation. Don't ever use the two letter - it's confusing.
+        /// </summary>
+        public static string GetShortAbbrev(string name)
+        {
+            return CountryCodeMap2.Where(item => item.Value.Equals(name)).Select(item => item.Key).First();
+        }
+
+        /// <summary>
         /// Get the wind capacity factor for a country.
         /// </summary>
         public static double GetWindCf(string name)

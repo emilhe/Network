@@ -93,7 +93,10 @@ namespace Controls.Charting
                     };
                     for (int i = 0; i < value.BetaX.Length; i++)
                     {
-                        spline.Points.AddXY(value.BetaX[i], value.BetaY[i]);
+                        var point = new DataPoint();
+                        point.SetValueXY(value.BetaX[i], value.BetaY[i]);
+                        point.ToolTip = string.Format("{0}, {1}", value.BetaX[i], value.BetaY[i]);
+                        spline.Points.Add(point);
                     }
                     chart.Series.Add(spline);   
                 }
@@ -169,15 +172,16 @@ namespace Controls.Charting
         public double[] BetaY { get; set; }
         public double GeneticX { get; set; }
         public double GeneticY { get; set; }
+        public string Note { get; set; }
 
         public string BetaLabel
         {
-            get { return string.Format("β = {0}, Beta", (K == -1) ? @"∞" : Beta.ToString("0.00")); }
+            get { return string.Format("β = {0}, Beta {1}", (K == -1) ? @"∞" : Beta.ToString("0.00"), Note); }
         }
 
         public string GeneticLabel
         {
-            get { return string.Format("K = {0}, Genetic", (K == -1) ? @"∞" : K.ToString()); }
+            get { return string.Format("K = {0}, Genetic {1}", (K == -1) ? @"∞" : K.ToString(), Note); }
         }
     }
 

@@ -91,6 +91,12 @@
     <Compile Include="Charting\TimeSeriesView.Designer.cs">
       <DependentUpon>TimeSeriesView.cs</DependentUpon>
     </Compile>
+    <Compile Include="Charting\NodeGeneChart.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Charting\NodeGeneChart.Designer.cs">
+      <DependentUpon>NodeGeneChart.cs</DependentUpon>
+    </Compile>
     <Compile Include="ModelSetupControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -112,6 +118,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Optimization\Optimization.csproj">
+      <Project>{FFD7147F-25BB-424F-8FF5-A86648812925}</Project>
+      <Name>Optimization</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SimpleImporter\ProtoLogic.csproj">
       <Project>{DD96E036-C8E4-42D4-AD91-12F9F21CA795}</Project>
       <Name>ProtoLogic</Name>
@@ -143,6 +153,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Charting\TimeSeriesView.resx">
       <DependentUpon>TimeSeriesView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Charting\NodeGeneChart.resx">
+      <DependentUpon>NodeGeneChart.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainSetupControl.resx">
       <DependentUpon>MainSetupControl.cs</DependentUpon>

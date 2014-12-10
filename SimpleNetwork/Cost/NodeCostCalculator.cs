@@ -16,15 +16,15 @@ namespace BusinessLogic.Cost
 
         public List<string> Names { get { return _mNodes.Select(item => item.Name).ToList(); } }
         
-        private readonly ModelYearConfig _mConfig;
+        private ModelYearConfig _mConfig;
 
         private const double Rate = 4;
         private static double _mAnnualizationFactor;
 
-        private readonly List<CountryNode> _mNodes;
-        private readonly SimulationController _mBeCtrl;
-        private readonly SimulationController _mBcCtrl;
-        private readonly SimulationController _mTcCtrl; 
+        private List<CountryNode> _mNodes;
+        private SimulationController _mBeCtrl;
+        private SimulationController _mBcCtrl;
+        private SimulationController _mTcCtrl; 
 
         private static double AnnualizationFactor
         {
@@ -38,12 +38,34 @@ namespace BusinessLogic.Cost
         #region Public interface
 
         // Per default the alpha \in [0.5-1.0] and gamma \in [1:2] profile is loaded.
-        public NodeCostCalculator(bool cache = true)
-            : this(FileUtils.FromJsonFile<ModelYearConfig>(@"C:\proto\noStorageAlpha0.5to1Gamma1to2.txt"), cache)
+        public NodeCostCalculator(bool cache = true, bool full = false)
         {
+            if (full)
+            {
+                var fullConfig = new ModelYearConfig()
+                {
+                    Parameters = new Dictionary<string, KeyValuePair<int, double>>
+                    {
+                        {"be", new KeyValuePair<int, double>(0, 1)},
+                        {"bc", new KeyValuePair<int, double>(0, 1)},
+                        {"tc", new KeyValuePair<int, double>(0, 1)}
+
+                    }
+                };
+                Initialize(fullConfig, 32, cache);
+                return;
+
+            }
+
+            Initialize(FileUtils.FromJsonFile<ModelYearConfig>(@"C:\proto\noStorageAlpha0.5to1Gamma1to2.txt"), 1, cache);
         }
 
         public NodeCostCalculator(ModelYearConfig config, bool cache = true)
+        {
+            Initialize(config, 1, cache);
+        }
+
+        private void Initialize(ModelYearConfig config, int length, bool cache = true)
         {
             _mConfig = config;
             // Backup energy controller.
@@ -54,11 +76,11 @@ namespace BusinessLogic.Cost
                 DistributionStrategy = DistributionStrategy.SkipFlow
             });
             _mBeCtrl.LogLevel = LogLevelEnum.System;
-            _mBeCtrl.Sources.Add(new TsSourceInput {Length = 1, Offset = _mConfig.Parameters["be"].Key});
+            _mBeCtrl.Sources.Add(new TsSourceInput { Length = length, Offset = _mConfig.Parameters["be"].Key });
             _mBeCtrl.NodeFuncs.Clear();
             _mBeCtrl.NodeFuncs.Add("No storage", input =>
             {
-                foreach (var node in _mNodes) node.Model.SetOffset((int) input.Offset*Utils.Utils.HoursInYear);
+                foreach (var node in _mNodes) node.Model.SetOffset((int)input.Offset * Utils.Utils.HoursInYear);
                 return _mNodes;
             });
             _mBeCtrl.CacheEnabled = cache;
@@ -70,11 +92,11 @@ namespace BusinessLogic.Cost
                 DistributionStrategy = DistributionStrategy.SkipFlow
             });
             _mBcCtrl.LogLevel = LogLevelEnum.System;
-            _mBcCtrl.Sources.Add(new TsSourceInput {Length = 1, Offset = _mConfig.Parameters["bc"].Key});
+            _mBcCtrl.Sources.Add(new TsSourceInput { Length = length, Offset = _mConfig.Parameters["bc"].Key });
             _mBcCtrl.NodeFuncs.Clear();
             _mBcCtrl.NodeFuncs.Add("No storage", input =>
             {
-                foreach (var node in _mNodes) node.Model.SetOffset((int) input.Offset*Utils.Utils.HoursInYear);
+                foreach (var node in _mNodes) node.Model.SetOffset((int)input.Offset * Utils.Utils.HoursInYear);
                 return _mNodes;
             });
             _mBcCtrl.CacheEnabled = cache;
@@ -85,11 +107,11 @@ namespace BusinessLogic.Cost
                 ExportStrategy = ExportStrategy.ConstrainedFlow
             });
             _mTcCtrl.LogLevel = LogLevelEnum.Flow;
-            _mTcCtrl.Sources.Add(new TsSourceInput {Length = 1, Offset = _mConfig.Parameters["tc"].Key});
+            _mTcCtrl.Sources.Add(new TsSourceInput { Length = length, Offset = _mConfig.Parameters["tc"].Key });
             _mTcCtrl.NodeFuncs.Clear();
             _mTcCtrl.NodeFuncs.Add("No storage", input =>
             {
-                foreach (var node in _mNodes) node.Model.SetOffset((int) input.Offset*Utils.Utils.HoursInYear);
+                foreach (var node in _mNodes) node.Model.SetOffset((int)input.Offset * Utils.Utils.HoursInYear);
                 return _mNodes;
             });
             _mTcCtrl.CacheEnabled = cache;

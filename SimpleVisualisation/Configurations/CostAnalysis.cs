@@ -63,15 +63,80 @@ namespace Main.Configurations
 
         #endregion
 
+        public static void CompareBeta(MainForm main, List<int> betaValues)
+        {
+
+            var alphaStart = 0.9;
+            var alphaRes = 4;
+            var delta = (1 - alphaStart) / alphaRes;
+            var costCalc = new NodeCostCalculator(true, true);
+            // Calculate costs and prepare data structures.
+            var data = new List<BetaWrapper>(betaValues.Count);
+            var alphas = new double[alphaRes + 1];
+            // Main loop.
+            for (int j = 0; j < betaValues.Count; j++)
+            {
+                var points = new double[alphaRes + 1];
+                // With trans.
+                for (int i = 0; i <= alphaRes; i++)
+                {
+                    alphas[i] = alphaStart + (i) * delta;
+                    points[i] = costCalc.SystemCost(new NodeGenes(alphas[i], 1, betaValues[j]), true);
+                }
+                data.Add(new BetaWrapper
+                {
+                    BetaX = alphas,
+                    BetaY = points,
+                    Beta = betaValues[j]
+                });
+                var points2 = new double[alphaRes + 1];
+                // Without trans.
+                for (int i = 0; i <= alphaRes; i++)
+                {
+                    points2[i] = costCalc.SystemCost(new NodeGenes(alphas[i], 1, betaValues[j]));
+                }
+                data.Add(new BetaWrapper
+                {
+                    BetaX = alphas,
+                    BetaY = points2,
+                    Beta = betaValues[j],
+                    Note = "NoTrans"
+                });
+            }
+            //// Add genetic points.
+            //for (int i = 0; i < betas.Length; i++)
+            //{
+            //    var genes =
+            //        FileUtils.FromJsonFile<NodeGenes>(
+            //            string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK={0}.txt",
+            //                kValues[i]));
+            //    data[i].GeneticX = genes.Alpha;
+            //    data[i].GeneticY = costCalc.SystemCost(genes, inclTrans);
+            //}
+            //// Add special genetic point.
+            //var unlimitedGenes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK=1mio.txt");
+            //data.Add(new BetaWrapper { K = -1, GeneticX = unlimitedGenes.Alpha, GeneticY = costCalc.SystemCost(unlimitedGenes, inclTrans) });
+
+            // Setup view.
+            var view = main.DisplayPlot();
+            view.AddData(data);
+            view.MainChart.ChartAreas[0].AxisY.Minimum = 50;
+            view.MainChart.ChartAreas[0].AxisY.Maximum = 100;
+            view.MainChart.ChartAreas[0].AxisX.Title = "Alpha";
+            ChartUtils.SaveChart(view.MainChart, 1300, 800,
+                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\VaryBeta32.png");
+        }
+
+
         // Gamma fixed = 1.0
         public static void BetaWithGenetic(MainForm main, List<int> kValues, bool inclTrans = false)
         {
 
             var betas = kValues.Select(item => BusinessLogic.Utils.Utils.FindBeta(item, 1e-3)).ToArray();
             var alphaStart = 0.5;
-            var alphaRes = 10;
+            var alphaRes = 20;
             var delta = (1-alphaStart)/alphaRes;
-            var costCalc = new NodeCostCalculator(true);
+            var costCalc = new NodeCostCalculator();
             // Calculate costs and prepare data structures.
             var data = new List<BetaWrapper>(betas.Length);
             var alphas = new double[alphaRes+1];
@@ -92,19 +157,19 @@ namespace Main.Configurations
                     Beta = betas[j]
                 });
             }
-            // Add genetic points.
-            for (int i = 0; i < betas.Length; i++)
-            {
-                var genes =
-                    FileUtils.FromJsonFile<NodeGenes>(
-                        string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK={0}.txt",
-                            kValues[i]));
-                data[i].GeneticX = genes.Alpha;
-                data[i].GeneticY = costCalc.SystemCost(genes, inclTrans);
-            }
-            // Add special genetic point.
-            var unlimitedGenes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK=1mio.txt");
-            data.Add(new BetaWrapper { K = -1, GeneticX = unlimitedGenes.Alpha, GeneticY = costCalc.SystemCost(unlimitedGenes, inclTrans) });
+            //// Add genetic points.
+            //for (int i = 0; i < betas.Length; i++)
+            //{
+            //    var genes =
+            //        FileUtils.FromJsonFile<NodeGenes>(
+            //            string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK={0}.txt",
+            //                kValues[i]));
+            //    data[i].GeneticX = genes.Alpha;
+            //    data[i].GeneticY = costCalc.SystemCost(genes, inclTrans);
+            //}
+            //// Add special genetic point.
+            //var unlimitedGenes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK=1mio.txt");
+            //data.Add(new BetaWrapper { K = -1, GeneticX = unlimitedGenes.Alpha, GeneticY = costCalc.SystemCost(unlimitedGenes, inclTrans) });
 
             // Setup view.
             var view = main.DisplayPlot();

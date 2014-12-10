@@ -45,13 +45,15 @@ namespace Main
             //test = new NodeGenes(0.5, 1, 3);
             //test = new NodeGenes(0.5, 1, 4);
 
-            //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 3, 4, 5 });
+            //CostAnalysis.CompareBeta(this, new List<int> { 1, 2, 4 });
+            //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 3, 4, 5 }, true);
 
             //var hest = 0;
 
             // TODO: Make small util method to determine highest beta for a  given 
 
-            Optimization.Genetic();
+            Figures.PlayGround.ChromosomeChart(this);
+            //Optimization.Genetic();
 
             //M.BackupAnalysis.BackupPerCountry(this);
 
@@ -204,6 +206,14 @@ namespace Main
         }
 
         #region Contour view
+
+        public void Show<T>(T view) where T : Control
+        {
+            view.Dock = DockStyle.Fill;
+            panel1.Controls.Add(view);
+            foreach (Control control in panel1.Controls) control.Visible = false;
+            view.Visible = true;
+        }
 
         public CostView DisplayCost()
         {

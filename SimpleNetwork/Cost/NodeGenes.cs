@@ -72,7 +72,7 @@ namespace BusinessLogic.Cost
             _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene { Alpha = alpha, Gamma = gamma });
 
             // The result is NOT defined in alpha = 0.
-            if (Math.Abs(alpha) < 1e-5) alpha = 1e-5;
+            //if (Math.Abs(alpha) < 1e-5) alpha = 1e-5;
 
             var lEU = CountryInfo.GetMeanLoadSum();
             var cfW = CountryInfo.GetWindCf();
@@ -89,7 +89,7 @@ namespace BusinessLogic.Cost
             foreach (var i in _mGenes.Keys)
             {
                 // EMHER: Semi certain about the gamma equaltion. 
-                _mGenes[i].Alpha = 1 / (1 + (1 / alpha - 1) * Math.Pow(cfS[i] / cfW[i], beta) * wSum / sSum);
+                _mGenes[i].Alpha = (alpha < 1e-6)? 0 : 1 / (1 + (1 / alpha - 1) * Math.Pow(cfS[i] / cfW[i], beta) * wSum / sSum);
                 // EMHER: Quite certain about the gamma equaltion. 
                 _mGenes[i].Gamma = gamma*lEU*(alpha*Math.Pow(cfW[i], beta)/wSum + (1 - alpha)*Math.Pow(cfS[i], beta)/sSum);
             }

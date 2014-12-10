@@ -90,6 +90,7 @@
     <Compile Include="Figures\EuropeMaps.cs" />
     <Compile Include="Figures\FlowAnalysiscs.cs" />
     <Compile Include="Figures\ModelYearAnalysis.cs" />
+    <Compile Include="Figures\PlayGround.cs" />
     <Compile Include="Optimization.cs" />
     <Compile Include="Quick.cs" />
     <Compile Include="MainForm.cs">
