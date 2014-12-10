@@ -66,7 +66,7 @@ namespace Main.Configurations
         public static void CompareBeta(MainForm main, List<int> betaValues)
         {
 
-            var alphaStart = 0.9;
+            var alphaStart = 0.8;
             var alphaRes = 4;
             var delta = (1 - alphaStart) / alphaRes;
             var costCalc = new NodeCostCalculator(true, true);
