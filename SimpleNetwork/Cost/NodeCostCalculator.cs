@@ -46,7 +46,7 @@ namespace BusinessLogic.Cost
                 {
                     Parameters = new Dictionary<string, KeyValuePair<int, double>>
                     {
-                        {"be", new KeyValuePair<int, double>(0, 1)},
+                        {"be", new KeyValuePair<int, double>(0, 1/32)},
                         {"bc", new KeyValuePair<int, double>(0, 1)},
                         {"tc", new KeyValuePair<int, double>(0, 1)}
 
