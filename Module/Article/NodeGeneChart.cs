@@ -4,9 +4,10 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using BusinessLogic.Cost;
+using Controls.Charting;
 using Utils;
 
-namespace Controls.Charting
+namespace Controls.Article
 {
     public partial class NodeGeneChart : UserControl
     {

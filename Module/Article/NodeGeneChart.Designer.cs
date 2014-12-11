@@ -1,4 +1,4 @@
-﻿namespace Controls.Charting
+﻿namespace Controls.Article
 {
     partial class NodeGeneChart
     {

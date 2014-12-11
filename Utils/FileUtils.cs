@@ -20,8 +20,9 @@ namespace Utils
             where T : IConvertible
             where V : IConvertible
         {
-            return File.ReadAllLines(path).Select(line => line.Split(':'))
-                .ToDictionary<string[], T, V>(item => Parse<T>(item[0]), item => Parse<V>(item[1]));
+            var text = File.ReadAllLines(path);
+            var cells = text.Select(line => line.Split(':'));
+            return cells.ToDictionary(item => Parse<T>(item[0]), item => Parse<V>(item[1]));
         }
 
         private static T Parse<T>(string s) where T : IConvertible

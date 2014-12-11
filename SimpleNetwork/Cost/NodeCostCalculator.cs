@@ -136,6 +136,20 @@ namespace BusinessLogic.Cost
             return costs;
         }
 
+        // Does not REALLY belong here. Consider moving..
+        public Dictionary<string, double> ParameterOverview(NodeGenes nodeGenes, bool includeTransmission = false)
+        {
+            // Calculate elements.
+            var avgLoad = _mNodes.Select(item => item.Model.AvgLoad).Sum();
+            var parameterOverview = new Dictionary<string, double>();
+            if (includeTransmission) parameterOverview.Add("TC", TransmissionCapacity(nodeGenes)/avgLoad);
+            parameterOverview.Add("BE", BackupEnergy(nodeGenes) / (avgLoad * Utils.Utils.HoursInYear));
+            parameterOverview.Add("BC", BackupCapacity(nodeGenes)/avgLoad);
+            parameterOverview.Add("CF", CapacityFactor(nodeGenes));
+
+            return parameterOverview;
+        }
+
         /// <summary>
         /// Overall system cost.
         /// </summary>
@@ -154,8 +168,23 @@ namespace BusinessLogic.Cost
 
         #region Data evaluation
 
+        // Capacity factor
+        private double CapacityFactor(NodeGenes nodeGenes)
+        {
+            var windCF =
+                nodeGenes.Select(
+                    item => item.Value.Alpha*item.Value.Gamma*CountryInfo.GetMeanLoad(item.Key)*CountryInfo.GetWindCf(item.Key)).Sum()/
+                CountryInfo.GetMeanLoadSum();
+            var solarCF = nodeGenes.Select(
+                    item => (1-item.Value.Alpha)*item.Value.Gamma * CountryInfo.GetMeanLoad(item.Key) * CountryInfo.GetSolarCf(item.Key)).Sum() /
+                CountryInfo.GetMeanLoadSum();
+
+            return (windCF+solarCF);
+
+        }
+
         // Cost of transmission network.
-        private double TransmissionCapacityCost(NodeGenes nodeGenes)
+        private double TransmissionCapacity(NodeGenes nodeGenes)
         {
             var config = _mConfig.Parameters["tc"];
 
@@ -163,14 +192,14 @@ namespace BusinessLogic.Cost
             var data = _mTcCtrl.EvaluateTs(nodeGenes);
             // Extract system values.
             var flowTs = data[0].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
-            var cost = 0.0;
+            var overallCapacity = 0.0;
             foreach (var ts in flowTs)
             {
                 var capacity = MathUtils.CalcCapacity(ts.GetAllValues());
-                cost += capacity * Costs.GetLinkCost(ts.Properties["From"], ts.Properties["To"], true);
+                overallCapacity += capacity; // * Costs.GetLinkLength(ts.Properties["From"], ts.Properties["To"]);
             }
 
-            return cost * config.Value;
+            return overallCapacity * config.Value;
         }
 
         // Cost of backup facilities.
@@ -204,6 +233,25 @@ namespace BusinessLogic.Cost
         #endregion
 
         #region Cost calculations
+
+        // Cost of transmission network.
+        private double TransmissionCapacityCost(NodeGenes nodeGenes)
+        {
+            var config = _mConfig.Parameters["tc"];
+
+            // Run simulation.
+            var data = _mTcCtrl.EvaluateTs(nodeGenes);
+            // Extract system values.
+            var flowTs = data[0].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
+            var cost = 0.0;
+            foreach (var ts in flowTs)
+            {
+                var capacity = MathUtils.CalcCapacity(ts.GetAllValues());
+                cost += capacity * Costs.GetLinkCost(ts.Properties["From"], ts.Properties["To"], true);
+            }
+
+            return cost * config.Value;
+        }
 
         // Cost of wind/solar facilities.
         private Dictionary<string, double> BaseCosts(NodeGenes nodeGenes)

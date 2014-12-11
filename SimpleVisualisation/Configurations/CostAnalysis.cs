@@ -134,7 +134,7 @@ namespace Main.Configurations
 
             var betas = kValues.Select(item => BusinessLogic.Utils.Utils.FindBeta(item, 1e-3)).ToArray();
             var alphaStart = 0.5;
-            var alphaRes = 20;
+            var alphaRes = 10;
             var delta = (1-alphaStart)/alphaRes;
             var costCalc = new NodeCostCalculator();
             // Calculate costs and prepare data structures.
@@ -157,28 +157,33 @@ namespace Main.Configurations
                     Beta = betas[j]
                 });
             }
-            //// Add genetic points.
-            //for (int i = 0; i < betas.Length; i++)
-            //{
-            //    var genes =
-            //        FileUtils.FromJsonFile<NodeGenes>(
-            //            string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK={0}.txt",
-            //                kValues[i]));
-            //    data[i].GeneticX = genes.Alpha;
-            //    data[i].GeneticY = costCalc.SystemCost(genes, inclTrans);
-            //}
-            //// Add special genetic point.
+            // Add genetic points.
+            for (int i = 0; i < betas.Length; i++)
+            {
+                var genes =
+                    FileUtils.FromJsonFile<NodeGenes>(
+                        string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK={0}.txt",
+                            kValues[i]));
+                data[i].GeneticX = genes.Alpha;
+                data[i].GeneticY = costCalc.SystemCost(genes, inclTrans);
+            }
+            // Add special genetic point.
             //var unlimitedGenes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK=1mio.txt");
             //data.Add(new BetaWrapper { K = -1, GeneticX = unlimitedGenes.Alpha, GeneticY = costCalc.SystemCost(unlimitedGenes, inclTrans) });
+            var k5Genes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintTransK=5Cost67.txt");
+            data.Add(new BetaWrapper { K = 5, GeneticX = k5Genes.Alpha, GeneticY = costCalc.SystemCost(k5Genes, inclTrans), Note = "T-OPT"});
 
             // Setup view.
             var view = main.DisplayPlot();
             view.AddData(data);
-            view.MainChart.ChartAreas[0].AxisY.Minimum = 50;
+            view.MainChart.ChartAreas[0].AxisY.Minimum = 60;
             view.MainChart.ChartAreas[0].AxisY.Maximum = 100;
+            view.MainChart.ChartAreas[0].AxisX.Minimum = 0.5;
+            view.MainChart.ChartAreas[0].AxisX.Maximum = 1;
+
             view.MainChart.ChartAreas[0].AxisX.Title = "Alpha";
-            ChartUtils.SaveChart(view.MainChart, 1300, 800,
-                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\VaryBetaWithGenetic.png");
+            ChartUtils.SaveChart(view.MainChart, 1000, 1000,//1300, 800,
+                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\VaryBetaWithGeneticAndTransmission.png");
         }
 
         // Gamma fixed = 1.0

@@ -123,7 +123,7 @@ namespace Utils
 
         #endregion
 
-        #region Capacity factor mappings
+        #region Capacity factor mappings: Rolando (ISET DATA)
 
         // Source: Optimal heterogeneity of a highly renewable pan-European electricity system
         private static readonly Dictionary<string, double> WindCf = new Dictionary<string, double>
@@ -196,6 +196,16 @@ namespace Utils
         };
 
         #endregion
+
+    //    #region Capacity factos mappsings: Magnus (VE)
+
+    //    private static readonly Dictionary<string, double> WindCf =
+    //        FileUtils.DictionaryFromFile<string, double>(@"C:\proto\CFwClean.txt");
+
+    //    private static readonly Dictionary<string, double> SolarCf =
+    //FileUtils.DictionaryFromFile<string, double>(@"C:\proto\CFsClean.txt");
+
+    //    #endregion
 
         #region Mean load mappings
 
