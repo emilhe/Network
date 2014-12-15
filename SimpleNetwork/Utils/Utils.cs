@@ -23,18 +23,19 @@ namespace BusinessLogic.Utils
             return edges;
         }
 
-        public static double FindBeta(double K, double delta)
+        // EMHER: The value 0.95 is to "optimal mix".
+        public static double FindBeta(double K, double delta, double alpha = 0.95)
         {
             var beta = 0.0;
             while (true)
             {
-                var genes = new NodeGenes(0.8, 1, beta);
+                var genes = new NodeGenes(alpha, 1, beta);
                 var gammas = genes.Select(item => item.Value.Gamma).ToArray();
                 if (gammas.Min() < 1 / K) break;
                 if (gammas.Max() > K) break;
                 beta += delta;
             }
-            return beta - delta;
+            return beta-delta;
         }
 
     }

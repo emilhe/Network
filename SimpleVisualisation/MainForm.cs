@@ -13,6 +13,7 @@ using Controls;
 using Controls.Charting;
 using BusinessLogic;
 using Main.Configurations;
+using Main.Documentation;
 using Main.Figures;
 using SimpleImporter;
 using Utils;
@@ -36,6 +37,24 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
 
+            //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
+
+            //Figures.PlayGround.Tmp(this);
+            //Figures.PlayGround.ChromosomeChart(this);
+
+            Tables.PrintLinkInfo();
+            Tables.PrintCostInfo();
+            Tables.PrintCapacityFactors();
+
+            //var genes = new NodeGenes(1, 1, 2);
+
+            //var costCalc = new NodeCostCalculator();
+            //var ks = costCalc.SystemCost(new NodeGenes(0.5, 1, 2));
+            //var bs = costCalc.SystemCost(new NodeGenes(0.5, 1, BusinessLogic.Utils.Utils.FindBeta(2, 1e-3, 1)));
+
+            //Figures.PlayGround.ParameterOverviewChartGenetic(this, new List<int> { 1, 2, 5 }, true);
+            //Figures.PlayGround.ParameterOverviewChart(this, new List<double> { 0.0, 1.0, 2.0, 4.0 }, true);
+
             //var chromosome = FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\genetic.txt");
             //CostAnalysis.PlotShit(this, chromosome);
 
@@ -45,9 +64,10 @@ namespace Main
             //test = new NodeGenes(0.5, 1, 3);
             //test = new NodeGenes(0.5, 1, 4);
 
-            //var raw = FileUtils.DictionaryFromFile<double, string>(@"C:\Users\Emil\Desktop\CFw.txt");
-            //var clean = raw.ToDictionary(item => CountryInfo.GetName(item.Value), item => item.Key);
-            //clean.ToFile(@"C:\Users\Emil\Desktop\CFwClean.txt");
+            //var raw = FileUtils.DictionaryFromFile<string, double>(@"C:\data\CFs.txt");
+            //var clean = raw.ToDictionary(item => CountryInfo.GetName(item.Key), item => item.Value);
+            //clean.ToFile(@"C:\Users\Emil\Desktop\CFsClean.txt");
+
 
             //CostAnalysis.CompareBeta(this, new List<int> { 1, 2, 4 });
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
@@ -56,9 +76,9 @@ namespace Main
 
             // TODO: Make small util method to determine highest beta for a  given 
 
-            //Figures.PlayGround.ChromosomeChart(this);
+            //Figures.PlayGround.ParameterOverviewChartGenetic(this, new List<double>{1,2,5});
             //Figures.PlayGround.ParameterOverviewChart(this, new List<double>{0,1,2,4}, true);
-            Optimization.Genetic();
+            //Optimization.Genetic();
 
             //M.BackupAnalysis.BackupPerCountry(this);
 

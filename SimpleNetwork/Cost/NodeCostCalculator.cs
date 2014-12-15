@@ -19,6 +19,7 @@ namespace BusinessLogic.Cost
         private ModelYearConfig _mConfig;
 
         private const double Rate = 4;
+        private const double LifeTime = 30;
         private static double _mAnnualizationFactor;
 
         private List<CountryNode> _mNodes;
@@ -196,7 +197,7 @@ namespace BusinessLogic.Cost
             foreach (var ts in flowTs)
             {
                 var capacity = MathUtils.CalcCapacity(ts.GetAllValues());
-                overallCapacity += capacity; // * Costs.GetLinkLength(ts.Properties["From"], ts.Properties["To"]);
+                overallCapacity += capacity* Costs.GetLinkLength(ts.Properties["From"], ts.Properties["To"]);
             }
 
             return overallCapacity * config.Value;
@@ -309,8 +310,8 @@ namespace BusinessLogic.Cost
         // WTF is this?
         private static double CalcAnnualizationFactor(double rate)
         {
-            if (rate == 0) return 30;
-            return (1 - Math.Pow((1 + (rate/100.0)), -30))/(rate/100.0);
+            if (rate == 0) return LifeTime;
+            return (1 - Math.Pow((1 + (rate/100.0)), -LifeTime))/(rate/100.0);
         }
     }
 

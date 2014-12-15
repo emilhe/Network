@@ -100,6 +100,68 @@ namespace BusinessLogic.Cost
             if (Math.Abs(gGamma) > 1e-6) throw new ArgumentException("Gamma value wrong");
         }
 
+        public NodeGenes(double alpha, double gamma, int k)
+        {
+            _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene { Alpha = alpha, Gamma = gamma });
+            var loadSum = _mGenes.Select(item => CountryInfo.GetMeanLoad(item.Key)).Sum();
+    
+            // FIND WIND GAMMAS            
+            var cfWs = _mGenes.ToDictionary(item => item.Key, item => CountryInfo.GetWindCf(item.Key));
+            var gammaWs = _mGenes.ToDictionary(item => item.Key, item => 1/(double)k);
+            var sumW = loadSum * gamma;
+            var minSumW = sumW / k;
+            foreach (var pair in cfWs.OrderByDescending(item => item.Value))
+            {
+                var load = CountryInfo.GetMeanLoad(pair.Key);
+                var delta = sumW - minSumW;
+                // Lots of "remaining power"; max out k.
+                if (delta > load * (k-1/(double)k))
+                {
+                    gammaWs[pair.Key] = k;
+                    sumW -= k * load;
+                }
+                // Intermediate case...
+                else if (sumW > 0)
+                {
+                    gammaWs[pair.Key] += delta / load;
+                    break;
+                }
+
+                minSumW -= load * 1 / k;
+            }
+
+            // FIND SOLAR GAMMAS
+            var cfSs = _mGenes.ToDictionary(item => item.Key, item => CountryInfo.GetSolarCf(item.Key));
+            var gammaSs = _mGenes.ToDictionary(item => item.Key, item => 1 / (double)k);
+            var sumS = loadSum*gamma;
+            var minSumS = sumS / k;
+            foreach (var pair in cfSs.OrderByDescending(item => item.Value))
+            {
+                var load = CountryInfo.GetMeanLoad(pair.Key);
+                var delta = sumS - minSumS;
+                // Lots of "remaining power"; max out k.
+                if (delta > load * (k - 1 / (double)k))
+                {
+                    gammaSs[pair.Key] = k;
+                    sumS -= k * load;
+                }
+                // Intermediate case...
+                else if (sumS > 0)
+                {
+                    gammaSs[pair.Key] += delta / load;
+                    break;
+                }
+
+                minSumS -= load * 1 / k;
+            }
+
+            foreach (var key in _mGenes.Keys.ToArray())
+            {
+                _mGenes[key].Gamma = gammaWs[key]*alpha + gammaSs[key]*(1 - alpha);
+                _mGenes[key].Alpha = gammaWs[key]*alpha / (alpha * gammaWs[key] + (1-alpha)*gammaSs[key]);
+            }
+        }
+
         public NodeGenes(double alpha, double gamma)
         {
             _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene{Alpha = alpha, Gamma = gamma});

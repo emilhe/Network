@@ -11,16 +11,6 @@ namespace Controls.Charting
     public partial class PlotView : UserControl
     {
 
-        public static List<Color> Colors = new List<Color>()
-        {
-            Color.Red,
-            Color.Blue,
-            Color.Green,
-            Color.Gold,
-            Color.Purple,
-            Color.Black
-        };
-
         public Chart MainChart { get { return chart; } }
 
         public PlotView()
@@ -77,14 +67,13 @@ namespace Controls.Charting
         public void AddData(List<BetaWrapper> values)
         {
             // Construct new time series.
-            var idx = 0;
             foreach (var value in values)
             {
-                var color = Colors[idx];
+                var color = ColorController.NextColor();
                 // Beta curve.
                 if (value.BetaY != null)
                 {
-                    var spline = new Series(value.BetaLabel)
+                    var spline = new Series(value.LabelK)
                     {
                         ChartType = SeriesChartType.Line,
                         //BorderDashStyle = ChartDashStyle.Dash,
@@ -100,6 +89,26 @@ namespace Controls.Charting
                     }
                     chart.Series.Add(spline);   
                 }
+                // Custom curve.
+                if (value.CustomYs != null)
+                {
+                    var spline = new Series(value.GeneticLabel + "??")
+                    {
+                        ChartType = SeriesChartType.Line,
+                        BorderDashStyle = ChartDashStyle.Dash,
+                        Color = color,
+                        BorderWidth = 3,
+                        IsVisibleInLegend = false
+                    };
+                    for (int i = 0; i < value.CustomXs.Length; i++)
+                    {
+                        var point = new DataPoint();
+                        point.SetValueXY(value.CustomXs[i], value.CustomYs[i]);
+                        point.ToolTip = string.Format("{0}, {1}", value.CustomXs[i], value.CustomYs[i]);
+                        spline.Points.Add(point);
+                    }
+                    chart.Series.Add(spline);
+                }
                 // Genetic point.
                 if (!value.GeneticY.Equals(0))
                 {
@@ -113,7 +122,6 @@ namespace Controls.Charting
                     points.Points.AddXY(value.GeneticX, value.GeneticY);
                     chart.Series.Add(points);
                 }
-                idx++;
             }
 
             RenderAxis();
@@ -162,27 +170,6 @@ namespace Controls.Charting
                 MainChart.ChartAreas[0].AxisX.Maximum = MainChart.ChartAreas[0].AxisX.Minimum + 1;
         }
 
-    }
-
-    public class BetaWrapper
-    {
-        public double Beta { get; set; }
-        public int K { get; set; }
-        public double[] BetaX { get; set; }
-        public double[] BetaY { get; set; }
-        public double GeneticX { get; set; }
-        public double GeneticY { get; set; }
-        public string Note { get; set; }
-
-        public string BetaLabel
-        {
-            get { return string.Format("β = {0}, Beta {1}", (K == -1) ? @"∞" : Beta.ToString("0.00"), Note); }
-        }
-
-        public string GeneticLabel
-        {
-            get { return string.Format("K = {0}, Genetic {1}", (K == -1) ? @"∞" : K.ToString(), Note); }
-        }
     }
 
 }

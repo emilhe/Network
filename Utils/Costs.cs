@@ -15,9 +15,9 @@ namespace Utils
         // Cost in €/MW
         private const double DcConverter = 150000;
         // Link properties.
-        private static readonly Dictionary<string, string> LinkType =
-            FileUtils.DictionaryFromFile<string, string>(@"C:\proto\LineType.txt");    
-        private static readonly Dictionary<string, int> LinkLength =
+        public static readonly Dictionary<string, string> LinkType =
+            FileUtils.DictionaryFromFile<string, string>(@"C:\proto\LineType.txt");
+        public static readonly Dictionary<string, int> LinkLength =
             FileUtils.DictionaryFromFile<string, int>(@"C:\proto\LineLength.txt");
 
         /// <summary>
@@ -63,7 +63,6 @@ namespace Utils
 
         #endregion
 
-
         // Source: Rolando PHD thesis, table 4.1, page 109.
         #region Assets
 
@@ -101,7 +100,7 @@ namespace Utils
 
         public static Asset CCGT = new Asset
         {
-            Name = "Solar photovoltaic",
+            Name = "CCGT",
             CapExFixed = 0.90,
             OpExFixed = 4.5,
             OpExVariable = 56.0

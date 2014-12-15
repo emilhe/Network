@@ -85,6 +85,7 @@
     <Compile Include="Configurations\FlowAnalysis.cs" />
     <Compile Include="Configurations\PlayGround.cs" />
     <Compile Include="Configurations\RealData.cs" />
+    <Compile Include="Documentation\Tables.cs" />
     <Compile Include="Figures\BackupAnalysis.cs" />
     <Compile Include="Figures\Comparisons.cs" />
     <Compile Include="Figures\EuropeMaps.cs" />
@@ -129,6 +130,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\LaTeX\LaTeX.csproj">
+      <Project>{60713DC2-9464-4325-AF33-4A9C8DE80ADB}</Project>
+      <Name>LaTeX</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Module\Controls.csproj">
       <Project>{1A045F9E-6824-4349-BE4B-2E0F7E1338C1}</Project>
       <Name>Controls</Name>

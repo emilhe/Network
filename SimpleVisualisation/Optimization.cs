@@ -30,7 +30,7 @@ namespace Main
             // Find optimum.
             var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator());
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(@"C:\proto\geneticWithConstraintTransK=1.txt");
+            optimum.Genes.ToJsonFile(@"C:\proto\VEgeneticWithConstraintTransK=2.txt");
         }
 
         public static void SimulatedAnnealing()

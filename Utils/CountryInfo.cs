@@ -123,89 +123,89 @@ namespace Utils
 
         #endregion
 
-        #region Capacity factor mappings: Rolando (ISET DATA)
+        //#region Capacity factor mappings: Rolando (ISET DATA)
 
-        // Source: Optimal heterogeneity of a highly renewable pan-European electricity system
-        private static readonly Dictionary<string, double> WindCf = new Dictionary<string, double>
-        {
-            {"Germany", 0.36},
-            {"France", 0.32},
-            {"Great Britain", 0.15},
-            {"Italy", 0.23},
-            {"Spain", 0.25},
-            {"Sweden", 0.14},
-            {"Poland", 0.15},
-            {"Norway", 0.13},
-            {"Netherlands", 0.15},
-            {"Belgium", 0.14},
-            {"Finland", 0.27},
-            {"Czech Republic", 0.21},
-            {"Austria", 0.19},
-            {"Greece", 0.14},
-            {"Romania", 0.15},
-            {"Bulgaria", 0.15},
-            {"Portugal", 0.22},
-            {"Switzerland", 0.14},
-            {"Hungary", 0.19},
-            {"Denmark", 0.41},
-            {"Serbia", 0.15},
-            {"Ireland", 0.46},
-            {"Bosnia", 0.16},
-            {"Slovakia", 0.17},
-            {"Croatia", 0.18},
-            {"Lithuania", 0.30},
-            {"Estonia", 0.28},
-            {"Slovenia", 0.15},
-            {"Latvia", 0.19},
-            {"Luxembourg", 0.35},
-        };
+        //// Source: Optimal heterogeneity of a highly renewable pan-European electricity system
+        //private static readonly Dictionary<string, double> WindCf = new Dictionary<string, double>
+        //{
+        //    {"Germany", 0.36},
+        //    {"France", 0.32},
+        //    {"Great Britain", 0.15},
+        //    {"Italy", 0.23},
+        //    {"Spain", 0.25},
+        //    {"Sweden", 0.14},
+        //    {"Poland", 0.15},
+        //    {"Norway", 0.13},
+        //    {"Netherlands", 0.15},
+        //    {"Belgium", 0.14},
+        //    {"Finland", 0.27},
+        //    {"Czech Republic", 0.21},
+        //    {"Austria", 0.19},
+        //    {"Greece", 0.14},
+        //    {"Romania", 0.15},
+        //    {"Bulgaria", 0.15},
+        //    {"Portugal", 0.22},
+        //    {"Switzerland", 0.14},
+        //    {"Hungary", 0.19},
+        //    {"Denmark", 0.41},
+        //    {"Serbia", 0.15},
+        //    {"Ireland", 0.46},
+        //    {"Bosnia", 0.16},
+        //    {"Slovakia", 0.17},
+        //    {"Croatia", 0.18},
+        //    {"Lithuania", 0.30},
+        //    {"Estonia", 0.28},
+        //    {"Slovenia", 0.15},
+        //    {"Latvia", 0.19},
+        //    {"Luxembourg", 0.35},
+        //};
 
-        // Source: Optimal heterogeneity of a highly renewable pan-European electricity system
-        private static readonly Dictionary<string, double> SolarCf = new Dictionary<string, double>
-        {
-            {"Germany", 0.15},
-            {"France", 0.20},
-            {"Great Britain", 0.15},
-            {"Italy", 0.23},
-            {"Spain", 0.25},
-            {"Sweden", 0.14},
-            {"Poland", 0.15},
-            {"Norway", 0.13},
-            {"Netherlands", 0.15},
-            {"Belgium", 0.14},
-            {"Finland", 0.13},
-            {"Czech Republic", 0.16},
-            {"Austria", 0.17},
-            {"Greece", 0.24},
-            {"Romania", 0.20},
-            {"Bulgaria", 0.22},
-            {"Portugal", 0.23},
-            {"Switzerland", 0.17},
-            {"Hungary", 0.18},
-            {"Denmark", 0.15},
-            {"Serbia", 0.19},
-            {"Ireland", 0.13},
-            {"Bosnia", 0.21},
-            {"Slovakia", 0.17},
-            {"Croatia", 0.20},
-            {"Lithuania", 0.14},
-            {"Estonia", 0.13},
-            {"Slovenia", 0.18},
-            {"Latvia", 0.13},
-            {"Luxembourg", 0.14},
-        };
+        //// Source: Optimal heterogeneity of a highly renewable pan-European electricity system
+        //private static readonly Dictionary<string, double> SolarCf = new Dictionary<string, double>
+        //{
+        //    {"Germany", 0.15},
+        //    {"France", 0.20},
+        //    {"Great Britain", 0.15},
+        //    {"Italy", 0.23},
+        //    {"Spain", 0.25},
+        //    {"Sweden", 0.14},
+        //    {"Poland", 0.15},
+        //    {"Norway", 0.13},
+        //    {"Netherlands", 0.15},
+        //    {"Belgium", 0.14},
+        //    {"Finland", 0.13},
+        //    {"Czech Republic", 0.16},
+        //    {"Austria", 0.17},
+        //    {"Greece", 0.24},
+        //    {"Romania", 0.20},
+        //    {"Bulgaria", 0.22},
+        //    {"Portugal", 0.23},
+        //    {"Switzerland", 0.17},
+        //    {"Hungary", 0.18},
+        //    {"Denmark", 0.15},
+        //    {"Serbia", 0.19},
+        //    {"Ireland", 0.13},
+        //    {"Bosnia", 0.21},
+        //    {"Slovakia", 0.17},
+        //    {"Croatia", 0.20},
+        //    {"Lithuania", 0.14},
+        //    {"Estonia", 0.13},
+        //    {"Slovenia", 0.18},
+        //    {"Latvia", 0.13},
+        //    {"Luxembourg", 0.14},
+        //};
+
+        //#endregion
+
+        #region Capacity factos mappsings: Magnus (VE)
+
+        private static readonly Dictionary<string, double> WindCf =
+            FileUtils.DictionaryFromFile<string, double>(@"C:\proto\CFwClean.txt");
+
+        private static readonly Dictionary<string, double> SolarCf =
+            FileUtils.DictionaryFromFile<string, double>(@"C:\proto\CFsClean.txt");
 
         #endregion
-
-    //    #region Capacity factos mappsings: Magnus (VE)
-
-    //    private static readonly Dictionary<string, double> WindCf =
-    //        FileUtils.DictionaryFromFile<string, double>(@"C:\proto\CFwClean.txt");
-
-    //    private static readonly Dictionary<string, double> SolarCf =
-    //FileUtils.DictionaryFromFile<string, double>(@"C:\proto\CFsClean.txt");
-
-    //    #endregion
 
         #region Mean load mappings
 

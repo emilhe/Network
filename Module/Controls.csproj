@@ -55,13 +55,16 @@
     <Compile Include="Article\NodeGeneChart.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Article\NodeGeneChart.Designer.cs" />
+    <Compile Include="Article\NodeGeneChart.Designer.cs">
+      <DependentUpon>NodeGeneChart.cs</DependentUpon>
+    </Compile>
     <Compile Include="Article\ParameterOverviewChart.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Article\ParameterOverviewChart.Designer.cs">
       <DependentUpon>ParameterOverviewChart.cs</DependentUpon>
     </Compile>
+    <Compile Include="BetaWrapper.cs" />
     <Compile Include="Charting\ChartUtils.cs" />
     <Compile Include="Charting\ContourView.cs">
       <SubType>UserControl</SubType>
@@ -141,7 +144,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Article\NodeGeneChart.resx" />
+    <EmbeddedResource Include="Article\NodeGeneChart.resx">
+      <DependentUpon>NodeGeneChart.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Article\ParameterOverviewChart.resx">
       <DependentUpon>ParameterOverviewChart.cs</DependentUpon>
     </EmbeddedResource>
