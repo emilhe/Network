@@ -105,6 +105,7 @@
     <Compile Include="Cost\GeneticNodeOptimizationStrategy.cs" />
     <Compile Include="Cost\INodeCostCalculator.cs" />
     <Compile Include="Cost\NodeGenes.cs" />
+    <Compile Include="Cost\NodeGenesFactory.cs" />
     <Compile Include="Cost\ParallelCostCalculator.cs" />
     <Compile Include="Cost\SerialCostCalculator.cs" />
     <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />

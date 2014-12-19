@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Windows.Forms;
+using BusinessLogic;
 using BusinessLogic.Cost;
-using BusinessLogic.Generators;
 using Controls;
 using Controls.Charting;
-using BusinessLogic;
 using Main.Configurations;
 using Main.Documentation;
-using Main.Figures;
-using SimpleImporter;
 using Utils;
 
 namespace Main
@@ -37,14 +30,17 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
 
+            //CostAnalysis.BetaWithGenetic(this, new List<int> { 1 }, true);
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
 
-            //Figures.PlayGround.Tmp(this);
-            //Figures.PlayGround.ChromosomeChart(this);
+            //Optimization.Genetic();
 
-            Tables.PrintLinkInfo();
-            Tables.PrintCostInfo();
-            Tables.PrintCapacityFactors();
+            //Figures.PlayGround.Tmp(this);
+            Figures.PlayGround.ChromosomeChart(this);
+
+            //Tables.PrintLinkInfo();
+            //Tables.PrintCapacityFactors();
+            //Tables.PrintCostInfo();
 
             //var genes = new NodeGenes(1, 1, 2);
 
@@ -283,7 +279,7 @@ namespace Main
             _contourView = new ContourView
             {
                 Dock = DockStyle.Fill,
-                Location = new System.Drawing.Point(0, 0),
+                Location = new Point(0, 0),
                 Name = "ContourView",
             };
             panel1.Controls.Add(_contourView);
@@ -334,7 +330,7 @@ namespace Main
             _timeSeriesControl = new TimeSeriesControl
             {
                 Dock = DockStyle.Fill,
-                Location = new System.Drawing.Point(0, 0),
+                Location = new Point(0, 0),
                 Name = "timeSeriesControl",
             };
             panel1.Controls.Add(_timeSeriesControl);
@@ -360,7 +356,7 @@ namespace Main
             _histogramView = new GroupHistogramView
             {
                 Dock = DockStyle.Fill,
-                Location = new System.Drawing.Point(0, 0),
+                Location = new Point(0, 0),
                 Name = "histogramView",
             };
             panel1.Controls.Add(_histogramView);

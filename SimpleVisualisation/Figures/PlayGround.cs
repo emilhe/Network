@@ -15,27 +15,37 @@ namespace Main.Figures
 
         public static void ChromosomeChart(MainForm main)
         {
-            var view = new NodeGeneChart();
-            
-            // Homogeneous layouts.
-            view.SetData(new[] { new NodeGenes(0.95, 1)}, false);
-            Save(view, "HomoGenes.png");
-            
-            // Beta layouts.
-            view.SetData(new[] { new NodeGenes(0, 1, 1.0), new NodeGenes(1, 1, 1.0) });
-            Save(view, "Beta1Genes.png");
-            view.SetData(new[] { new NodeGenes(0, 1, 2.0), new NodeGenes(1, 1, 2.0) });
-            Save(view, "Beta2Genes.png");
-            view.SetData(new[] { new NodeGenes(0, 1, 4.0), new NodeGenes(1, 1, 4.0) });
-            Save(view, "Beta4Genes.png");
+            var mix = 0.95;
+            var basePath = @"C:\Users\Emil\Dropbox\Master Thesis\Python\chromosomes\";
 
+            var beta = BusinessLogic.Utils.Utils.FindBeta(1.5, 1e-3, mix);
+
+            // Homogeneous layout.
+            (NodeGenesFactory.SpawnBeta(mix, 1, 0.0)).Export().ToJsonFile(basePath+"k=1.txt");     
+            // Beta layouts.
+            (NodeGenesFactory.SpawnBeta(mix, 1, 1.0)).Export().ToJsonFile(basePath + "beta=1.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(1.5, 1e-3, mix))).Export().ToJsonFile(basePath+"k=1.5beta.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(2, 1e-3, mix))).Export().ToJsonFile(basePath+"k=2beta.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(3, 1e-3, mix))).Export().ToJsonFile(basePath+"k=3beta.txt");
             // Maximum CF layouts.
-            view.SetData(new[] { new NodeGenes(0, 1, 1), new NodeGenes(1, 1, 1) }, false);
-            Save(view, "NuMax1Genes.png");
-            view.SetData(new[] { new NodeGenes(0, 1, 2), new NodeGenes(1, 1, 2) });
-            Save(view, "NuMax2Genes.png");
-            view.SetData(new[] { new NodeGenes(0, 1, 5), new NodeGenes(1, 1, 5) });
-            Save(view, "NuMax5Genes.png");
+            (NodeGenesFactory.SpawnBeta(mix, 1, 1.5)).Export().ToJsonFile(basePath+"k=1.5nuMax.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, 2)).Export().ToJsonFile(basePath+"k=2nuMax.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, 3)).Export().ToJsonFile(basePath+"k=3nuMax.txt");
+
+            //view.SetData(new[] { new NodeGenes(0, 1, 1.0), new NodeGenes(1, 1, 1.0) });
+            //Save(view, "Beta1Genes.png");
+            //view.SetData(new[] { new NodeGenes(0, 1, 2.0), new NodeGenes(1, 1, 2.0) });
+            //Save(view, "Beta2Genes.png");
+            //view.SetData(new[] { new NodeGenes(0, 1, 4.0), new NodeGenes(1, 1, 4.0) });
+            //Save(view, "Beta4Genes.png");
+
+            //// Maximum CF layouts.
+            //view.SetData(new[] { new NodeGenes(0, 1, 1), new NodeGenes(1, 1, 1) }, false);
+            //Save(view, "NuMax1Genes.png");
+            //view.SetData(new[] { new NodeGenes(0, 1, 2), new NodeGenes(1, 1, 2) });
+            //Save(view, "NuMax2Genes.png");
+            //view.SetData(new[] { new NodeGenes(0, 1, 5), new NodeGenes(1, 1, 5) });
+            //Save(view, "NuMax5Genes.png");
 
             //// Genetic layouts.
             //const string basePath = @"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraint";
@@ -55,13 +65,13 @@ namespace Main.Figures
             //view.SetData(new[] { layout, betaLayout });
             //Save(view, "LayoutK=5.png");
             //var layout = FileUtils.FromJsonFile<NodeGenes>(basePath + "K=1mio.txt");
-            var betaLayout = new NodeGenes(0.95, 1, BusinessLogic.Utils.Utils.FindBeta(1e6, 1e-3));
-            view.SetData(new[] { betaLayout }, false);
-            view.MainChart.ChartAreas[0].AxisY.Interval = 20;
+            //var betaLayout = new NodeGenes(0.95, 1, BusinessLogic.Utils.Utils.FindBeta(1e6, 1e-3));
+            //view.SetData(new[] { betaLayout }, false);
+            //view.MainChart.ChartAreas[0].AxisY.Interval = 20;
 
-            Save(view, "GeneticK=1mio.png");
+            //Save(view, "GeneticK=1mio.png");
 
-            main.Show(view);
+            //main.Show(view);
         }
 
         public static void ParameterOverviewChart(MainForm main, List<double> betaValues, bool inclTrans = false)
@@ -145,11 +155,11 @@ namespace Main.Figures
                 for (int i = 0; i <= alphaRes; i++)
                 {
                     alphas[i] = alphaStart + (i) * delta;
-                    var results = costCalc.ParameterOverview(new NodeGenes(alphas[i], 1, betaValues[j]), inclTrans);
+                    var results = costCalc.ParameterOverview(NodeGenesFactory.SpawnBeta(alphas[i], 1, betaValues[j]), inclTrans);
                     foreach (var pair in results)
                     {
                         if (!data.ContainsKey(pair.Key)) data.Add(pair.Key, new Dictionary<double, BetaWrapper>());
-                        if (!data[pair.Key].ContainsKey(betaValues[j])) data[pair.Key].Add(betaValues[j], new BetaWrapper()
+                        if (!data[pair.Key].ContainsKey(betaValues[j])) data[pair.Key].Add(betaValues[j], new BetaWrapper
                         {
                             Beta = betaValues[j],
                             BetaX = alphas,
@@ -185,7 +195,7 @@ namespace Main.Figures
             {
                 for (int i = 0; i <= alphaRes; i++)
                 {
-                    var results = costCalc.ParameterOverview(new NodeGenes(alphas[i], 1, betas[j]), inclTrans);
+                    var results = costCalc.ParameterOverview(NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]), inclTrans);
                     foreach (var pair in results)
                     {
                         if (!data.ContainsKey(pair.Key)) data.Add(pair.Key, new Dictionary<int, BetaWrapper>());
@@ -200,7 +210,7 @@ namespace Main.Figures
                         });
                         data[pair.Key][kValues[j]].BetaY[i] = pair.Value;
                     }
-                    results = costCalc.ParameterOverview(new NodeGenes(alphas[i], 1, kValues[j]), inclTrans);
+                    results = costCalc.ParameterOverview(NodeGenesFactory.SpawnNuMax(alphas[i], 1, kValues[j]), inclTrans);
                     foreach (var pair in results)
                     {
                         data[pair.Key][kValues[j]].CustomYs[i] = pair.Value;

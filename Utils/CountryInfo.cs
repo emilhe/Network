@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace Utils
@@ -126,7 +127,7 @@ namespace Utils
         //#region Capacity factor mappings: Rolando (ISET DATA)
 
         //// Source: Optimal heterogeneity of a highly renewable pan-European electricity system
-        //private static readonly Dictionary<string, double> WindCf = new Dictionary<string, double>
+        //private static readonly Dictionary<string, double> WindOnshoreCf = new Dictionary<string, double>
         //{
         //    {"Germany", 0.36},
         //    {"France", 0.32},
@@ -197,13 +198,22 @@ namespace Utils
 
         //#endregion
 
-        #region Capacity factos mappsings: Magnus (VE)
+        #region Capacity factors: Extracted from VE by EMHER.
 
-        private static readonly Dictionary<string, double> WindCf =
-            FileUtils.DictionaryFromFile<string, double>(@"C:\proto\CFwClean.txt");
+        public static readonly Dictionary<string, double> WindOnshoreCf =
+            FileUtils.DictionaryFromFile<string, double>(@"C:\EmherSN\data\windCf_50pct_onshore.txt")
+                .Where(item => CountryCodeMap3.ContainsKey(item.Key))
+                .ToDictionary(item => GetName(item.Key), item => item.Value);
 
-        private static readonly Dictionary<string, double> SolarCf =
-            FileUtils.DictionaryFromFile<string, double>(@"C:\proto\CFsClean.txt");
+        public static readonly Dictionary<string, double> WindOffshoreCf =
+            FileUtils.DictionaryFromFile<string, double>(@"C:\EmherSN\data\windCf_50pct_offshore.txt")
+                .Where(item => CountryCodeMap3.ContainsKey(item.Key))
+                .ToDictionary(item => GetName(item.Key), item => item.Value);
+
+        public static readonly Dictionary<string, double> SolarCf =
+            FileUtils.DictionaryFromFile<string, double>(@"C:\EmherSN\data\solarCf_50pct_onshore.txt")
+                .Where(item => CountryCodeMap3.ContainsKey(item.Key))
+                .ToDictionary(item => GetName(item.Key), item => item.Value);
 
         #endregion
 
@@ -211,7 +221,7 @@ namespace Utils
 
         // Source: 32 years of VE data.
         private static readonly Dictionary<string, double> MeanLoad =
-            FileUtils.DictionaryFromFile<string, double>(@"C:\proto\MeanLoad.txt");
+            FileUtils.DictionaryFromFile<string, double>(@"C:\EmherSN\data\MeanLoad.txt");
 
         #endregion
 
@@ -249,9 +259,9 @@ namespace Utils
         /// <summary>
         /// Get the wind capacity factor for a country.
         /// </summary>
-        public static double GetWindCf(string name)
+        public static double GetOnshoreWindCf(string name)
         {
-            return WindCf[name];
+            return WindOnshoreCf[name];
         }
 
         /// <summary>
@@ -259,7 +269,7 @@ namespace Utils
         /// </summary>
         public static double GetWindCfSum()
         {
-            return WindCf.Values.Sum();
+            return WindOnshoreCf.Values.Sum();
         }
 
         /// <summary>
@@ -295,18 +305,6 @@ namespace Utils
         public static double GetMeanLoadSum()
         {
             return MeanLoad.Values.Sum();
-        }
-
-        // TODO: Is this OK?
-        public static Dictionary<string, double> GetSolarCf()
-        {
-            return SolarCf;
-        }
-
-        // TODO: Is this OK?
-        public static Dictionary<string, double> GetWindCf()
-        {
-            return WindCf;
         }
 
         /// <summary>

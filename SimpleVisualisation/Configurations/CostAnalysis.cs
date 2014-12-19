@@ -49,7 +49,7 @@ namespace Main.Configurations
                 // Calculate costs.
                 alphas[j] = j*delta;
                 // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCosts(new NodeGenes(1, alphas[j], beta), inclTrans))
+                foreach (var item in costCalc.DetailedSystemCosts(NodeGenesFactory.SpawnBeta(1, alphas[j], beta), inclTrans))
                 {
                     data[item.Key][j] = item.Value;
                 }
@@ -82,7 +82,7 @@ namespace Main.Configurations
                 for (int i = 0; i <= alphaRes; i++)
                 {
                     alphas[i] = alphaStart + (i) * delta;
-                    points[i] = costCalc.SystemCost(new NodeGenes(alphas[i], 1, betaValues[j]), true);
+                    points[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betaValues[j]), true);
                 }
                 data.Add(new BetaWrapper
                 {
@@ -94,7 +94,7 @@ namespace Main.Configurations
                 // Without trans.
                 for (int i = 0; i <= alphaRes; i++)
                 {
-                    points2[i] = costCalc.SystemCost(new NodeGenes(alphas[i], 1, betaValues[j]));
+                    points2[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betaValues[j]));
                 }
                 data.Add(new BetaWrapper
                 {
@@ -134,13 +134,16 @@ namespace Main.Configurations
         {
 
             var alphaStart = 0.5;
-            var alphaRes = 20;
+            var alphaRes = 10;
             var delta = (1-alphaStart)/alphaRes;
-            var costCalc = new NodeCostCalculator();
+            var costCalc = new NodeCostCalculator(true, true);
             // Calculate costs and prepare data structures.
             var data = new List<BetaWrapper>(alphaRes + 1);
             var alphas = new double[alphaRes+1];
             var betas = new double[kValues.Count];
+            // TEST
+            var k = NodeGenesFactory.SpawnBeta(0.5, 1, betas[0]);
+            var b = NodeGenesFactory.SpawnNuMax(0.5, 1, kValues[0]);
             // Main loop.
             for (int j = 0; j < betas.Length; j++)
             {
@@ -150,8 +153,8 @@ namespace Main.Configurations
                 {
                     alphas[i] = alphaStart + (i)*delta;
                     betas[j] = BusinessLogic.Utils.Utils.FindBeta(kValues[j], 1e-3);
-                    betaPoints[i] = costCalc.SystemCost(new NodeGenes(alphas[i], 1, betas[j]), inclTrans);
-                    kPoints[i] = costCalc.SystemCost(new NodeGenes(alphas[i], 1, kValues[j]), inclTrans);
+                    betaPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]), inclTrans);
+                    kPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnNuMax(alphas[i], 1, kValues[j]), inclTrans);
                 }
                 data.Add(new BetaWrapper
                 {
@@ -174,12 +177,12 @@ namespace Main.Configurations
             //    data[i].GeneticY = costCalc.SystemCost(genes, inclTrans);
             //}
             // Add special genetic point.
-            //var unlimitedGenes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK=1mio.txt");
-            //data.Add(new BetaWrapper { K = -1, GeneticX = unlimitedGenes.Alpha, GeneticY = costCalc.SystemCost(unlimitedGenes, inclTrans) });
-            //var k5Genes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintTransK=5Cost67.txt");
-            //data.Add(new BetaWrapper { K = 5, GeneticX = k5Genes.Alpha, GeneticY = costCalc.SystemCost(k5Genes, inclTrans), Note = "T-OPT"});
-            var k1Genes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\VEgeneticWithConstraintTransK=1.txt");
-            data.Add(new BetaWrapper { K = 1, GeneticX = k1Genes.Alpha, GeneticY = costCalc.SystemCost(k1Genes, inclTrans), Note = "T-OPT" });
+            var genes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\VEgeneticWithConstraintTransK=1.txt");
+            data.Add(new BetaWrapper { K = 1, GeneticX = genes.Alpha, GeneticY = costCalc.SystemCost(genes, inclTrans), Note = "1Y + T"});
+            genes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\VEgeneticWithoutConstraintTransK=1.txt");
+            data.Add(new BetaWrapper { K = 1, GeneticX = genes.Alpha, GeneticY = costCalc.SystemCost(genes, inclTrans), Note = "1Y" });
+            genes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\32VEgeneticWithoutConstraintTransK=1.txt");
+            data.Add(new BetaWrapper { K = 1, GeneticX = genes.Alpha, GeneticY = costCalc.SystemCost(genes, inclTrans), Note = "32Y" });
 
             // Setup view.
             var view = main.DisplayPlot();
@@ -191,7 +194,7 @@ namespace Main.Configurations
 
             view.MainChart.ChartAreas[0].AxisX.Title = "Alpha";
             ChartUtils.SaveChart(view.MainChart, 1000, 1000,//1300, 800,
-                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\VaryBetaWithGeneticAndTransmission2.png");
+                @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\VaryBetaWithGeneticNoTransmissionK=1.png");
         }
 
         // Gamma fixed = 1.0
@@ -211,7 +214,7 @@ namespace Main.Configurations
                 for (int i = 0; i < alphaRes; i++)
                 {         
                     alphas[i] = (i+1) * delta;
-                    points[i] = costCalc.SystemCost(new NodeGenes(alphas[i], 1, betas[j]), inclTrans);
+                    points[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]), inclTrans);
                 }
                 data.Add(string.Format("Beta = {0} (K={1})",betas[j], j+1), points);
             }
@@ -309,7 +312,7 @@ namespace Main.Configurations
 
         //    var contries = ProtoStore.LoadCountries();
         //    var chromosome = new NodeGenes(alpha, gamma);
-        //    var cfW = CountryInfo.GetWindCf();
+        //    var cfW = CountryInfo.GetOnshoreWindCf();
         //    var cfS = CountryInfo.GetSolarCf();
         //    // Calculated load weighted beta-scaled cf factors.
         //    var wSum = 0.0;

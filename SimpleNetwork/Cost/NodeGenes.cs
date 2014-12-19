@@ -67,101 +67,6 @@ namespace BusinessLogic.Cost
             _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene());
         }
 
-        public NodeGenes(double alpha, double gamma, double beta)
-        {
-            _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene { Alpha = alpha, Gamma = gamma });
-
-            // The result is NOT defined in alpha = 0.
-            //if (Math.Abs(alpha) < 1e-5) alpha = 1e-5;
-
-            var lEU = CountryInfo.GetMeanLoadSum();
-            var cfW = CountryInfo.GetWindCf();
-            var cfS = CountryInfo.GetSolarCf();
-            // Calculated load weighted beta-scaled cf factors.
-            var wSum = 0.0;
-            var sSum = 0.0;
-            foreach (var i in _mGenes.Keys)
-            {
-                wSum += CountryInfo.GetMeanLoad(i) * Math.Pow(cfW[i], beta);
-                sSum += CountryInfo.GetMeanLoad(i) * Math.Pow(cfS[i], beta);
-            }
-            // Now calculate alpha i.
-            foreach (var i in _mGenes.Keys)
-            {
-                // EMHER: Semi certain about the gamma equaltion. 
-                _mGenes[i].Alpha = (alpha < 1e-6)? 0 : 1 / (1 + (1 / alpha - 1) * Math.Pow(cfS[i] / cfW[i], beta) * wSum / sSum);
-                // EMHER: Quite certain about the gamma equaltion. 
-                _mGenes[i].Gamma = gamma*lEU*(alpha*Math.Pow(cfW[i], beta)/wSum + (1 - alpha)*Math.Pow(cfS[i], beta)/sSum);
-            }
-            // Make sanity check.
-            var dAlpha = alpha - Alpha;
-            var gGamma = gamma - Gamma;
-            if (Math.Abs(dAlpha) > 1e-6) throw new ArgumentException("Alpha value wrong");
-            if (Math.Abs(gGamma) > 1e-6) throw new ArgumentException("Gamma value wrong");
-        }
-
-        public NodeGenes(double alpha, double gamma, int k)
-        {
-            _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene { Alpha = alpha, Gamma = gamma });
-            var loadSum = _mGenes.Select(item => CountryInfo.GetMeanLoad(item.Key)).Sum();
-    
-            // FIND WIND GAMMAS            
-            var cfWs = _mGenes.ToDictionary(item => item.Key, item => CountryInfo.GetWindCf(item.Key));
-            var gammaWs = _mGenes.ToDictionary(item => item.Key, item => 1/(double)k);
-            var sumW = loadSum * gamma;
-            var minSumW = sumW / k;
-            foreach (var pair in cfWs.OrderByDescending(item => item.Value))
-            {
-                var load = CountryInfo.GetMeanLoad(pair.Key);
-                var delta = sumW - minSumW;
-                // Lots of "remaining power"; max out k.
-                if (delta > load * (k-1/(double)k))
-                {
-                    gammaWs[pair.Key] = k;
-                    sumW -= k * load;
-                }
-                // Intermediate case...
-                else if (sumW > 0)
-                {
-                    gammaWs[pair.Key] += delta / load;
-                    break;
-                }
-
-                minSumW -= load * 1 / k;
-            }
-
-            // FIND SOLAR GAMMAS
-            var cfSs = _mGenes.ToDictionary(item => item.Key, item => CountryInfo.GetSolarCf(item.Key));
-            var gammaSs = _mGenes.ToDictionary(item => item.Key, item => 1 / (double)k);
-            var sumS = loadSum*gamma;
-            var minSumS = sumS / k;
-            foreach (var pair in cfSs.OrderByDescending(item => item.Value))
-            {
-                var load = CountryInfo.GetMeanLoad(pair.Key);
-                var delta = sumS - minSumS;
-                // Lots of "remaining power"; max out k.
-                if (delta > load * (k - 1 / (double)k))
-                {
-                    gammaSs[pair.Key] = k;
-                    sumS -= k * load;
-                }
-                // Intermediate case...
-                else if (sumS > 0)
-                {
-                    gammaSs[pair.Key] += delta / load;
-                    break;
-                }
-
-                minSumS -= load * 1 / k;
-            }
-
-            foreach (var key in _mGenes.Keys.ToArray())
-            {
-                _mGenes[key].Gamma = gammaWs[key]*alpha + gammaSs[key]*(1 - alpha);
-                _mGenes[key].Alpha = gammaWs[key]*alpha / (alpha * gammaWs[key] + (1-alpha)*gammaSs[key]);
-            }
-        }
-
         public NodeGenes(double alpha, double gamma)
         {
             _mGenes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene{Alpha = alpha, Gamma = gamma});
@@ -177,21 +82,34 @@ namespace BusinessLogic.Cost
             _mGenes = genes;
         }
 
+        // Get exact (deep) copy.
         public NodeGenes Clone()
         {
-            // Clone the genes.
             var genes = new Dictionary<string, NodeGene>(_mGenes.Count);
-            
+            CloneGenes(genes, s => s);
+
+            return new NodeGenes(genes);
+        }
+
+        // Get (deep) copy with country abbreviation strings (used for graphs).
+        public NodeGenes Export()
+        {
+            var genes = new Dictionary<string, NodeGene>(_mGenes.Count);
+            CloneGenes(genes, CountryInfo.GetShortAbbrev);
+
+            return new NodeGenes(genes);
+        }
+
+        private void CloneGenes(Dictionary<string, NodeGene> genes, Func<string, string> map)
+        {
             foreach (var gene in _mGenes)
             {
-                genes.Add(gene.Key, new NodeGene    
+                genes.Add(map(gene.Key), new NodeGene
                 {
                     Alpha = gene.Value.Alpha,
                     Gamma = gene.Value.Gamma
                 });
             }
-
-            return new NodeGenes(genes);
         }
 
         #region Delegation 

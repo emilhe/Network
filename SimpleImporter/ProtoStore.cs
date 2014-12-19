@@ -8,16 +8,19 @@ namespace SimpleImporter
     public class ProtoStore
     {
 
-        private const string BaseDir = @"C:\proto\";
-        private const string ResultDir = @"C:\proto\result";
+        public const string BaseDir = @"C:\EmherSN\";
+        public const string DataDir = @"C:\EmherSN\data";
+        public const string CacheDir = @"C:\EmherSN\cache";
+        public const string ResultDir = @"C:\EmherSN\results";
+        public const string ImportDir = @"C:\EmherSN\imports";
 
         #region Countries
 
         public static void SaveCountries(List<string> countries)
         {
-            if (!Directory.Exists(BaseDir)) Directory.CreateDirectory(BaseDir);
+            if (!Directory.Exists(DataDir)) Directory.CreateDirectory(DataDir);
 
-            using (var file = File.Create(Path.Combine(BaseDir, "Countries")))
+            using (var file = File.Create(Path.Combine(DataDir, "Countries")))
             {
                 Serializer.Serialize(file, countries);
             }
@@ -26,7 +29,7 @@ namespace SimpleImporter
         public static List<string> LoadCountries()
         {
             List<string> result;
-            using (var file = File.OpenRead(Path.Combine(BaseDir, "Countries")))
+            using (var file = File.OpenRead(Path.Combine(DataDir, "Countries")))
             {
                 result = Serializer.Deserialize<List<string>>(file);
             }
@@ -38,31 +41,31 @@ namespace SimpleImporter
         #region Time Series
 
         /// <summary>
-        /// Method for saving time series in root folder (typically data imports).
+        /// Method for saving time series in import folder (typically data imports).
         /// </summary>
         /// <param name="ts"> the time series to save </param>
         /// <param name="key"> the file name </param>
-        public static void SaveTimeSeriesInRoot(TimeSeriesDal ts, string key)
+        public static void SaveTimeSeriesInImport(TimeSeriesDal ts, string key)
         {
-            if (!Directory.Exists(BaseDir)) Directory.CreateDirectory(BaseDir);
+            if (!Directory.Exists(ImportDir)) Directory.CreateDirectory(ImportDir);
 
-            using (var file = File.Create(Path.Combine(BaseDir, key)))
+            using (var file = File.Create(Path.Combine(ImportDir, key)))
             {
                 Serializer.Serialize(file, ts);
             }
         }
 
         /// <summary>
-        /// Method for loading time series from root folder (typically data imports).
+        /// Method for loading time series from import folder (typically data imports).
         /// </summary>
         /// <param name="key"> file name </param>
         /// <returns> the time series </returns>
-        public static TimeSeriesDal LoadTimeSeriesFromRoot(string key)
+        public static TimeSeriesDal LoadTimeSeriesFromImport(string key)
         {
-            if (!File.Exists(Path.Combine(BaseDir, key))) return null;
+            if (!File.Exists(Path.Combine(ImportDir, key))) return null;
 
             TimeSeriesDal result;
-            using (var file = File.OpenRead(Path.Combine(BaseDir, key)))
+            using (var file = File.OpenRead(Path.Combine(ImportDir, key)))
             {
                 result = Serializer.Deserialize<TimeSeriesDal>(file);
             }
@@ -110,7 +113,7 @@ namespace SimpleImporter
 
         public static void SaveEcnData(List<EcnDataRow> data)
         {
-            using (var file = File.Create(Path.Combine(BaseDir, "EcnData")))
+            using (var file = File.Create(Path.Combine(DataDir, "EcnData")))
             {
                 Serializer.Serialize(file, data);
             }
@@ -119,7 +122,7 @@ namespace SimpleImporter
         public static List<EcnDataRow> LoadEcnData()
         {
             List<EcnDataRow> result;
-            using (var file = File.OpenRead(Path.Combine(BaseDir, "EcnData")))
+            using (var file = File.OpenRead(Path.Combine(DataDir, "EcnData")))
             {
                 result = Serializer.Deserialize<List<EcnDataRow>>(file);
             }
@@ -132,7 +135,7 @@ namespace SimpleImporter
 
         public static void SaveLinkData(List<LinkDataRow> data, string key)
         {
-            using (var file = File.Create(Path.Combine(BaseDir, key)))
+            using (var file = File.Create(Path.Combine(DataDir, key)))
             {
                 Serializer.Serialize(file, data);
             }
@@ -141,7 +144,7 @@ namespace SimpleImporter
         public static List<LinkDataRow> LoadLinkData(string key)
         {
             List<LinkDataRow> result;
-            using (var file = File.OpenRead(Path.Combine(BaseDir, key)))
+            using (var file = File.OpenRead(Path.Combine(DataDir, key)))
             {
                 result = Serializer.Deserialize<List<LinkDataRow>>(file);
             }
@@ -152,11 +155,13 @@ namespace SimpleImporter
 
         #region Results : Grid
 
+        // Currently simulation saving is done in the cache dir, since that's what simulation saving is used for.
+
         public static void SaveGridResult(bool[,] grid, double[] rows, double[] cols, string key)
         {
-            if (!Directory.Exists(ResultDir)) Directory.CreateDirectory(ResultDir);
+            if (!Directory.Exists(CacheDir)) Directory.CreateDirectory(CacheDir);
 
-            using (var file = File.Create(Path.Combine(ResultDir, key)))
+            using (var file = File.Create(Path.Combine(CacheDir, key)))
             {
                 Serializer.Serialize(file, new GridResultRow {Columns = cols, Rows = rows, Grid = grid.ToProtoArray<bool>()});
             }
@@ -164,10 +169,10 @@ namespace SimpleImporter
 
         public static GridResultRow LoadGridResult(string key)
         {
-            if (!File.Exists(Path.Combine(ResultDir, key))) return null;
+            if (!File.Exists(Path.Combine(CacheDir, key))) return null;
 
             GridResultRow result;
-            using (var file = File.OpenRead(Path.Combine(ResultDir, key)))
+            using (var file = File.OpenRead(Path.Combine(CacheDir, key)))
             {
                 result = Serializer.Deserialize<GridResultRow>(file);
             }
@@ -178,12 +183,14 @@ namespace SimpleImporter
 
         #region Results : Simulation output
 
+        // Currently simulation saving is done in the cache dir, since that's what simulation saving is used for.
+
         public static void SaveSimulationOutput(SimulationOutputDal sim, string key)
         {
-            if (!Directory.Exists(ResultDir)) Directory.CreateDirectory(ResultDir);
-            if (!Directory.Exists(Path.Combine(ResultDir, key))) Directory.CreateDirectory(Path.Combine(ResultDir, key));
+            if (!Directory.Exists(CacheDir)) Directory.CreateDirectory(CacheDir);
+            if (!Directory.Exists(Path.Combine(CacheDir, key))) Directory.CreateDirectory(Path.Combine(CacheDir, key));
 
-            using (var file = File.Create(Path.Combine(ResultDir, key, "META")))
+            using (var file = File.Create(Path.Combine(CacheDir, key, "META")))
             {
                 Serializer.Serialize(file, sim);
             }   
@@ -191,10 +198,10 @@ namespace SimpleImporter
 
         public static SimulationOutputDal LoadSimulationOutput(string key)
         {
-            if (!File.Exists(Path.Combine(ResultDir, key, "META"))) return null;
+            if (!File.Exists(Path.Combine(CacheDir, key, "META"))) return null;
 
             SimulationOutputDal result;
-            using (var file = File.OpenRead(Path.Combine(ResultDir, key, "META")))
+            using (var file = File.OpenRead(Path.Combine(CacheDir, key, "META")))
             {
                 result = Serializer.Deserialize<SimulationOutputDal>(file);
             }

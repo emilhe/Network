@@ -35,7 +35,7 @@ namespace SimpleImporter
                 // For now, t time series are unimportant.
                 if (name.Equals("t")) continue;
                 var ts = Parse(file, country, name, source);
-                ProtoStore.SaveTimeSeriesInRoot(ts,
+                ProtoStore.SaveTimeSeriesInImport(ts,
                     GenerateFileKey(ts.Properties["Name"], (TsType) byte.Parse(ts.Properties["Type"]),
                         (TsSource) byte.Parse(ts.Properties["Source"])));
                 if (countries.Contains(country)) continue;

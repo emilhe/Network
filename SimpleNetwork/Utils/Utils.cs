@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Cost;
 using BusinessLogic.Nodes;
@@ -29,13 +30,19 @@ namespace BusinessLogic.Utils
             var beta = 0.0;
             while (true)
             {
-                var genes = new NodeGenes(alpha, 1, beta);
+                var genes = NodeGenesFactory.SpawnBeta(alpha, 1, beta);
                 var gammas = genes.Select(item => item.Value.Gamma).ToArray();
-                if (gammas.Min() < 1 / K) break;
-                if (gammas.Max() > K) break;
+                if (gammas.Min() < 1/K)
+                {
+                    break;
+                }
+                if (gammas.Max() > K)
+                {
+                    break;
+                }
                 beta += delta;
             }
-            return beta-delta;
+            return Math.Max(0,beta-delta);
         }
 
     }

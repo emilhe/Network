@@ -82,13 +82,13 @@ namespace Utils
             OpExVariable = 0.0
         };
 
-        public static Asset Wind = new Asset
-        {
-            Name = "Wind – 50/50 mix",
-            CapExFixed = 1.5,
-            OpExFixed = 35,
-            OpExVariable = 0.0
-        };
+        //public static Asset Wind = new Asset
+        //{
+        //    Name = "Wind – 50/50 mix",
+        //    CapExFixed = 1.5,
+        //    OpExFixed = 35,
+        //    OpExVariable = 0.0
+        //};
 
         public static Asset Solar = new Asset
         {

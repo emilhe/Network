@@ -10,6 +10,8 @@ namespace BusinessLogic.Cost
     public class ParallelCostCalculator : ICostCalculator<NodeChromosome>
     {
 
+        public bool Full { get; set; }
+
         private readonly Dictionary<int, NodeCostCalculator> _mCalcMap;
         private readonly ParallelOptions _mOptions;
 
@@ -26,7 +28,7 @@ namespace BusinessLogic.Cost
             {
                 // Very expensive, of extra thread are spawned (they are, apparently..).
                 var id = Thread.CurrentThread.ManagedThreadId;
-                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.Add(id, new NodeCostCalculator(false));
+                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.Add(id, new NodeCostCalculator(false, Full));
                 chromosome.UpdateCost(_mCalcMap[id]);
             });
         }

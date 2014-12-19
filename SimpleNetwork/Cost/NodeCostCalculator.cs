@@ -174,7 +174,7 @@ namespace BusinessLogic.Cost
         {
             var windCF =
                 nodeGenes.Select(
-                    item => item.Value.Alpha*item.Value.Gamma*CountryInfo.GetMeanLoad(item.Key)*CountryInfo.GetWindCf(item.Key)).Sum()/
+                    item => item.Value.Alpha*item.Value.Gamma*CountryInfo.GetMeanLoad(item.Key)*CountryInfo.GetOnshoreWindCf(item.Key)).Sum()/
                 CountryInfo.GetMeanLoadSum();
             var solarCF = nodeGenes.Select(
                     item => (1-item.Value.Alpha)*item.Value.Gamma * CountryInfo.GetMeanLoad(item.Key) * CountryInfo.GetSolarCf(item.Key)).Sum() /
@@ -264,7 +264,7 @@ namespace BusinessLogic.Cost
             {
                 var gene = nodeGenes[node.Name];
                 // Calculate capacities.
-                windCapacity += gene.Gamma * gene.Alpha * node.AvgLoad / CountryInfo.GetWindCf(node.Name);
+                windCapacity += gene.Gamma * gene.Alpha * node.AvgLoad / CountryInfo.GetOnshoreWindCf(node.Name);
                 solarCapacity += gene.Gamma * (1 - gene.Alpha) * node.AvgLoad / CountryInfo.GetSolarCf(node.Name);
             }
                 
@@ -297,7 +297,7 @@ namespace BusinessLogic.Cost
 
         private static double WindCost(double capacity)
         {
-            return capacity*(Costs.Wind.CapExFixed*1e6 + Costs.Wind.OpExFixed*1e3*AnnualizationFactor);
+            return capacity*(Costs.OnshoreWind.CapExFixed*1e6 + Costs.OnshoreWind.OpExFixed*1e3*AnnualizationFactor);
         }
 
         private static double SolarCost(double capacity)

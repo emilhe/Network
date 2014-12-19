@@ -138,12 +138,13 @@ namespace Utils
 
         #region Deprecated
 
-        public static void ToFile<T, V>(this Dictionary<T, V> dictionary, string path)
+        public static void ToFile<T, V>(this IDictionary<T, V> dictionary, string path)
         {
             File.WriteAllLines(path, dictionary.Select(x => x.Key + ":" + x.Value));
         }
 
-        public static Dictionary<T, V> DictionaryFromFile<T, V>(string path) where T : IConvertible
+        public static IDictionary<T, V> DictionaryFromFile<T, V>(string path)
+            where T : IConvertible
             where V : IConvertible
         {
             return File.ReadAllLines(path).Select(line => line.Split(':'))

@@ -28,9 +28,9 @@ namespace Main
             //}
 
             // Find optimum.
-            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator());
+            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator(){Full = true});
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(@"C:\proto\VEgeneticWithConstraintTransK=2.txt");
+            optimum.Genes.ToJsonFile(@"C:\proto\32VEgeneticWithoutConstraintTransK=1.txt");
         }
 
         public static void SimulatedAnnealing()
