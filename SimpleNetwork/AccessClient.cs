@@ -16,7 +16,7 @@ namespace BusinessLogic
 
         #region Country data
 
-        public List<CountryNode> GetAllCountryData(TsSource source, int offset = 0)
+        public static List<CountryNode> GetAllCountryDataOld(TsSource source, int offset = 0)
         {
             var countries = ProtoStore.LoadCountries();
             var result = new List<CountryNode>(countries.Count);
@@ -32,13 +32,29 @@ namespace BusinessLogic
             return result;
         }
 
+        public static List<CountryNode> GetAllCountryDataNew(TsSource source, bool offshore = false, int offset = 0)
+        {
+            var countries = ProtoStore.LoadCountries();
+            var result = new List<CountryNode>(countries.Count);
+
+            foreach (var country in countries)
+            {
+                var load = GetTs(country, TsType.Load, TsSource.VE, offset);
+                var wind = GetTs(country, offshore? TsType.OffshoreWind : TsType.OnshoreWind, source, offset);
+                var solar = GetTs(country, TsType.Solar, source, offset);
+                result.Add(new CountryNode(new ReModel(country, load, wind, solar)));
+            }
+
+            return result;
+        }
+
         //private void AddGenerator(CountryNode countryNode, TsType type, TsSource source, int offset)
         //{
         //    countryNode.Generators.Add(new TimeSeriesGenerator(type.GetDescription(),
         //        GetTs(countryNode.Name, type, source, offset)));
         //}
 
-        private DenseTimeSeries GetTs(string country, TsType type, TsSource source, int offset)
+        private static DenseTimeSeries GetTs(string country, TsType type, TsSource source, int offset)
         {
             var tsBll = new DenseTimeSeries(ProtoStore.LoadTimeSeriesFromImport(CsvImporter.GenerateFileKey(country, type, source)));
             tsBll.SetOffset(offset);

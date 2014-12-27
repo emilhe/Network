@@ -10,7 +10,7 @@ namespace Main
         public static void Genetic()
         {
             // ReBirth population.
-            var n = 100;
+            var n = 500;
             var strategy = new GeneticNodeOptimizationStrategy();
             var population = new NodeChromosome[n];
 
@@ -28,9 +28,9 @@ namespace Main
             //}
 
             // Find optimum.
-            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator(){Full = true});
+            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator(){Full = false});
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(@"C:\proto\32VEgeneticWithoutConstraintTransK=1.txt");
+            optimum.Genes.ToJsonFile(@"C:\proto\onshoreVEgeneticConstraintTransK=3.txt");
         }
 
         public static void SimulatedAnnealing()

@@ -13,6 +13,7 @@ namespace SimpleImporter
         ISET = 0,
         VE = 1,
         CALCULATED = 2,
+        VE50PCT = 3,
     }
 
     public enum TsType : byte
@@ -21,6 +22,8 @@ namespace SimpleImporter
         [Description("Wind Generation")] Wind = 1,
         [Description("Solar Generation")] Solar = 2,
         [Description("Custom")] Custom = 3,
+        [Description("Onshore Wind Generation")] OnshoreWind = 4,
+        [Description("Offshore Wind Generation")] OffshoreWind = 5
     }
 
     public enum ExportStrategy : byte

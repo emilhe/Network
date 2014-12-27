@@ -10,6 +10,8 @@ namespace BusinessLogic.Cost
     public class ParallelCostCalculator : ICostCalculator<NodeChromosome>
     {
 
+        // TODO: FIX TRANSMISSION PROPERTY
+        public bool Transmission { get; set; }
         public bool Full { get; set; }
 
         private readonly Dictionary<int, NodeCostCalculator> _mCalcMap;

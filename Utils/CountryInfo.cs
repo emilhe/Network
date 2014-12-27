@@ -213,7 +213,7 @@ namespace Utils
         public static readonly Dictionary<string, double> SolarCf =
             FileUtils.DictionaryFromFile<string, double>(@"C:\EmherSN\data\solarCf_50pct_onshore.txt")
                 .Where(item => CountryCodeMap3.ContainsKey(item.Key))
-                .ToDictionary(item => GetName(item.Key), item => item.Value);
+                .ToDictionary(item => GetName(item.Key), item => item.Value*1.81);
 
         #endregion
 

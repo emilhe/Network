@@ -52,8 +52,12 @@ namespace BusinessLogic
 
         public static List<CountryNode> CreateNodes(TsSource source = TsSource.ISET, double offset = 0)
         {
-            var client = new AccessClient();
-            return client.GetAllCountryData(source, (int) (offset*Utils.Utils.HoursInYear));
+            return AccessClient.GetAllCountryDataOld(source, (int)(offset * Utils.Utils.HoursInYear));
+        }
+
+        public static List<CountryNode> CreateNodesNew(bool offshore, double offset = 0)
+        {
+            return AccessClient.GetAllCountryDataNew(TsSource.VE50PCT, offshore, (int)(offset * Utils.Utils.HoursInYear));
         }
 
         #endregion

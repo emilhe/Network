@@ -47,7 +47,7 @@ namespace BusinessLogic.Cost
                 {
                     Parameters = new Dictionary<string, KeyValuePair<int, double>>
                     {
-                        {"be", new KeyValuePair<int, double>(0, 1/32)},
+                        {"be", new KeyValuePair<int, double>(0, 1.0/32.0)},
                         {"bc", new KeyValuePair<int, double>(0, 1)},
                         {"tc", new KeyValuePair<int, double>(0, 1)}
 
@@ -117,7 +117,8 @@ namespace BusinessLogic.Cost
             });
             _mTcCtrl.CacheEnabled = cache;
 
-            _mNodes = ConfigurationUtils.CreateNodes(TsSource.VE);
+            // TODO: Make source configurable
+            _mNodes = ConfigurationUtils.CreateNodesNew(false);
         }
 
         /// <summary>
@@ -138,15 +139,29 @@ namespace BusinessLogic.Cost
         }
 
         // Does not REALLY belong here. Consider moving..
-        public Dictionary<string, double> ParameterOverview(NodeGenes nodeGenes, bool includeTransmission = false)
+        public Dictionary<string, double>   ParameterOverview(NodeGenes nodeGenes, bool includeTransmission = false)
         {
             // Calculate elements.
             var avgLoad = _mNodes.Select(item => item.Model.AvgLoad).Sum();
             var parameterOverview = new Dictionary<string, double>();
-            if (includeTransmission) parameterOverview.Add("TC", TransmissionCapacity(nodeGenes)/avgLoad);
-            parameterOverview.Add("BE", BackupEnergy(nodeGenes) / (avgLoad * Utils.Utils.HoursInYear));
-            parameterOverview.Add("BC", BackupCapacity(nodeGenes)/avgLoad);
+            var costs = BaseCosts(nodeGenes).Values.Sum();
+
+            if (includeTransmission)
+            {
+                var tc = TransmissionCapacity(nodeGenes);
+                parameterOverview.Add("TC", tc / avgLoad);
+                // TODO: HERE ALL AC IS ASSUMED! TO BE CHANGED!!
+                costs += tc*Costs.AcCostPerKm;
+            }
+            var be = BackupEnergy(nodeGenes);
+            costs += BackupEnergyCost(be);
+            var bc = BackupCapacity(nodeGenes);
+            costs += BackupCapacityCost(bc);
+            parameterOverview.Add("BE", be / (avgLoad * Utils.Utils.HoursInYear));
+            parameterOverview.Add("BC", bc / avgLoad);
             parameterOverview.Add("CF", CapacityFactor(nodeGenes));
+            var scaling = _mNodes.Select(item => item.Model.AvgLoad).Sum()*Utils.Utils.HoursInYear*AnnualizationFactor;
+            parameterOverview.Add("LCOE", costs/scaling);
 
             return parameterOverview;
         }
@@ -181,7 +196,6 @@ namespace BusinessLogic.Cost
                 CountryInfo.GetMeanLoadSum();
 
             return (windCF+solarCF);
-
         }
 
         // Cost of transmission network.

@@ -46,14 +46,14 @@ namespace BusinessLogic.Cost
             return result;
         }
 
-        public static NodeGenes SpawnNuMax(double alpha, double gamma, double k)
+        public static NodeGenes SpawnCfMax(double alpha, double gamma, double k)
         {
             var genes = CountryInfo.GetCountries().ToDictionary(item => item, item => new NodeGene { Alpha = alpha, Gamma = gamma });
             var loadSum = genes.Select(item => CountryInfo.GetMeanLoad(item.Key)).Sum();
 
             // FIND WIND GAMMAS            
             var cfWs = genes.ToDictionary(item => item.Key, item => CountryInfo.GetOnshoreWindCf(item.Key));
-            var gammaWs = genes.ToDictionary(item => item.Key, item => 1 / (double)k);
+            var gammaWs = genes.ToDictionary(item => item.Key, item => 1 / k);
             var sumW = loadSum * gamma;
             var minSumW = loadSum / k;
             foreach (var pair in cfWs.OrderByDescending(item => item.Value))
@@ -61,7 +61,7 @@ namespace BusinessLogic.Cost
                 var load = CountryInfo.GetMeanLoad(pair.Key);
                 var delta = sumW - minSumW;
                 // Lots of "remaining power"; max out k.
-                if (delta > load * (k - 1 / (double)k))
+                if (delta > load * (k - 1 / k))
                 {
                     gammaWs[pair.Key] = k;
                     sumW -= k * load;

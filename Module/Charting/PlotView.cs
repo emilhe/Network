@@ -23,6 +23,31 @@ namespace Controls.Charting
             MainChart.Series.Clear();
         }
 
+        public void AddData(double[] x, string name, bool addPoints = true, bool skipLine = false)
+        {
+            if (!skipLine)
+            {
+                var line = new Series(name) { ChartType = SeriesChartType.Line };
+                for (int i = 0; i < x.Length; i++)
+                {
+                    line.Points.AddXY(x[i], i);
+                }
+                chart.Series.Add(line);
+            }
+
+            if (addPoints)
+            {
+                var points = new Series(name + ", points") { ChartType = SeriesChartType.Point };
+                for (int i = 0; i < x.Length; i++)
+                {
+                    points.Points.AddXY(x[i], i);
+                }
+                chart.Series.Add(points);
+            }
+
+            RenderAxis();
+        }
+
         public void AddData(double[] x, double[] y, string name, bool addPoints = true, bool skipLine = false)
         {
             if (!skipLine)
@@ -90,7 +115,7 @@ namespace Controls.Charting
                     chart.Series.Add(spline);   
                 }
                 // Custom curve.
-                if (value.CustomYs != null)
+                if (value.MaxCfY != null)
                 {
                     var spline = new Series(value.GeneticLabel + "??")
                     {
@@ -100,11 +125,11 @@ namespace Controls.Charting
                         BorderWidth = 3,
                         IsVisibleInLegend = false
                     };
-                    for (int i = 0; i < value.CustomXs.Length; i++)
+                    for (int i = 0; i < value.MaxCfX.Length; i++)
                     {
                         var point = new DataPoint();
-                        point.SetValueXY(value.CustomXs[i], value.CustomYs[i]);
-                        point.ToolTip = string.Format("{0}, {1}", value.CustomXs[i], value.CustomYs[i]);
+                        point.SetValueXY(value.MaxCfX[i], value.MaxCfY[i]);
+                        point.ToolTip = string.Format("{0}, {1}", value.MaxCfX[i], value.MaxCfY[i]);
                         spline.Points.Add(point);
                     }
                     chart.Series.Add(spline);

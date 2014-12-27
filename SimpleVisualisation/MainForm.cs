@@ -5,10 +5,12 @@ using System.Linq;
 using System.Windows.Forms;
 using BusinessLogic;
 using BusinessLogic.Cost;
+using BusinessLogic.Interfaces;
 using Controls;
 using Controls.Charting;
 using Main.Configurations;
 using Main.Documentation;
+using SimpleImporter;
 using Utils;
 
 namespace Main
@@ -35,8 +37,12 @@ namespace Main
 
             //Optimization.Genetic();
 
-            //Figures.PlayGround.Tmp(this);
-            Figures.PlayGround.ChromosomeChart(this);
+            //Figures.PlayGround.ExportChromosomeData();
+            //Figures.PlayGround.ExportCostDetailsData(new List<double> { 1, 2, 3 }, true);
+            Figures.PlayGround.ExportParameterOverviewData(new List<double> { 1, 2, 3 }, true);
+
+            //var avg = data.Last().Model.WindTimeSeries.Values.Average();
+            //var hest = 2;
 
             //Tables.PrintLinkInfo();
             //Tables.PrintCapacityFactors();
@@ -196,7 +202,7 @@ namespace Main
 
             //var hest = 0;
 
-            //var opt = new MixOptimizer(client.GetAllCountryData(TsSource.ISET));  
+            //var opt = new MixOptimizer(client.GetAllCountryDataOld(TsSource.ISET));  
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
             //opt.OptimizeIndividually();

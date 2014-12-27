@@ -143,18 +143,18 @@ namespace Main.Configurations
             var betas = new double[kValues.Count];
             // TEST
             var k = NodeGenesFactory.SpawnBeta(0.5, 1, betas[0]);
-            var b = NodeGenesFactory.SpawnNuMax(0.5, 1, kValues[0]);
+            var b = NodeGenesFactory.SpawnCfMax(0.5, 1, kValues[0]);
             // Main loop.
             for (int j = 0; j < betas.Length; j++)
             {
                 var betaPoints = new double[alphaRes+1];
-                var kPoints = new double[alphaRes + 1];
+                var maxCfPoints = new double[alphaRes + 1];
                 for (int i = 0; i <= alphaRes; i++)
                 {
                     alphas[i] = alphaStart + (i)*delta;
                     betas[j] = BusinessLogic.Utils.Utils.FindBeta(kValues[j], 1e-3);
                     betaPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]), inclTrans);
-                    kPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnNuMax(alphas[i], 1, kValues[j]), inclTrans);
+                    maxCfPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]), inclTrans);
                 }
                 data.Add(new BetaWrapper
                 {
@@ -162,8 +162,8 @@ namespace Main.Configurations
                     BetaY = betaPoints,
                     K = kValues[j],
                     Beta = betas[j],
-                    CustomXs = alphas,
-                    CustomYs = kPoints
+                    MaxCfX = alphas,
+                    MaxCfY = maxCfPoints
                 });
             }
             //// Add genetic points.

@@ -11,7 +11,7 @@ namespace SimpleImporter
         public const string BaseDir = @"C:\EmherSN\";
         public const string DataDir = @"C:\EmherSN\data";
         public const string CacheDir = @"C:\EmherSN\cache";
-        public const string ResultDir = @"C:\EmherSN\results";
+        //public const string ResultDir = @"C:\EmherSN\results";
         public const string ImportDir = @"C:\EmherSN\imports";
 
         #region Countries
@@ -79,10 +79,10 @@ namespace SimpleImporter
         /// <returns> file name </returns>
         public static Guid SaveTimeSeries(TimeSeriesDal ts, string key)
         {
-            if (!Directory.Exists(Path.Combine(ResultDir, key))) Directory.CreateDirectory(Path.Combine(ResultDir, key));
+            if (!Directory.Exists(Path.Combine(CacheDir, key))) Directory.CreateDirectory(Path.Combine(CacheDir, key));
             var subKey = Guid.NewGuid();
 
-            using (var file = File.Create(Path.Combine(ResultDir, key, subKey.ToString())))
+            using (var file = File.Create(Path.Combine(CacheDir, key, subKey.ToString())))
             {
                 Serializer.Serialize(file, ts);
             }
@@ -97,10 +97,10 @@ namespace SimpleImporter
         /// <returns> the time series </returns>
         public static TimeSeriesDal LoadTimeSeries(Guid subKey, string key)
         {
-            if (!File.Exists(Path.Combine(ResultDir, key, subKey.ToString()))) return null;
+            if (!File.Exists(Path.Combine(CacheDir, key, subKey.ToString()))) return null;
 
             TimeSeriesDal result;
-            using (var file = File.OpenRead(Path.Combine(ResultDir, key, subKey.ToString())))
+            using (var file = File.OpenRead(Path.Combine(CacheDir, key, subKey.ToString())))
             {
                 result = Serializer.Deserialize<TimeSeriesDal>(file);
             }

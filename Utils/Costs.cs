@@ -10,10 +10,10 @@ namespace Utils
         #region Transmission
 
         // Cost in €/MW/km
-        private const double AcCostPerKm = 400;
-        private const double DcCostPerKm = 1500;
+        public const double AcCostPerKm = 400;
+        public const double DcCostPerKm = 1500;
         // Cost in €/MW
-        private const double DcConverter = 150000;
+        public const double DcConverter = 150000;
         // Link properties.
         public static readonly Dictionary<string, string> LinkType =
             FileUtils.DictionaryFromFile<string, string>(@"C:\proto\LineType.txt");
