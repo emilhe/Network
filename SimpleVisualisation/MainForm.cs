@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Windows.Forms;
-using BusinessLogic;
 using BusinessLogic.Cost;
-using BusinessLogic.Interfaces;
+using BusinessLogic.Generators;
 using Controls;
 using Controls.Charting;
+using BusinessLogic;
 using Main.Configurations;
 using Main.Documentation;
+using Main.Figures;
 using SimpleImporter;
 using Utils;
 
@@ -32,21 +37,14 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
 
-            //CostAnalysis.BetaWithGenetic(this, new List<int> { 1 }, true);
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
 
-            //Optimization.Genetic();
+            //Figures.PlayGround.Tmp(this);
+            Figures.PlayGround.ChromosomeChart(this);
 
-            //Figures.PlayGround.ExportChromosomeData();
-            //Figures.PlayGround.ExportCostDetailsData(new List<double> { 1, 2, 3 }, true);
-            Figures.PlayGround.ExportParameterOverviewData(new List<double> { 1, 2, 3 }, true);
-
-            //var avg = data.Last().Model.WindTimeSeries.Values.Average();
-            //var hest = 2;
-
-            //Tables.PrintLinkInfo();
-            //Tables.PrintCapacityFactors();
+            //Tables.PrintLinkInfo(); HEST
             //Tables.PrintCostInfo();
+            //Tables.PrintCapacityFactors();
 
             //var genes = new NodeGenes(1, 1, 2);
 
@@ -202,7 +200,7 @@ namespace Main
 
             //var hest = 0;
 
-            //var opt = new MixOptimizer(client.GetAllCountryDataOld(TsSource.ISET));  
+            //var opt = new MixOptimizer(client.GetAllCountryData(TsSource.ISET));  
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
             //opt.OptimizeIndividually();
@@ -285,7 +283,7 @@ namespace Main
             _contourView = new ContourView
             {
                 Dock = DockStyle.Fill,
-                Location = new Point(0, 0),
+                Location = new System.Drawing.Point(0, 0),
                 Name = "ContourView",
             };
             panel1.Controls.Add(_contourView);
@@ -336,7 +334,7 @@ namespace Main
             _timeSeriesControl = new TimeSeriesControl
             {
                 Dock = DockStyle.Fill,
-                Location = new Point(0, 0),
+                Location = new System.Drawing.Point(0, 0),
                 Name = "timeSeriesControl",
             };
             panel1.Controls.Add(_timeSeriesControl);
@@ -362,7 +360,7 @@ namespace Main
             _histogramView = new GroupHistogramView
             {
                 Dock = DockStyle.Fill,
-                Location = new Point(0, 0),
+                Location = new System.Drawing.Point(0, 0),
                 Name = "histogramView",
             };
             panel1.Controls.Add(_histogramView);

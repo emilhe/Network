@@ -25,14 +25,18 @@ namespace Main.Figures
             var layouts = new Dictionary<NodeGenes, string>();
 
             // Homogeneous layout.
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, 0.0), "k=1.txt");
+            //layouts.Add(new NodeGenes(1,1), "homo.txt");
+            // Standard beta/max CF layouts
+            layouts.Add(NodeGenesFactory.SpawnBeta(1, 1, 1), "beta=1wind.txt");
+            layouts.Add(NodeGenesFactory.SpawnBeta(0, 1, 1), "beta=1solar.txt");
+            layouts.Add(NodeGenesFactory.SpawnCfMax(1, 1, 2), "k=2cfMaxWind.txt");
+            layouts.Add(NodeGenesFactory.SpawnCfMax(0, 1, 2), "k=2cfMaxSolar.txt");
             // Beta layouts.
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, 1.0), "beta=1.txt");
-            //layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(1.5, 1e-3, mix)), "k=15beta.txt");
+            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(1, 1e-3, mix)), "k=1beta.txt");
             layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(2, 1e-3, mix)), "k=2beta.txt");
             layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(3, 1e-3, mix)), "k=3beta.txt");
             // Maximum CF layouts.
-            //layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 1.5), "k=15cfMax.txt");
+            layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 1), "k=1cfMax.txt");
             layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 2), "k=2cfMax.txt");
             layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 3), "k=3cfMax.txt");
             // Genetic layouts.
