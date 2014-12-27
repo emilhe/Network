@@ -42,7 +42,7 @@ namespace Main
             //Figures.PlayGround.Tmp(this);
             Figures.PlayGround.ChromosomeChart(this);
 
-            //Tables.PrintLinkInfo();
+            //Tables.PrintLinkInfo(); HEST
             //Tables.PrintCostInfo();
             //Tables.PrintCapacityFactors();
 
