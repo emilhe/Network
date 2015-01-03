@@ -27,14 +27,24 @@ namespace Utils
         /// <param name="to"> end country </param>
         /// <param name="diffAcDc"> differentiate dc and ac links </param>
         /// <returns> link cost per MW </returns>
-        public static double GetLinkCost(string from, string to, bool diffAcDc = false)
+        public static double GetLinkCost(string from, string to, bool diffAcDc = true)
         {
-            var key = GetKey(from, to);
+            return GetLinkCost(GetKey(from, to), diffAcDc);
+        }
+
+        /// <summary>
+        /// Get the cost of a link.
+        /// </summary>
+        /// <param name="key"> key </param>
+        /// <param name="diffAcDc"> differentiate dc and ac links </param>
+        /// <returns> link cost per MW </returns>
+        public static double GetLinkCost(string key, bool diffAcDc = true)
+        {
             if (!diffAcDc) return LinkLength[key] * AcCostPerKm;
 
             if (!LinkType.ContainsKey(key)) throw new ArgumentException("Link type not found: " + key);
-            if (LinkType[key].Equals("AC")) return LinkLength[key]*AcCostPerKm;
-            if (LinkType[key].Equals("DC")) return LinkLength[key]*DcCostPerKm + 2*DcConverter;
+            if (LinkType[key].Equals("AC")) return LinkLength[key] * AcCostPerKm;
+            if (LinkType[key].Equals("DC")) return LinkLength[key] * DcCostPerKm + 2 * DcConverter;
 
             throw new ArgumentException("Unknown link type.");
         }
@@ -50,7 +60,7 @@ namespace Utils
             return LinkLength[GetKey(from, to)];
         }
 
-        private static string GetKey(string from, string to)
+        public static string GetKey(string from, string to)
         {
             string key = null;
             var key1 = string.Format("{0}-{1}", from, to);

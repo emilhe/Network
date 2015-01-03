@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using BusinessLogic.Utils;
 using Optimization;
 
 namespace BusinessLogic.Cost
@@ -10,7 +11,7 @@ namespace BusinessLogic.Cost
     public class ParallelCostCalculator : ICostCalculator<NodeChromosome>
     {
 
-        // TODO: FIX TRANSMISSION PROPERTY
+        // TODO: FIX TRANSMISSION  & FULL PROPERTY
         public bool Transmission { get; set; }
         public bool Full { get; set; }
 
@@ -30,7 +31,7 @@ namespace BusinessLogic.Cost
             {
                 // Very expensive, of extra thread are spawned (they are, apparently..).
                 var id = Thread.CurrentThread.ManagedThreadId;
-                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.Add(id, new NodeCostCalculator(false, Full));
+                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.Add(id, new NodeCostCalculator(new ParameterEvaluator(Full) { CacheEnabled = false }));
                 chromosome.UpdateCost(_mCalcMap[id]);
             });
         }

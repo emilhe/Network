@@ -12,13 +12,8 @@ namespace Optimization
         // Cost function.
         double Cost { get; }
 
-        // Mutate according to "species specifications".
-        void Mutate();
-
-        // Mutate according to "species specifications".
-        ISolution Clone();
-
         // Update the cost. MUST be done externally.
         void UpdateCost(object costCalc);
+
     }
 }

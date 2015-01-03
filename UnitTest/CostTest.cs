@@ -22,7 +22,7 @@ namespace UnitTest
              //var n = 50;
              //var strategy = new GeneticNodeOptimizationStrategy(new ParallelCostCalculator());
              //var population = new IChromosome[n];
-             //for (int i = 0; i < population.Length; i++) population[i] = strategy.Spawn();
+             //for (int i = 0; i < population.Length; i++) population[i] = strategy.SpawnChromosome();
              //// Find optimum.
              //var optimizer = new GeneticOptimizer<NodeChromosome>(strategy);
              //var optimum = optimizer.Optimize(population);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BusinessLogic.Cost;
+using BusinessLogic.Utils;
 using Controls;
 using Controls.Article;
 using Controls.Charting;
@@ -46,23 +47,36 @@ namespace Main.Figures
 
         public static void ExportParameterOverviewData(List<double> kValues, bool inclTrans = false)
         {
-            var costCalc = new NodeCostCalculator(true, true);
-            var data = CalcBetaCurves(kValues, 0.0, genes => costCalc.ParameterOverview(genes, inclTrans));
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator(true));
+            var data = CalcBetaCurves(kValues, 0.0, genes => genes.Alpha, genes => costCalc.ParameterOverview(genes, inclTrans));
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\dataS2.txt");
         }
 
         public static void ExportCostDetailsData(List<double> kValues, bool inclTrans = false)
         {
-            var costCalc = new NodeCostCalculator(true, true);
-            var data = CalcCosts(kValues, 1, genes => costCalc.DetailedSystemCosts(genes, inclTrans));
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator(true));
+            var data = CalcCostDetails(kValues, 1, genes => costCalc.DetailedSystemCosts(genes, inclTrans));
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\costs\cost.txt");
         }
 
+        public static void ExportMismatchData(List<double> kValues, bool inclTrans = false)
+        {
+            var paramEval = new ParameterEvaluator();
+            var costCalc = new NodeCostCalculator(paramEval);
+            var data = CalcBetaCurves(kValues, 0.0, paramEval.Sigma, genes => new Dictionary<string, double>
+            {
+                {"CF", paramEval.CapacityFactor(genes)},
+                {"LCOE", costCalc.SystemCost(genes, inclTrans)}
+            });
+
+            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\sigmas\sigma.txt");
+        }
+
         #endregion
 
-        private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes, Dictionary<string, double>> eval)
+        private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes, double> evalX, Func<NodeGenes, Dictionary<string, double>> evalY)
         {
             // Prepare the data structures.
             var alphaRes = 10;
@@ -84,7 +98,9 @@ namespace Main.Figures
             {
                 for (int i = 0; i <= alphaRes; i++)
                 {
-                    var results = eval(NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]));
+                    var genes = NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]);
+                    var xValue = evalX(genes);
+                    var results = evalY(genes);
                     foreach (var pair in results)
                     {
                         if (!data.ContainsKey(pair.Key)) data.Add(pair.Key, new Dictionary<double, BetaWrapper>());
@@ -92,17 +108,19 @@ namespace Main.Figures
                         {
                             K = kValues[j],
                             Beta = betas[j],
-                            BetaX = alphas,
+                            BetaX = new double[alphaRes + 1],
                             BetaY = new double[alphaRes + 1],
-                            MaxCfX = alphas,    
+                            MaxCfX = new double[alphaRes + 1],    
                             MaxCfY = new double[alphaRes + 1],
                         });
                         data[pair.Key][kValues[j]].BetaY[i] = pair.Value;
+                        data[pair.Key][kValues[j]].BetaX[i] = xValue;
                     }
-                    results = eval(NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]));
+                    results = evalY(NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]));
                     foreach (var pair in results)
                     {
                         data[pair.Key][kValues[j]].MaxCfY[i] = pair.Value;
+                        data[pair.Key][kValues[j]].MaxCfX[i] = xValue;
                     }
                 }
             }
@@ -114,10 +132,11 @@ namespace Main.Figures
                     FileUtils.FromJsonFile<NodeGenes>(
                         string.Format(GeneticPath,
                             kValues[j]));
-                var results = eval(genes);
+                var xValue = evalX(genes);
+                var results = evalY(genes);
                 foreach (var pair in results)
                 {
-                    data[pair.Key][kValues[j]].GeneticX = genes.Alpha;
+                    data[pair.Key][kValues[j]].GeneticX = xValue;
                     data[pair.Key][kValues[j]].GeneticY = pair.Value;
                 }
             }
@@ -125,8 +144,7 @@ namespace Main.Figures
             return data;
         }
 
-        // TODO: FRAGILE STRUCTURE
-        private static CostWrapper CalcCosts(List<double> kValues, double alpha, Func<NodeGenes, Dictionary<string, double>> eval)
+        private static CostWrapper CalcCostDetails(List<double> kValues, double alpha, Func<NodeGenes, Dictionary<string, double>> eval)
         {
             // Prepare the data structures.
             var betas = new double[kValues.Count];
@@ -169,7 +187,6 @@ namespace Main.Figures
 
             return data;
         }
-
 
         #region Deprecated
 
@@ -270,8 +287,8 @@ namespace Main.Figures
 
         public static void ParameterOverviewChart(MainForm main, List<double> betaValues, bool inclTrans = false)
         {
-            var costCalc = new NodeCostCalculator();
-            var data = CalcBetaCurves(betaValues, 0.0, genes => costCalc.ParameterOverview(genes, inclTrans));
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator());
+            var data = CalcBetaCurves(betaValues, 0.0, genes => genes.Alpha, genes => costCalc.ParameterOverview(genes, inclTrans));
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\data.txt");
 
@@ -295,8 +312,8 @@ namespace Main.Figures
 
         public static void ParameterOverviewChartGenetic(MainForm main, List<double> kValues, bool inclTrans = false)
         {
-            var costCalc = new NodeCostCalculator();
-            var data = CalcBetaCurves(kValues, 0.5, genes => costCalc.ParameterOverview(genes, inclTrans));
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator());
+            var data = CalcBetaCurves(kValues, 0.5, genes => genes.Alpha, genes => costCalc.ParameterOverview(genes, inclTrans));
 
             //// Calculate genetic points.
             //for (int j = 0; j < kValues.Count; j++)

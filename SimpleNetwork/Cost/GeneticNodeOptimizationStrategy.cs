@@ -42,7 +42,7 @@ namespace BusinessLogic.Cost
         {
             var n = chromosomes.Length;
             // Kill bad candidates (only necessary if EliteMixFrac != 0).
-            for (var i = (int)Math.Ceiling(n * EliteFrac); i < n; i++) chromosomes[i] = GenePool.Spawn();
+            for (var i = (int)Math.Ceiling(n * EliteFrac); i < n; i++) chromosomes[i] = GenePool.SpawnChromosome();
         }
 
         public void Mate(NodeChromosome[] chromosomes)
@@ -65,7 +65,7 @@ namespace BusinessLogic.Cost
             for (int i = (int)Math.Ceiling(n * EliteFrac); i < (int)Math.Ceiling(n * (ChildFrac+EliteFrac)); i++)
             {
                 var offspringIdx = i - (int) Math.Ceiling(n*EliteFrac);
-                chromosomes[i] = offspring[offspringIdx]; //(i < offspring.Length) ? offspring[i] : Spawn();
+                chromosomes[i] = offspring[offspringIdx]; //(i < offspring.Length) ? offspring[i] : SpawnChromosome();
             }
         }
 

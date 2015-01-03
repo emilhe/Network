@@ -20,7 +20,7 @@ namespace UnitTest
             //var n = 100;
             //var strategy = new GeneticStringOptimizationStrategy();
             //var population = new IChromosome[n];
-            //for (int i = 0; i < population.Length; i++) population[i] = GeneticStringOptimizationStrategy.Spawn();
+            //for (int i = 0; i < population.Length; i++) population[i] = GeneticStringOptimizationStrategy.SpawnChromosome();
             //// Find optimum.
             //var optimizer = new GeneticOptimizer<HelloWorldChromosome>(strategy);
             //var optimum = optimizer.Optimize(population);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessLogic.Utils;
 using Optimization;
 
 namespace BusinessLogic.Cost
@@ -10,7 +11,7 @@ namespace BusinessLogic.Cost
     public class SerialCostCalculator : ICostCalculator<NodeChromosome>
     {
 
-        private readonly NodeCostCalculator _mCalc = new NodeCostCalculator(false);
+        private readonly NodeCostCalculator _mCalc = new NodeCostCalculator(new ParameterEvaluator {CacheEnabled = false});
 
         public void UpdateCost(NodeChromosome[] chromosomes)
         {

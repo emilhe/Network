@@ -39,7 +39,7 @@ namespace Main
 
             //Figures.PlayGround.ExportChromosomeData();
             //Figures.PlayGround.ExportCostDetailsData(new List<double> { 1, 2, 3 }, true);
-            Figures.PlayGround.ExportParameterOverviewData(new List<double> { 1, 2, 3 }, true);
+            Figures.PlayGround.ExportMismatchData(new List<double> { 1, 2, 3 }, true);
 
             //var avg = data.Last().Model.WindTimeSeries.Values.Average();
             //var hest = 2;

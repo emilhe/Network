@@ -169,6 +169,7 @@
     <Compile Include="Utils\GridEvaluator.cs" />
     <Compile Include="Utils\LineEvaluator.cs" />
     <Compile Include="Utils\MismatchOptimizer.cs" />
+    <Compile Include="Utils\ParameterEvaluator.cs" />
     <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>

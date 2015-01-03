@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Optimization
 {
-    public interface IChromosome : ISolution
+    public interface IChromosome : IMutableSolution
     {
 
         // Mate another chromosome.

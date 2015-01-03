@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms.VisualStyles;
 using BusinessLogic;
 using BusinessLogic.Cost;
+using BusinessLogic.Utils;
 using Controls;
 using Controls.Charting;
 using SimpleImporter;
@@ -39,7 +40,7 @@ namespace Main.Configurations
         {
             var delta = 1 / ((double)res);
             var sources = new List<string> { "Transmission", "Wind", "Solar", "Backup", "Fuel" };
-            var costCalc = new NodeCostCalculator();
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator());
             Dictionary<string, double[]> data = sources.ToDictionary(name => name, name => new double[res+1]);
             var alphas = new double[res + 1];
 
@@ -70,7 +71,7 @@ namespace Main.Configurations
             var alphaStart = 0.8;
             var alphaRes = 4;
             var delta = (1 - alphaStart) / alphaRes;
-            var costCalc = new NodeCostCalculator(true, true);
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator(true){CacheEnabled = true});
             // Calculate costs and prepare data structures.
             var data = new List<BetaWrapper>(betaValues.Count);
             var alphas = new double[alphaRes + 1];
@@ -136,7 +137,7 @@ namespace Main.Configurations
             var alphaStart = 0.5;
             var alphaRes = 10;
             var delta = (1-alphaStart)/alphaRes;
-            var costCalc = new NodeCostCalculator(true, true);
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator(true) { CacheEnabled = true });
             // Calculate costs and prepare data structures.
             var data = new List<BetaWrapper>(alphaRes + 1);
             var alphas = new double[alphaRes+1];
@@ -203,7 +204,7 @@ namespace Main.Configurations
             var betas = new[]{0,1.273,1.920,2.359,2.693};
             var alphaRes = 10;
             var delta = 1 / ((double)alphaRes);
-            var costCalc = new NodeCostCalculator();
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator());
             // Calculate costs and prepare data structures.
             var data = new Dictionary<string, double[]>();
             var alphas = new double[alphaRes];
@@ -248,7 +249,7 @@ namespace Main.Configurations
             var res = 20;
             var delta = 1 / ((double)res);
             var sources = new List<string> { "Transmission", "Wind", "Solar", "Backup", "Fuel" };
-            var costCalc = new NodeCostCalculator();
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator());
             var chromosome = new NodeGenes(0.8, 0.5);
 
             // Calculate costs and prepare data structures
@@ -277,7 +278,7 @@ namespace Main.Configurations
             var delta = 1 / ((double)res);
             var sources = new List<string> { "Transmission", "Wind", "Solar", "Backup", "Fuel" };
             var countries = ProtoStore.LoadCountries();
-            var costCalc = new NodeCostCalculator();
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator());
             //var chromosome = new NodeGenes(countries, 0.8, 0.5);
             // Calculate costs and prepare data structures
             Dictionary<string, double[]> data = sources.ToDictionary(name => name, pair => new double[res + 1]);

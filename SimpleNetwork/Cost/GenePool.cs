@@ -37,7 +37,20 @@ namespace BusinessLogic.Cost
 
         #region Safe (respects gamma limits) gene modification.
 
-        public static NodeChromosome Spawn()
+        public static NodeChromosome SpawnParticle()
+        {
+            double rescaling;
+            NodeChromosome guess;
+            do
+            {
+                guess = new NodeChromosome(new NodeGenes(RndGene));
+                rescaling = GammaRescaling(guess);
+            } while (rescaling.Equals(double.NegativeInfinity));
+            ScaleGamma(guess, rescaling);
+            return guess;
+        }
+
+        public static NodeChromosome SpawnChromosome()
         {
             double rescaling;
             NodeChromosome guess;

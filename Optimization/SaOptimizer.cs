@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Optimization
 {
-    public class SaOptimizer<T> where T : ISolution
+    public class SaOptimizer<T> where T : IMutableSolution
     {
 
         private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);        

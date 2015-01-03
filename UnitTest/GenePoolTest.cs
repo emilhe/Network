@@ -18,7 +18,7 @@ namespace UnitTest
             var n = 1000;
             var genes = new NodeChromosome[n];
             // Act.
-            for (int i = 0; i < n; i++) genes[i] = GenePool.Spawn();
+            for (int i = 0; i < n; i++) genes[i] = GenePool.SpawnChromosome();
             var alphas = genes.SelectMany(item => item.Genes.Select(pair => pair.Value.Alpha)).ToArray();
             var gammas = genes.SelectMany(item => item.Genes.Select(pair => pair.Value.Gamma)).ToArray();
             // Assert.
@@ -37,7 +37,7 @@ namespace UnitTest
             // Act.
             for (int i = 0; i < n; i++)
             {
-                genes[i] = GenePool.Spawn();
+                genes[i] = GenePool.SpawnChromosome();
                 foreach (var key in genes[i].Genes.Keys)
                 {
                     // Perform 10 mutations.
