@@ -29,10 +29,10 @@ namespace Main
             var strategy = new CukooNodeOptimizationStrategy();
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
-            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> { Full = false, Transmission = false });
+            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> { Full = true, Transmission = true });
             // Do stuff.
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEcukooConstraintTransK={0}.txt", k));
+            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVE32cukooConstraintTransK={0}.txt", k));
         }
 
         //public static void ParticleSwarm()

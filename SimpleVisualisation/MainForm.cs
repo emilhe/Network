@@ -38,15 +38,15 @@ namespace Main
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
 
             //Optimization.Genetic(1,25);
-            //Optimization.Cukoo(1, 25);
+            Optimization.Cukoo(1, 25);
             //ModelYearAnalysis.DetermineModelYears(this, true);
 
-            var oldOpt = FileUtils.FromJsonFile < NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK=1.txt");
-            var newOpt = FileUtils.FromJsonFile<NodeGenes>(@"C:\chromosomes\k=1.txt");
+            //var oldOpt = FileUtils.FromJsonFile < NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK=1.txt");
+            //var newOpt = FileUtils.FromJsonFile<NodeGenes>(@"C:\chromosomes\k=1.txt");
 
-            var calc = new NodeCostCalculator(new ParameterEvaluator(true));
-            var oldCost = calc.SystemCost(oldOpt, true);
-            var newCost = calc.SystemCost(newOpt, true);
+            //var calc = new NodeCostCalculator(new ParameterEvaluator(true));
+            //var oldCost = calc.SystemCost(oldOpt, true);
+            //var newCost = calc.SystemCost(newOpt, true);
 
             //Figures.PlayGround.ExportChromosomeData();
             //Console.WriteLine("Chromosomes done...");
