@@ -92,14 +92,9 @@ namespace BusinessLogic.Cost
             return new NodeChromosome(Genes);
         }
 
-        // TEST: Should in general not be invoked...
-        public void UpdateCost(object calc      )
+        public void UpdateCost(object calc)
         {
-            //// Should this be here?
-            //Renormalize();
-
-            // TODO: Take transmission into account.
-            _mCost = ((INodeCostCalculator)calc).SystemCost(Genes, false);
+            _mCost = ((INodeCostCalculator)calc).SystemCost(Genes, true);
             _mInvalidCost = false;
         }
 

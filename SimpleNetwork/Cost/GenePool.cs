@@ -13,7 +13,7 @@ namespace BusinessLogic.Cost
     {
 
         // ALPHA/GAMMA LIMITS
-        public static double K = 3;
+        public static double K = 1;
         public static double AlphaMin = 0;
         public static double AlphaMax = 1;
 

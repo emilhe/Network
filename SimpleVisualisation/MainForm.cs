@@ -10,6 +10,7 @@ using Controls;
 using Controls.Charting;
 using Main.Configurations;
 using Main.Documentation;
+using Main.Figures;
 using SimpleImporter;
 using Utils;
 
@@ -35,11 +36,20 @@ namespace Main
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1 }, true);
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
 
-            //Optimization.Genetic();
+            Optimization.Genetic(1,100);
+
+            //ModelYearAnalysis.DetermineModelYears(this, true);
 
             //Figures.PlayGround.ExportChromosomeData();
+            //Console.WriteLine("Chromosomes done...");
+            //Figures.PlayGround.ExportMismatchData(new List<double> { 1, 2, 3 }, true);
+            //Console.WriteLine("Mismatch done...");
             //Figures.PlayGround.ExportCostDetailsData(new List<double> { 1, 2, 3 }, true);
-            Figures.PlayGround.ExportMismatchData(new List<double> { 1, 2, 3 }, true);
+            //Console.WriteLine("Cost details done...");
+            //Figures.PlayGround.ExportParameterOverviewData(new List<double> { 1, 2, 3 }, true);
+            //Console.WriteLine("Parameter overview done...");
+
+            //Console.WriteLine("All done...");
 
             //var avg = data.Last().Model.WindTimeSeries.Values.Average();
             //var hest = 2;

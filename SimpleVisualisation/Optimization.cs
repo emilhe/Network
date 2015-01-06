@@ -7,30 +7,18 @@ namespace Main
     class Optimization
     {
 
-        public static void Genetic()
+        public static void Genetic(int k, int n)
         {
-            // ReBirth population.
-            var n = 500;
+            // Adjust gene pool.
+            GenePool.K = 1;
+            // Setup stuff.
             var strategy = new GeneticNodeOptimizationStrategy();
             var population = new NodeChromosome[n];
-
-            for (int i = 0; i < population.Length; i++)
-            {
-                population[i] = GenePool.SpawnChromosome();
-                //population[i] = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\geneticWithConstraintK=1mio.txt"));
-            }
-
-            // The (so far) best optimum.
-            //for (int i = 0; i < population.Length; i++)
-            //{
-            //    var Genes = new NodeGenes(0.5 + 0.5 * i / population.Length, 1, 16);
-            //    population[i] = new NodeChromosome(Genes, calc);
-            //}
-
-            // Find optimum.
-            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator(){Full = false});
+            for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
+            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator {Full = false, Transmission = true});
+            // Do stuff.
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(@"C:\proto\onshoreVEgeneticConstraintTransK=3.txt");
+            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEgeneticWithTransK={0}.txt", k));
         }
 
         public static void ParticleSwarm()

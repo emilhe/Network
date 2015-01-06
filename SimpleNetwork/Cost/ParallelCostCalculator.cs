@@ -11,7 +11,7 @@ namespace BusinessLogic.Cost
     public class ParallelCostCalculator : ICostCalculator<NodeChromosome>
     {
 
-        // TODO: FIX TRANSMISSION  & FULL PROPERTY
+        // This properties are HACKY
         public bool Transmission { get; set; }
         public bool Full { get; set; }
 
