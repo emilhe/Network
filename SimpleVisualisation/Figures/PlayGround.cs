@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BusinessLogic.Cost;
 using BusinessLogic.Utils;
 using Controls;
 using Controls.Article;
 using Controls.Charting;
+using Newtonsoft.Json.Linq;
 using Utils;
 
 namespace Main.Figures
@@ -67,7 +69,7 @@ namespace Main.Figures
 
         public static void ExportMismatchData(List<double> kValues, bool inclTrans = false)
         {
-            var paramEval = new ParameterEvaluator();
+            var paramEval = new ParameterEvaluator(true);
             var costCalc = new NodeCostCalculator(paramEval);
             var data = CalcBetaCurves(kValues, 0.0, paramEval.Sigma, genes => new Dictionary<string, double>
             {
@@ -83,7 +85,7 @@ namespace Main.Figures
         private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes, double> evalX, Func<NodeGenes, Dictionary<string, double>> evalY)
         {
             // Prepare the data structures.
-            var alphaRes = 10;
+            var alphaRes = 15;
             var delta = (1 - alphaStart) / alphaRes;
             var alphas = new double[alphaRes + 1];
             var betas = new double[kValues.Count];
@@ -127,6 +129,8 @@ namespace Main.Figures
                         data[pair.Key][kValues[j]].MaxCfX[i] = xValue;
                     }
                 }
+
+                Console.WriteLine("Beta {0} done",betas[j]);
             }
 
             // Calculate genetic points.
@@ -291,7 +295,7 @@ namespace Main.Figures
 
         public static void ParameterOverviewChart(MainForm main, List<double> betaValues, bool inclTrans = false)
         {
-            var costCalc = new NodeCostCalculator(new ParameterEvaluator());
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator(false));
             var data = CalcBetaCurves(betaValues, 0.0, genes => genes.Alpha, genes => costCalc.ParameterOverview(genes, inclTrans));
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\data.txt");
@@ -316,7 +320,7 @@ namespace Main.Figures
 
         public static void ParameterOverviewChartGenetic(MainForm main, List<double> kValues, bool inclTrans = false)
         {
-            var costCalc = new NodeCostCalculator(new ParameterEvaluator());
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator(false));
             var data = CalcBetaCurves(kValues, 0.5, genes => genes.Alpha, genes => costCalc.ParameterOverview(genes, inclTrans));
 
             //// Calculate genetic points.

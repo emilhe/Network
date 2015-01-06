@@ -11,9 +11,9 @@ namespace BusinessLogic.Cost
     public class SerialCostCalculator : ICostCalculator<NodeChromosome>
     {
 
-        private readonly NodeCostCalculator _mCalc = new NodeCostCalculator(new ParameterEvaluator {CacheEnabled = false});
+        private readonly NodeCostCalculator _mCalc = new NodeCostCalculator(new ParameterEvaluator(false) {CacheEnabled = false});
 
-        public void UpdateCost(NodeChromosome[] chromosomes)
+        public void UpdateCost(IEnumerable<NodeChromosome> chromosomes)
         {
             foreach (var chromosome in chromosomes)
             {

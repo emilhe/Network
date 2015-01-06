@@ -16,7 +16,7 @@ namespace HomeWork
         {
             var opt = Setup();
 
-            ExerciseI(opt);
+            //ExerciseI(opt);
             ExerciseIII(opt);
 
             Console.ReadLine();
@@ -80,6 +80,7 @@ namespace HomeWork
             edges.Connect(0, 4);
             edges.Connect(1, 2);
             edges.Connect(1, 3);
+            edges.Connect(2, 3);
             edges.Connect(2, 4);
             edges.Connect(3, 4);
             opt.SetEdges(edges);

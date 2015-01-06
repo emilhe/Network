@@ -101,6 +101,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessClient.cs" />
+    <Compile Include="Cost\CukooNodeOptimizationStrategy.cs" />
     <Compile Include="Cost\GenePool.cs" />
     <Compile Include="Cost\GeneticNodeOptimizationStrategy.cs" />
     <Compile Include="Cost\INodeCostCalculator.cs" />

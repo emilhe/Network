@@ -8,10 +8,10 @@ using Optimization;
 namespace BusinessLogic.Cost
 {
 
-    public class ParallelCostCalculator : ICostCalculator<NodeChromosome>
+    public class ParallelCostCalculator<T> : ICostCalculator<T> where T : ISolution
     {
 
-        // TODO: FIX TRANSMISSION  & FULL PROPERTY
+        // This properties are HACKY
         public bool Transmission { get; set; }
         public bool Full { get; set; }
 
@@ -25,7 +25,7 @@ namespace BusinessLogic.Cost
             _mCalcMap = new Dictionary<int, NodeCostCalculator>(maxDegreeOfParallelism);
         }
 
-        public void UpdateCost(NodeChromosome[] chromosomes)
+        public void UpdateCost(IEnumerable<T> chromosomes)
         {
             Parallel.ForEach(chromosomes, _mOptions, chromosome =>
             {

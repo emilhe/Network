@@ -9,7 +9,6 @@ namespace BusinessLogic.Cost
        
         private double _mCost;
         private double _mGamma = 1;
-        private bool _mInvalidCost = true;
 
         // The OVERALL values (even though the DNA is heterogeneous).
         public double Gamma
@@ -25,11 +24,13 @@ namespace BusinessLogic.Cost
 
         public double Alpha { get { return Genes.Alpha; } }
 
+        public bool InvalidCost { get; set; }
+
         public double Cost
         {
             get 
             {
-                if(_mInvalidCost) throw new ArgumentException("Cost is not updated.");
+                if(InvalidCost) throw new ArgumentException("Cost is not updated.");
                 return _mCost;
             }
         }
@@ -38,11 +39,13 @@ namespace BusinessLogic.Cost
 
         public NodeChromosome()
         {
+            InvalidCost = true;
         }
 
         public NodeChromosome(NodeGenes genes)
         {
             Genes = genes;
+            InvalidCost = true;
 
             //if(GenePool.Renormalize(this)) return;
             //throw new ArgumentException("Renormalisation impossible within alpha/gamma constraints.");
@@ -84,23 +87,18 @@ namespace BusinessLogic.Cost
                 }
             }
 
-            _mInvalidCost = true;
+            InvalidCost = true;
         }
 
         public ISolution Clone()
         {
-            return new NodeChromosome(Genes);
+            return new NodeChromosome(Genes.Clone());
         }
 
-        // TEST: Should in general not be invoked...
-        public void UpdateCost(object calc      )
+        public void UpdateCost(object calc)
         {
-            //// Should this be here?
-            //Renormalize();
-
-            // TODO: Take transmission into account.
-            _mCost = ((INodeCostCalculator)calc).SystemCost(Genes, false);
-            _mInvalidCost = false;
+            _mCost = ((INodeCostCalculator)calc).SystemCost(Genes, true);
+            InvalidCost = false;
         }
 
         private NodeChromosome SpawnChild(NodeChromosome validPartner)

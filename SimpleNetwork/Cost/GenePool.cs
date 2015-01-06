@@ -13,14 +13,21 @@ namespace BusinessLogic.Cost
     {
 
         // ALPHA/GAMMA LIMITS
-        public static double K = 3;
+        public static double K = 1;
         public static double AlphaMin = 0;
         public static double AlphaMax = 1;
 
         public static readonly double GammaMin = 1/K;
         public static readonly double GammaMax = K;
-
         private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);
+
+        // Parameters used for Levy flight.
+        private const double Beta = 3.0/2.0;
+        private static readonly double Sigma =
+            Math.Pow(
+                SpecialFunction.gamma(1.0 + Beta) * Math.Sin(Math.PI * Beta / 2.0) /
+                (SpecialFunction.gamma((1.0 + Beta) / 2.0) * Beta * Math.Pow(2.0, ((Beta - 1.0) / 2.0))), (1.0 / Beta));
+        private static readonly double StepScale = 10;
 
         #region Gene modification
 
@@ -37,18 +44,20 @@ namespace BusinessLogic.Cost
 
         #region Safe (respects gamma limits) gene modification.
 
-        public static NodeChromosome SpawnParticle()
-        {
-            double rescaling;
-            NodeChromosome guess;
-            do
-            {
-                guess = new NodeChromosome(new NodeGenes(RndGene));
-                rescaling = GammaRescaling(guess);
-            } while (rescaling.Equals(double.NegativeInfinity));
-            ScaleGamma(guess, rescaling);
-            return guess;
-        }
+        //public static NodeChromosome SpawnParticle()
+        //{
+        //    double rescaling;
+        //    NodeChromosome guess;
+        //    do
+        //    {
+        //        guess = new NodeChromosome(new NodeGenes(RndGene));
+        //        rescaling = GammaRescaling(guess);
+        //    } while (rescaling.Equals(double.NegativeInfinity));
+        //    ScaleGamma(guess, rescaling);
+        //    return guess;
+        //}
+
+        #region Chromosome
 
         public static NodeChromosome SpawnChromosome()
         {
@@ -88,6 +97,57 @@ namespace BusinessLogic.Cost
             });
         }
 
+        #endregion
+
+        public static NodeChromosome LevyFlight(NodeChromosome chromosome, NodeChromosome best)
+        {
+            double rescaling;
+            NodeChromosome guess;
+            do
+            {
+                guess = UnsafeLevyFlight(chromosome, best);
+                rescaling = GammaRescaling(guess);
+            } while (rescaling.Equals(double.NegativeInfinity));
+            ScaleGamma(guess, rescaling);
+            return guess;
+                
+        }
+
+        private static NodeChromosome UnsafeLevyFlight(NodeChromosome chromosome, NodeChromosome best)
+        {
+            var genes = new Dictionary<string, NodeGene>();
+
+            foreach (var key in chromosome.Genes.Keys.ToArray())
+            {
+                var bestGene = best.Genes[key];
+                var oldGene = chromosome.Genes[key];
+                var newGene = new NodeGene { Alpha = oldGene.Alpha, Gamma = oldGene.Gamma };
+                // First do alpha.
+                var u = Rnd.NextDouble() * Sigma;
+                var v = Rnd.NextDouble();
+                var step = Math.Pow(u / Math.Abs(v), 1.0 / Beta);
+                var stepSize = StepScale * step * Math.Abs(bestGene.Alpha - oldGene.Alpha);
+                newGene.Alpha += (0.5 - Rnd.NextDouble()) * stepSize;
+                if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
+                if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
+                // Then gamma.
+                u = Rnd.NextDouble() * Sigma;
+                v = Rnd.NextDouble();
+                step = Math.Pow(u / Math.Abs(v), 1.0 / Beta);
+                stepSize = StepScale * step * Math.Abs(bestGene.Gamma - oldGene.Gamma);
+                newGene.Gamma += (0.5 - Rnd.NextDouble()) * stepSize;
+                if (newGene.Alpha < GammaMin) newGene.Gamma = GammaMin;
+                if (newGene.Alpha > GammaMax) newGene.Gamma = GammaMax;
+                genes.Add(key, newGene);
+            }
+
+            return new NodeChromosome(new NodeGenes(genes));
+        }
+
+        #endregion
+
+        #region Util methods
+
         public static bool Renormalize(NodeChromosome chromosome)
         {
             var rescaling = GammaRescaling(chromosome);
@@ -115,9 +175,6 @@ namespace BusinessLogic.Cost
             ScaleGamma(chromosome, rescaling);
         }
 
-        #endregion
-
-        #region Util methods
 
         private static double GammaRescaling(NodeChromosome chromosome, string country, double gamma, double alpha)
         {

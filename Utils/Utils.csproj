@@ -52,6 +52,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="FileUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SpecialFunctions.cs" />
     <Compile Include="Statistics\DataBinTable.cs" />
     <Compile Include="Statistics\MathUtils.cs" />
   </ItemGroup>
