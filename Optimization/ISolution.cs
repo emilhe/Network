@@ -12,6 +12,9 @@ namespace Optimization
         // Cost function.
         double Cost { get; }
 
+        // Cost function.
+        bool InvalidCost { get; }
+
         // Update the cost. MUST be done externally.
         void UpdateCost(object costCalc);
 
