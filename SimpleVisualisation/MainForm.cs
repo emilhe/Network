@@ -37,6 +37,7 @@ namespace Main
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1 }, true);
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
 
+<<<<<<< HEAD
             for (int i = 0; i < 100; i++)
             {
                 Optimization.Cukoo(1, 25, i.ToString());
@@ -59,6 +60,13 @@ namespace Main
             //ModelYearAnalysis.DetermineModelYears(this, true);
 
             //var oldOpt = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK=1.txt");
+=======
+            //Optimization.Genetic(1,25);
+            Optimization.Cukoo(1, 25);
+            //ModelYearAnalysis.DetermineModelYears(this, true);
+
+            //var oldOpt = FileUtils.FromJsonFile < NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK=1.txt");
+>>>>>>> 667443ddf0bfa81c1f84d47a87ce088964c23999
             //var newOpt = FileUtils.FromJsonFile<NodeGenes>(@"C:\chromosomes\k=1.txt");
 
             //var calc = new NodeCostCalculator(new ParameterEvaluator(true));
