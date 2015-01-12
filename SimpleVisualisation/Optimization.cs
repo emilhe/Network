@@ -7,7 +7,7 @@ namespace Main
     class Optimization
     {
 
-        public static void Genetic(int k, int n)
+        public static void Genetic(int k, int n, string key = "")
         {
             // Adjust gene pool.
             GenePool.K = 1;
@@ -18,10 +18,10 @@ namespace Main
             var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> {Full = false, Transmission = false});
             // Do stuff.
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEgeneticConstraintTransK={0}.txt", k));
+            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEgeneticConstraintTransK={0}{1}.txt", k, key));
         }
 
-        public static void Cukoo(int k, int n)
+        public static void Cukoo(int k, int n, string key = "")
         {
             // Adjust gene pool.
             GenePool.K = 1;
@@ -29,10 +29,11 @@ namespace Main
             var strategy = new CukooNodeOptimizationStrategy();
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
+            population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
             var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> { Full = false, Transmission = false });
             // Do stuff.
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEcukooConstraintTransK={0}.txt", k));
+            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEcukooConstraintTransK={0}{1}.txt", k,key));
         }
 
         //public static void ParticleSwarm()

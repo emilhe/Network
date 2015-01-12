@@ -37,18 +37,35 @@ namespace Main
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1 }, true);
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
 
-            //Optimization.Genetic(1,25);
-            //Optimization.Cukoo(1, 25);
+            for (int i = 0; i < 100; i++)
+            {
+                Optimization.Cukoo(1, 25, i.ToString());
+            }
+
+            //var genes = new NodeGenes[30];
+            //for (int i = 0; i < 30; i++)
+            //{
+            //    genes[i] = FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\onshoreVEgeneticConstraintTransK=1{0}.txt", i));
+            //    //Optimization.Cukoo(1, 25, i.ToString());
+            //}
+            //var chromosomes = genes.Select(item => new NodeChromosome(item)).ToArray();
+            //var calc = new ParallelCostCalculator<NodeChromosome> { Full = true, Transmission = true };
+            //calc.UpdateCost(chromosomes);
+            //chromosomes.OrderBy(item => item.Cost).First().Genes.ToJsonFile((string.Format(@"C:\proto\onshoreVEgeneticConstraintTransK=1{0}.txt", "BEST")));
+            //chromosomes.Select(item => item.Cost).ToArray().ToJsonFile(@"C:\proto\GAcostStats.txt");
+
+            //Optimization.Genetic(1, 1000);
+            //Optimization.Cukoo(1, 500);
             //ModelYearAnalysis.DetermineModelYears(this, true);
 
-            var oldOpt = FileUtils.FromJsonFile < NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK=1.txt");
-            var newOpt = FileUtils.FromJsonFile<NodeGenes>(@"C:\chromosomes\k=1.txt");
+            //var oldOpt = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK=1.txt");
+            //var newOpt = FileUtils.FromJsonFile<NodeGenes>(@"C:\chromosomes\k=1.txt");
 
-            var calc = new NodeCostCalculator(new ParameterEvaluator(true));
-            var oldCost = calc.SystemCost(oldOpt, true);
-            var newCost = calc.SystemCost(newOpt, true);
+            //var calc = new NodeCostCalculator(new ParameterEvaluator(true));
+            //var oldCost = calc.SystemCost(oldOpt, true);
+            //var newCost = calc.SystemCost(newOpt, true);
 
-            //Figures.PlayGround.ExportChromosomeData();
+            Figures.PlayGround.ExportChromosomeData();
             //Console.WriteLine("Chromosomes done...");
             //Figures.PlayGround.ExportMismatchData(new List<double> { 1, 2, 3 }, true);
             //Console.WriteLine("Mismatch done...");
