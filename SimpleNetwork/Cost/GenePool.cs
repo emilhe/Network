@@ -217,8 +217,8 @@ namespace BusinessLogic.Cost
             // Check if the new effective gamma violates the contstraints.
             foreach (var value in genes.Values.Select(item => item.Gamma * chromosome.Gamma / effGamma))
             {
-                if (GammaMin - value < -1e-5) return double.NegativeInfinity;
-                if (value - GammaMax > 1e-5) return double.NegativeInfinity;
+                if (GammaMin - value > 1e-5) return double.NegativeInfinity;
+                if (GammaMax - value < -1e-5) return double.NegativeInfinity;
             }
             // Return the scaling factor.
             return chromosome.Gamma/effGamma;
