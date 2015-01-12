@@ -37,11 +37,10 @@ namespace Main
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1 }, true);
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
 
-<<<<<<< HEAD
-            for (int i = 0; i < 100; i++)
-            {
-                Optimization.Cukoo(1, 25, i.ToString());
-            }
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    Optimization.Cukoo(1, 25, i.ToString());
+            //}
 
             //var genes = new NodeGenes[30];
             //for (int i = 0; i < 30; i++)
@@ -60,13 +59,13 @@ namespace Main
             //ModelYearAnalysis.DetermineModelYears(this, true);
 
             //var oldOpt = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK=1.txt");
-=======
             //Optimization.Genetic(1,25);
             Optimization.Cukoo(1, 25);
+            Optimization.Cukoo(2, 25);
+            Optimization.Cukoo(3, 25);
             //ModelYearAnalysis.DetermineModelYears(this, true);
 
             //var oldOpt = FileUtils.FromJsonFile < NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK=1.txt");
->>>>>>> 667443ddf0bfa81c1f84d47a87ce088964c23999
             //var newOpt = FileUtils.FromJsonFile<NodeGenes>(@"C:\chromosomes\k=1.txt");
 
             //var calc = new NodeCostCalculator(new ParameterEvaluator(true));
@@ -74,15 +73,15 @@ namespace Main
             //var newCost = calc.SystemCost(newOpt, true);
 
             Figures.PlayGround.ExportChromosomeData();
-            //Console.WriteLine("Chromosomes done...");
-            //Figures.PlayGround.ExportMismatchData(new List<double> { 1, 2, 3 }, true);
-            //Console.WriteLine("Mismatch done...");
-            //Figures.PlayGround.ExportCostDetailsData(new List<double> { 1, 2, 3 }, true);
-            //Console.WriteLine("Cost details done...");
-            //Figures.PlayGround.ExportParameterOverviewData(new List<double> { 1, 2, 3 }, true);
-            //Console.WriteLine("Parameter overview done...");
+            Console.WriteLine("Chromosomes done...");
+            Figures.PlayGround.ExportMismatchData(new List<double> { 1, 2, 3 }, true);
+            Console.WriteLine("Mismatch done...");
+            Figures.PlayGround.ExportCostDetailsData(new List<double> { 1, 2, 3 }, true);
+            Console.WriteLine("Cost details done...");
+            Figures.PlayGround.ExportParameterOverviewData(new List<double> { 1, 2, 3 }, true);
+            Console.WriteLine("Parameter overview done...");
 
-            //Console.WriteLine("All done...");
+            Console.WriteLine("All done...");
 
             //var avg = data.Last().Model.WindTimeSeries.Values.Average();
             //var hest = 2;

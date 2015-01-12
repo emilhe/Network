@@ -10,12 +10,19 @@ namespace BusinessLogic.Cost
     {
 
         // ALPHA/GAMMA LIMITS
-        public static double K = 1;
+        public static double K {
+            get { return GammaMax; }
+            set
+            {
+                GammaMax = value;
+                GammaMin = 1.0/value;
+            }
+        } 
         public static double AlphaMin = 0;
         public static double AlphaMax = 1;
 
-        public static readonly double GammaMin = 1/K;
-        public static readonly double GammaMax = K;
+        public static double GammaMin = 1;
+        public static double GammaMax = 1;
         private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);
 
         // Parameters used for Levy flight.

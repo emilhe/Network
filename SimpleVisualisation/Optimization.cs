@@ -24,23 +24,16 @@ namespace Main
         public static void Cukoo(int k, int n, string key = "")
         {
             // Adjust gene pool.
-            GenePool.K = 1;
+            GenePool.K = k;
             // Setup stuff.
             var strategy = new CukooNodeOptimizationStrategy();
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
-<<<<<<< HEAD
             population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
             var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> { Full = false, Transmission = false });
             // Do stuff.
             var optimum = optimizer.Optimize(population);
             optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEcukooConstraintTransK={0}{1}.txt", k,key));
-=======
-            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> { Full = true, Transmission = true });
-            // Do stuff.
-            var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVE32cukooConstraintTransK={0}.txt", k));
->>>>>>> 667443ddf0bfa81c1f84d47a87ce088964c23999
         }
 
         //public static void ParticleSwarm()
