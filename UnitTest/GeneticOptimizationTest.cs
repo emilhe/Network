@@ -90,6 +90,7 @@ namespace UnitTest
             private static readonly Random _mRnd = new Random((int) DateTime.Now.Ticks);
 
             public double Cost { get; private set; }
+            public bool InvalidCost { get; private set; }
 
             public string Genes
             {

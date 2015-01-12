@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Linq;
 using Utils;
 
@@ -9,6 +10,7 @@ namespace Optimization
 
         public int Generation { get; private set; }
 
+        private readonly Random _mRnd = new Random((int)DateTime.Now.Ticks);
         private readonly ICostCalculator<T> _mCostCalculator;
         private readonly ICukooOptimizationStrategy<T> _mStrat;
 
@@ -20,41 +22,50 @@ namespace Optimization
 
         public T Optimize(T[] nests)
         {
+            // Eval generation 0.
             Generation = 0;
-            nests = OrderPopulation(nests);
-            var bestNest = nests[0];
+            EvalPopulation(nests);
+            nests = nests.OrderBy(item => item.Cost).ToArray();
+            T bestNest = nests[0];
             Console.WriteLine("Generation {0}, Cost = {1}", Generation, bestNest.Cost);
+            // Initialize data structures.
+            var n = nests.Length;
+            var newEggs = new T[n];
 
             while (!_mStrat.TerminationCondition(nests))
             {
-                // Generate new solutions.
-                var newNests = _mStrat.GetNewNests(nests, bestNest);
-                EvalPopulation(newNests);
-                // Select the best solutions.
-                for (int i = 0; i < nests.Length; i++)
+                Generation++;
+                // Generate new eggs.
+                for (int i = 0; i < n; i++)
                 {
-                    if (newNests[i].Cost >= nests[i].Cost) continue;
-                    nests[i] = newNests[i];
+                    newEggs[i] = _mStrat.LevyFlight(nests[i], bestNest);
                 }
-                nests = nests.OrderBy(item => item.Cost).ToArray();
-                // Abandon the bad nests.
-                _mStrat.AbandonNests(nests);
-                nests = OrderPopulation(nests);
+                EvalPopulation(newEggs);
+                // Drop each egg in a random nest.
+                for (int i = 0; i < n; i++)
+                {
+                    var j = (int)Math.Round((n - 1) * _mRnd.NextDouble());
+                    if (nests[j].Cost > newEggs[i].Cost) nests[j] = newEggs[i];
+                }
                 // Update best nest.
+                nests = nests.OrderBy(item => item.Cost).ToArray();
+                bestNest = nests[0];
+                // Abandon bad nests.
+                for (int i = 0; i < n*_mStrat.AbandonRate; i++)
+                {
+                    var j = (int)Math.Round((n - 1) * _mRnd.NextDouble());
+                    nests[j] = _mStrat.LevyFlight(nests[j], bestNest);
+                }
+                EvalPopulation(nests);
+                // Order & update best nest.
+                nests = nests.OrderBy(item => item.Cost).ToArray();
                 bestNest = nests[0];
                 // Debug info.
                 bestNest.ToJsonFile(@"C:\proto\bestConfig.txt");
-                Generation++;
                 Console.WriteLine("Generation {0}, Cost = {1}", Generation, bestNest.Cost);
             }
 
             return bestNest;
-        }
-
-        private T[] OrderPopulation(T[] unorderedPopulation)
-        {
-            EvalPopulation(unorderedPopulation);
-            return unorderedPopulation.OrderBy(item => item.Cost).ToArray();
         }
 
         private void EvalPopulation(T[] unorderedPopulation)
