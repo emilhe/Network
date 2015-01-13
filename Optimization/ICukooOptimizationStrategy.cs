@@ -14,6 +14,6 @@ namespace Optimization
 
         bool TerminationCondition(T[] nests);
         T LevyFlight(T nest, T bestNest, double scaling = 1);
-
+        T CrossOver(T badNest, T goodNest);
     }
 }
