@@ -184,7 +184,7 @@ namespace Main.Figures
                     data.Costs[pair.Key].Add(pair.Value);
                 }
                 // Add genetic point.
-                data.Labels.Add(string.Format(@"GA@K={0}", kValues[j].ToString("0")));
+                data.Labels.Add(string.Format(@"CS@K={0}", kValues[j].ToString("0")));
                 var genes = FileUtils.FromJsonFile<NodeGenes>(string.Format(GeneticPath,kValues[j]));
                 results = eval(genes);
                 foreach (var pair in results)
