@@ -95,9 +95,9 @@ namespace BusinessLogic.Cost
             return new NodeChromosome(Genes.Clone());
         }
 
-        public void UpdateCost(object calc)
+        public void UpdateCost(Func<ISolution, double> eval)
         {
-            _mCost = ((INodeCostCalculator)calc).SystemCost(Genes, true);
+            _mCost = eval(this);
             InvalidCost = false;
         }
 
@@ -112,15 +112,6 @@ namespace BusinessLogic.Cost
            } 
             return new NodeChromosome(childDna);
         } 
-
-        //private void Renormalize()
-        //{
-        //    //// Renormalize if necessary.
-        //    //var effGamma = _mGenes.Gamma;
-        //    //if (effGamma - Gamma < 1e-5) return;
-        //    //// TODO: This can fuck up gamma limits (we skip this for now..).
-        //    //foreach (var key in _mGenes.Keys) _mGenes[key].Gamma *= Gamma / effGamma;
-        //}
 
     }
 }

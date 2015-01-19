@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BusinessLogic.Cost;
 using BusinessLogic.Nodes;
 using BusinessLogic.Simulation;
@@ -153,6 +150,7 @@ namespace BusinessLogic.Utils
         
         public bool CacheEnabled
         {
+            get { return _mCore.BcController.CacheEnabled; }
             set
             {
                 _mCore.BcController.CacheEnabled = value;
