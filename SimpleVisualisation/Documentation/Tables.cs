@@ -76,12 +76,11 @@ namespace Main.Documentation
                 Header =
                     new[]
                     {
-                        "", @"$\nu_n^w$", @"$\nu_n^w$", @"$\nu_n^s$", "", @"$\nu_n^w$", @"$\nu_n^w$", @"$\nu_n^s$", "",
-                        @"$\nu_n^w$", @"$\nu_n^w$", @"$\nu_n^s$"
+                        "", @"$\nu_n^w$", @"$\tilde{\nu}_n^w$", @"$\nu_n^s$", "", @"$\nu_n^w$", @"$\tilde{\nu}_n^w$", @"$\nu_n^s$", "",
+                        @"$\nu_n^w$", @"$\tilde{\nu}_n^w$", @"$\nu_n^s$"
                     },
                 Caption =
-                    @"Capacity factors $\nu_n^w$ and $\nu_n^s$ for wind and solar PV for the European countries. 
-                    In the case of wind, seperate values for onshore (left) and offshore (right) regions are shown.",
+                    @"Capacity factors $\nu_n^w$, $\tilde{\nu}_n^w$ and  $\nu_n^s$ for onshore wind, offshore wind and solar PV for the European countries.",
                 Label = "capacity-factors",
                 Format = "lccclccclccc",
                 Rows = new List<string[]>(),

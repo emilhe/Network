@@ -65,9 +65,9 @@ namespace BusinessLogic.Storages
 
         public bool Measuring { get { return _mMeasuring; } }
 
-        public void Start()
+        public void Start(int ticks)
         {
-            _mTimeSeries = new DenseTimeSeries(Name);
+            _mTimeSeries = new DenseTimeSeries(Name, ticks);
             _mTimeSeries.AppendData(_mSample);
             _mMeasuring = true;
         }

@@ -16,7 +16,7 @@ namespace Optimization
         bool InvalidCost { get; }
 
         // Update the cost. MUST be done externally.
-        void UpdateCost(object costCalc);
+        void UpdateCost(Func<ISolution, double> eval);
 
     }
 }

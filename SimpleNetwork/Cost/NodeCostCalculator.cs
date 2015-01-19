@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BusinessLogic.Nodes;
-using BusinessLogic.Simulation;
-using BusinessLogic.TimeSeries;
 using BusinessLogic.Utils;
-using Optimization;
-using SimpleImporter;
 using Utils;
-using Utils.Statistics;
 
 namespace BusinessLogic.Cost
 {
     public class NodeCostCalculator : INodeCostCalculator
     {
 
+        public bool CacheEnabled { get { return _mEvaluator.CacheEnabled; } set { _mEvaluator.CacheEnabled = value; } }
         private readonly ParameterEvaluator _mEvaluator;
 
         private const double Rate = 4;

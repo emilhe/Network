@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
-using BusinessLogic.ExportStrategies.DistributionStrategies;
-using BusinessLogic.Nodes;
 
 namespace BusinessLogic.ExportStrategies
 {
@@ -55,9 +50,9 @@ namespace BusinessLogic.ExportStrategies
             get { return _mHelper.Measuring; }
         }
 
-        public void Start()
+        public void Start(int ticks)
         {
-            ((IMeasureable) _mHelper).Start();
+            ((IMeasureable)_mHelper).Start(ticks);
         }
 
         public void Clear()

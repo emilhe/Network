@@ -33,9 +33,9 @@ namespace BusinessLogic.ExportStrategies
             get { return _mHelper.Measuring; }
         }
 
-        public void Start()
+        public void Start(int ticks)
         {
-            ((IMeasureable) _mHelper).Start();
+            ((IMeasureable)_mHelper).Start(ticks);
         }
 
         public void Clear()

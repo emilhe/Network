@@ -57,10 +57,10 @@ namespace BusinessLogic.Nodes
             return result;
         }
 
-        public void Start()
+        public void Start(int ticks)
         {
-            foreach (var generator in Generators) generator.Start();
-            foreach (var item in StorageCollection) item.Value.Start();
+            foreach (var generator in Generators) generator.Start(ticks);
+            foreach (var item in StorageCollection) item.Value.Start(ticks);
             Measuring = true;
         }
 

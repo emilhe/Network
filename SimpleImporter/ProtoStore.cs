@@ -60,7 +60,7 @@ namespace SimpleImporter
         /// </summary>
         /// <param name="key"> file name </param>
         /// <returns> the time series </returns>
-        public static TimeSeriesDal LoadTimeSeriesFromImport(string key)
+        internal static TimeSeriesDal LoadTimeSeriesFromImport(string key)
         {
             if (!File.Exists(Path.Combine(ImportDir, key))) return null;
 

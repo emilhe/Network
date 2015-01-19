@@ -160,10 +160,10 @@ namespace BusinessLogic.ExportStrategies
             }
         }
 
-        public void Start()
+        public void Start(int ticks)
         {
             if (DistributionStrategy == null) return;
-            DistributionStrategy.Start();
+            DistributionStrategy.Start(ticks);
         }
 
         public void Clear()
