@@ -56,7 +56,7 @@ namespace BusinessLogic
 
         private static DenseTimeSeries GetTs(string country, TsType type, TsSource source, int offset)
         {
-            var tsBll = new DenseTimeSeries(ProtoStore.LoadTimeSeriesFromImport(CsvImporter.GenerateFileKey(country, type, source)));
+            var tsBll = new DenseTimeSeries(ProtoCache.LoadTimeSeriesFromImport(CsvImporter.GenerateFileKey(country, type, source)));
             tsBll.SetOffset(offset);
 
             return tsBll;

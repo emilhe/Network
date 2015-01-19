@@ -52,9 +52,9 @@ namespace BusinessLogic.Storages
             get { return _mCompositeStorage.Measuring; }
         }
 
-        public void Start()
+        public void Start(int ticks)
         {
-            _mCompositeStorage.Start();
+            _mCompositeStorage.Start(ticks);
         }
 
         public void Clear()

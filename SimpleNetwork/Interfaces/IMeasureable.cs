@@ -11,7 +11,7 @@ namespace BusinessLogic.Interfaces
         /// <summary>
         /// Start measuring.
         /// </summary>
-        void Start();
+        void Start(int ticks);
 
         /// <summary>
         /// Stop measuring and discard all previous measurements.

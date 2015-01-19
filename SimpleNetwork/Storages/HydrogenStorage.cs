@@ -32,9 +32,9 @@ namespace BusinessLogic.Storages
             get { return _mCore.Measuring; }
         }
 
-        public void Start()
+        public void Start(int ticks)
         {
-            ((IMeasureable) _mCore).Start();
+            ((IMeasureable)_mCore).Start(ticks);
         }
 
         public void Clear()

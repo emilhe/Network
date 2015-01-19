@@ -101,7 +101,7 @@ namespace BusinessLogic.ExportStrategies.DistributionStrategies
 
         public bool Measuring { get { return false; } }
 
-        public void Start()
+        public void Start(int ticks)
         {
             // Nothing to measure.
         }

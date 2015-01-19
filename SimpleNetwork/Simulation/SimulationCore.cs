@@ -16,6 +16,7 @@ namespace BusinessLogic.Simulation
         private readonly Stopwatch _mWatch;
         private readonly bool _mDebug;
         private bool _mSuccess;
+        private int _mTicks;
 
         private List<ITickListener> _mTickListeners; 
         private readonly NetworkModel _mModel;
@@ -77,6 +78,7 @@ namespace BusinessLogic.Simulation
             // SimulationCore main loop.
             var tick = 0;
             _mSuccess = true;
+            _mTicks = ticks;
             while (tick < ticks)
             {
                 if (_mDebug) _mWatch.Restart();
@@ -140,18 +142,18 @@ namespace BusinessLogic.Simulation
             // System time series setup.
             var systemTimeSeries = new List<ITimeSeries>
             {
-                new DenseTimeSeries("Mismatch"),
-                new DenseTimeSeries("Curtailment")
+                new DenseTimeSeries("Mismatch", _mTicks),
+                new DenseTimeSeries("Curtailment", _mTicks)
             };
             _mSystemTimeSeries = systemTimeSeries.ToDictionary(item => item.Name, item => item);
 
             if (logLevel == LogLevelEnum.System) return;
 
-            ExportStrategy.Start();
+            ExportStrategy.Start(_mTicks);
 
             if (logLevel == LogLevelEnum.Flow) return;
 
-            foreach (var node in Nodes) node.Start();
+            foreach (var node in Nodes) node.Start(_mTicks);
         }
 
         /// <summary>

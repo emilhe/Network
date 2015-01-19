@@ -11,8 +11,8 @@ namespace BusinessLogic.Cost
     public class ParallelCostCalculator<T> : ICostCalculator<T> where T : ISolution
     {
 
-        private bool m_full = false;
-        private bool m_dirty = false;
+        private bool m_full;
+        private bool m_dirty;
 
         public bool Transmission { get; set; }
         public bool CacheEnabled { get; set; }

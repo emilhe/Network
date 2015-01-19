@@ -132,7 +132,7 @@ namespace BusinessLogic.ExportStrategies
 
         public bool Measuring { get; private set; }
 
-        public void Start()
+        public void Start(int ticks)
         {
             _mFlowTimeSeriesMap = new Dictionary<int, ITimeSeries>();
 
@@ -141,7 +141,7 @@ namespace BusinessLogic.ExportStrategies
                 for (int j = i; j < _mNodes.Count; j++)
                 {
                     if (!_mEdges.Connected(i, j)) continue;
-                    var ts = new DenseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation);
+                    var ts = new DenseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation, ticks);
                     ts.Properties.Add("From", _mNodes[i].Name);
                     ts.Properties.Add("To", _mNodes[j].Name);
                     _mFlowTimeSeriesMap.Add(i + _mNodes.Count * j,ts);
