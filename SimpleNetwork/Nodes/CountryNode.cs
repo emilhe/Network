@@ -24,11 +24,7 @@ namespace BusinessLogic.Nodes
         {
             Model = model;
 
-            Generators = new List<IGenerator>
-            {
-                new TimeSeriesGenerator("Wind",Model.WindTimeSeries),
-                new TimeSeriesGenerator("Solar",Model.SolarTimeSeries)
-            };
+            Generators = Model.GetGenerators();
             StorageCollection = new StorageCollection {new Curtailment()};
         }
 

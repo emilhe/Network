@@ -24,15 +24,15 @@ namespace BusinessLogic
             foreach (var country in countries)
             {
                 var load = GetTs(country, TsType.Load, source, offset);
-                var wind = GetTs(country, TsType.Wind, source, offset);
+                var onshoreWind = GetTs(country, TsType.Wind, source, offset);
                 var solar = GetTs(country, TsType.Solar, source, offset);
-                result.Add(new CountryNode(new ReModel(country, load, wind, solar)));
+                result.Add(new CountryNode(new ReModel(country, load, solar, onshoreWind)));
             }
 
             return result;
         }
 
-        public static List<CountryNode> GetAllCountryDataNew(TsSource source, bool offshore = false, int offset = 0)
+        public static List<CountryNode> GetAllCountryDataNew(TsSource source, int offset = 0)
         {
             var countries = ProtoStore.LoadCountries();
             var result = new List<CountryNode>(countries.Count);
@@ -40,9 +40,10 @@ namespace BusinessLogic
             foreach (var country in countries)
             {
                 var load = GetTs(country, TsType.Load, TsSource.VE, offset);
-                var wind = GetTs(country, offshore? TsType.OffshoreWind : TsType.OnshoreWind, source, offset);
+                var onshoreWind = GetTs(country, TsType.OnshoreWind, source, offset);
+                var offshoreWind = GetTs(country, TsType.OffshoreWind, source, offset);
                 var solar = GetTs(country, TsType.Solar, source, offset);
-                result.Add(new CountryNode(new ReModel(country, load, wind, solar)));
+                result.Add(new CountryNode(new ReModel(country, load, solar, onshoreWind, offshoreWind)));
             }
 
             return result;

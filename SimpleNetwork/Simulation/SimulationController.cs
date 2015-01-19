@@ -316,14 +316,16 @@ namespace BusinessLogic.Simulation
             var simulation = new SimulationCore(model);
             var watch = new Stopwatch();
             watch.Start();
-                foreach (var node in _mNodes)
-                {
-                    node.Model.Gamma = genes[node.Name].Gamma;
-                    node.Model.Alpha = genes[node.Name].Alpha;
-                }
-            simulation.Simulate((int) (Utils.Utils.HoursInYear * years), LogLevel);
-            if (PrintDebugInfo) Console.WriteLine("NodeGenes: " +
-                  watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
+            foreach (var node in _mNodes)
+            {
+                node.Model.Gamma = genes[node.Name].Gamma;
+                node.Model.Alpha = genes[node.Name].Alpha;
+                node.Model.OffshoreFraction = genes[node.Name].OffshoreFraction;
+            }
+            simulation.Simulate((int) (Utils.Utils.HoursInYear*years), LogLevel);
+            if (PrintDebugInfo)
+                Console.WriteLine("NodeGenes: " +
+                                  watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
 
             return simulation.Output;
         }

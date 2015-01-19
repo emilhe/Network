@@ -25,6 +25,9 @@ namespace BusinessLogic.Cost
         public static double GammaMax = 1;
         private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);
 
+        // Offshore fractions
+        public static Dictionary<string, double> OffshoreFractions;
+
         // Parameters used for Levy flight.
         private const double Beta = 3.0/2.0;
         private static readonly double Sigma =
@@ -60,6 +63,7 @@ namespace BusinessLogic.Cost
                 rescaling = GammaRescaling(guess);
             } while (rescaling.Equals(double.NegativeInfinity));
             ScaleGamma(guess, rescaling);
+            ApplyOffshoreFraction(guess);
             return guess;
         }
 
@@ -102,6 +106,7 @@ namespace BusinessLogic.Cost
                 rescaling = GammaRescaling(guess);
             } while (rescaling.Equals(double.NegativeInfinity));
             ScaleGamma(guess, rescaling);
+            ApplyOffshoreFraction(guess);
             return guess;
                 
         }
@@ -227,6 +232,20 @@ namespace BusinessLogic.Cost
         private static void ScaleGamma(NodeChromosome chromosome, double scaling)
         {
             foreach (var gene in chromosome.Genes) gene.Value.Gamma *= scaling;
+        }
+
+        private static void ApplyOffshoreFraction(NodeChromosome chromosome)
+        {
+            ApplyOffshoreFraction(chromosome.Genes);
+        }
+
+        public static void ApplyOffshoreFraction(NodeGenes genes)
+        {
+            if (OffshoreFractions == null) return;
+            foreach (var key in OffshoreFractions.Keys)
+            {
+                genes[key].OffshoreFraction = OffshoreFractions[key];
+            }
         }
 
         #endregion

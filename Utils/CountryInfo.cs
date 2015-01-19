@@ -217,6 +217,21 @@ namespace Utils
 
         #endregion
 
+        #region Offshore mappings
+
+        public static readonly Dictionary<string, double> OffshoreFrations = new Dictionary<string, double>()
+        {
+            {"Denmark", 0.50},
+            {"Germany", 0.25},
+            {"Great Britain", 0.50},
+            {"Ireland", 0.50},
+            {"Netherlands", 0.50},
+            {"Norway", 0.25},
+            {"Sweden", 0.25},
+        };
+
+        #endregion
+
         #region Mean load mappings
 
         // Source: 32 years of VE data.
@@ -262,6 +277,15 @@ namespace Utils
         public static double GetOnshoreWindCf(string name)
         {
             return WindOnshoreCf[name];
+        }
+
+
+        /// <summary>
+        /// Get the wind capacity factor for a country.
+        /// </summary>
+        public static double GetOffshoreWindCf(string name)
+        {
+            return WindOffshoreCf[name];
         }
 
         /// <summary>

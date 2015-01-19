@@ -103,21 +103,30 @@ namespace BusinessLogic.Cost
         // Cost of wind/solar facilities.
         private Dictionary<string, double> BaseCosts(NodeGenes nodeGenes)
         {
-            var windCapacity = 0.0;
             var solarCapacity = 0.0;
+            var onshoreWindCapacity = 0.0;
+            var offshoreWindCapacity = 0.0;
 
             foreach (var node in _mEvaluator.Nodes.Select(item => item.Model))
             {
                 var gene = nodeGenes[node.Name];
                 // Calculate capacities.
-                windCapacity += gene.Gamma * gene.Alpha * node.AvgLoad / CountryInfo.GetOnshoreWindCf(node.Name);
                 solarCapacity += gene.Gamma * (1 - gene.Alpha) * node.AvgLoad / CountryInfo.GetSolarCf(node.Name);
+                onshoreWindCapacity += gene.Gamma * gene.Alpha * (1-gene.OffshoreFraction) * node.AvgLoad / CountryInfo.GetOnshoreWindCf(node.Name);
+                if (CountryInfo.GetOffshoreWindCf(node.Name) == 0) continue;
+                offshoreWindCapacity += gene.Gamma * gene.Alpha * gene.OffshoreFraction * node.AvgLoad / CountryInfo.GetOffshoreWindCf(node.Name);
             }
-                
+
+            var onshoreCost = OnshoreWindCost(onshoreWindCapacity);
+            var offshoreCost = OffshoreWindCost(offshoreWindCapacity);
+
             return new Dictionary<string, double>
             {
-                {"Wind", WindCost(windCapacity)},
-                {"Solar", SolarCost(solarCapacity)}
+                {"Wind",onshoreCost + offshoreCost},
+                {"Solar", SolarCost(solarCapacity)},
+                // TODO: Maybe split costs up later?
+                //{"Onshore wind", onshoreCost},
+                //{"Offshore wind", offshoreCost},
             };
         }
 
@@ -141,9 +150,14 @@ namespace BusinessLogic.Cost
             return capacity*(Costs.CCGT.CapExFixed*1e6 + Costs.CCGT.OpExFixed*1e3*AnnualizationFactor);
         }
 
-        private static double WindCost(double capacity)
+        private static double OffshoreWindCost(double capacity)
         {
-            return capacity*(Costs.OnshoreWind.CapExFixed*1e6 + Costs.OnshoreWind.OpExFixed*1e3*AnnualizationFactor);
+            return capacity*(Costs.OffshoreWind.CapExFixed*1e6 + Costs.OffshoreWind.OpExFixed*1e3*AnnualizationFactor);
+        }
+
+        private static double OnshoreWindCost(double capacity)
+        {
+            return capacity * (Costs.OnshoreWind.CapExFixed * 1e6 + Costs.OnshoreWind.OpExFixed * 1e3 * AnnualizationFactor);
         }
 
         private static double SolarCost(double capacity)

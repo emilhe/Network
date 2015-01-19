@@ -135,9 +135,9 @@ namespace UnitTest
                     : new HelloWorldChromosome(validPartner.Genes.Substring(0, pivot) + Genes.Substring(pivot));
             }
 
-            public void UpdateCost(object costCalc)
+            public void UpdateCost(Func<ISolution, double> eval)
             {
-                CalculateCost();
+                eval(this);
             }
 
             public void Mutate()

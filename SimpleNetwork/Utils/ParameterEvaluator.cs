@@ -69,7 +69,7 @@ namespace BusinessLogic.Utils
                 }
             };
             // TODO: Make source configureable?
-            Nodes = ConfigurationUtils.CreateNodesNew(false);
+            Nodes = ConfigurationUtils.CreateNodesNew();
         }
     }
 
@@ -137,7 +137,7 @@ namespace BusinessLogic.Utils
                 return Nodes;
             });
             // TODO: Make source configurable
-            Nodes = ConfigurationUtils.CreateNodesNew(false);
+            Nodes = ConfigurationUtils.CreateNodesNew();
         }
     }
 

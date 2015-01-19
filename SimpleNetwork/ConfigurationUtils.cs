@@ -55,9 +55,20 @@ namespace BusinessLogic
             return AccessClient.GetAllCountryDataOld(source, (int)(offset * Utils.Utils.HoursInYear));
         }
 
-        public static List<CountryNode> CreateNodesNew(bool offshore, double offset = 0)
+        public static List<CountryNode> CreateNodesNew(double offset = 0, Dictionary<string, double> offshoreFractions = null)
         {
-            return AccessClient.GetAllCountryDataNew(TsSource.VE50PCT, offshore, (int)(offset * Utils.Utils.HoursInYear));
+            var nodes = AccessClient.GetAllCountryDataNew(TsSource.VE50PCT, (int)(offset * Utils.Utils.HoursInYear));
+            if (offshoreFractions == null) return nodes;
+
+            foreach (var key in offshoreFractions.Keys)
+            {
+                var match = nodes.SingleOrDefault(item => item.Name.Equals(key));
+                if(match == null) continue;
+
+                match.Model.OffshoreFraction = offshoreFractions[key];
+            }
+
+            return nodes;
         }
 
         #endregion

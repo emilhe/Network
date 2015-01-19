@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Windows.Forms;
 using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
 using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;

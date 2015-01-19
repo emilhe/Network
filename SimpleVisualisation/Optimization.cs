@@ -29,7 +29,7 @@ namespace Main
             var strategy = new CukooNodeOptimizationStrategy();
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
-            population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
+            //population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
             var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> { Full = false, Transmission = false });
             // Do stuff.
             var optimum = optimizer.Optimize(population);
