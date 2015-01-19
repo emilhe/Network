@@ -17,7 +17,7 @@ namespace Main.Figures
     {
 
         private const string GeneticPath =
-            @"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK={0}.txt";
+            @"C:\proto\onshoreVEcukooConstraintTransK={0}.txt";
 
         #region Data export to JSON for external rendering
 

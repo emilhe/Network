@@ -16,9 +16,9 @@ namespace Utils
         public const double DcConverter = 150000;
         // Link properties.
         public static readonly Dictionary<string, string> LinkType =
-            FileUtils.DictionaryFromFile<string, string>(@"C:\proto\LineType.txt");
+            FileUtils.DictionaryFromFile<string, string>(@"C:\EmherSN\data\LineType.txt");
         public static readonly Dictionary<string, int> LinkLength =
-            FileUtils.DictionaryFromFile<string, int>(@"C:\proto\LineLength.txt");
+            FileUtils.DictionaryFromFile<string, int>(@"C:\EmherSN\data\LineLength.txt");
 
         /// <summary>
         /// Get the cost of a link.
