@@ -15,6 +15,12 @@ namespace SimpleImporter
     public class ProtoCache
     {
 
+        // For now, just flush all at once :).
+        public static void Flush()
+        {
+            TimeSeries.Clear();
+        }
+
         #region Time series
 
         private static readonly Dictionary<string, TimeSeriesDal> TimeSeries = new Dictionary<string, TimeSeriesDal>();
@@ -26,7 +32,8 @@ namespace SimpleImporter
         /// <returns> the time series </returns>
         public static TimeSeriesDal LoadTimeSeriesFromImport(string key)
         {
-            return TimeSeries.ContainsKey(key) ? TimeSeries[key] : ProtoStore.LoadTimeSeriesFromImport(key);
+            if(!TimeSeries.ContainsKey(key)) TimeSeries[key] = ProtoStore.LoadTimeSeriesFromImport(key);
+            return TimeSeries[key];
         }
 
         #endregion

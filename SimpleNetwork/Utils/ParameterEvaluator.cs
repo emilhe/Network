@@ -166,7 +166,7 @@ namespace BusinessLogic.Utils
         {
             if (full) _mCore = new FullCore();
             else
-            {
+            {   
                 // TODO: Make config a variable? For now, just use default...
                 var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\ModelYear\noStorageAlpha0.5to1Gamma1.txt");
                 _mCore = new ModelYearCore(config);
