@@ -21,7 +21,7 @@ namespace Main
             optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEgeneticConstraintTransK={0}{1}.txt", k, key));
         }
 
-        public static void Cukoo(int k, int n, string key = "")
+        public static void Cukoo(int k, int n = 250, string key = "")
         {
             // Adjust gene pool.
             GenePool.K = k;
