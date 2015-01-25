@@ -10,7 +10,6 @@ namespace BusinessLogic.Cost
         private double _mCost;
         private double _mGamma = 1;
 
-        // The OVERALL values (even though the DNA is heterogeneous).
         public double Gamma
         {
             get { return _mGamma; }
@@ -33,9 +32,16 @@ namespace BusinessLogic.Cost
                 if(InvalidCost) throw new ArgumentException("Cost is not updated.");
                 return _mCost;
             }
+            // Should ONLY be set internally or by JSON deserializer.
+            set
+            {
+                _mCost = value;
+                InvalidCost = false;
+            }
         }
 
-        public NodeGenes Genes { get; private set; }
+        // Should ONLY be set by JSON deserializer.   
+        public NodeGenes Genes { get; set; }
 
         public NodeChromosome()
         {
@@ -97,8 +103,7 @@ namespace BusinessLogic.Cost
 
         public void UpdateCost(Func<ISolution, double> eval)
         {
-            _mCost = eval(this);
-            InvalidCost = false;
+            Cost = eval(this);
         }
 
         private NodeChromosome SpawnChild(NodeChromosome validPartner)
