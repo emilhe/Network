@@ -9,7 +9,7 @@ namespace Optimization
     public interface IGeneticOptimizationStrategy<T> where T : IChromosome
     {
 
-        bool TerminationCondition(T[] chromosomes);
+        bool TerminationCondition(T[] chromosomes, int evaluations);
 
         void Select(T[] chromosomes);
         void Mate(T[] chromosomes);

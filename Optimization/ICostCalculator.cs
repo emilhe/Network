@@ -9,6 +9,7 @@ namespace Optimization
     public interface ICostCalculator<T> where T : ISolution
     {
 
+        int Evaluations { get; }
         void UpdateCost(IEnumerable<T> solutions);
 
     }

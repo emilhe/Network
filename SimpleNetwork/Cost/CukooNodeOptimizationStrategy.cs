@@ -16,9 +16,10 @@ namespace BusinessLogic.Cost
         private double _mLastCost = double.MaxValue;
         private int _mStagnationCount;
 
-        // Terminate when the solution becomes stable.
-        public bool TerminationCondition(NodeChromosome[] nests)
+        public bool TerminationCondition(NodeChromosome[] nests, int evaluations)
         {
+            return (evaluations > 2500);
+
             if (Math.Abs(nests[0].Cost - _mLastCost) > 1e-2)
             {
                 _mLastCost = nests[0].Cost;

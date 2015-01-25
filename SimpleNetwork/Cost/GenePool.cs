@@ -34,7 +34,7 @@ namespace BusinessLogic.Cost
             Math.Pow(
                 SpecialFunction.gamma(1.0 + Beta) * Math.Sin(Math.PI * Beta / 2.0) /
                 (SpecialFunction.gamma((1.0 + Beta) / 2.0) * Beta * Math.Pow(2.0, ((Beta - 1.0) / 2.0))), (1.0 / Beta));
-        private static readonly double StepScale = 35;
+        private static readonly double StepScale = 25;
 
         #region Gene modification
 
@@ -114,7 +114,7 @@ namespace BusinessLogic.Cost
         private static NodeChromosome LevyFlight(NodeChromosome chromosome, NodeChromosome best, double scaling)
         {
             var genes = new Dictionary<string, NodeGene>();
-            var levy = LevyStep();
+            var levy = LevyStep();            
 
             foreach (var key in chromosome.Genes.Keys.ToArray())
             {
@@ -126,6 +126,7 @@ namespace BusinessLogic.Cost
                 if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
                 if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
                 // Then gamma.
+                //levy = LevyStep();       
                 newGene.Gamma += scaling*StepScale*levy*Rnd.NextDouble()*(bestGene.Gamma - oldGene.Gamma);
                 if (newGene.Gamma < GammaMin) newGene.Gamma = GammaMin;
                 if (newGene.Gamma > GammaMax) newGene.Gamma = GammaMax;

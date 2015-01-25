@@ -23,9 +23,10 @@ namespace BusinessLogic.Cost
         private double _mLastCost = double.MaxValue;
         private int _mStagnationCount;
 
-        // Iterate until no progress has been made in [StagnationLimit] generations.
-        public bool TerminationCondition(NodeChromosome[] chromosomes)
+        public bool TerminationCondition(NodeChromosome[] chromosomes, int evaluations)
         {
+            return (evaluations > 2500);
+
             if (Math.Abs(chromosomes[0].Cost - _mLastCost) > 1e-3)
             {
                 _mLastCost = chromosomes[0].Cost;
