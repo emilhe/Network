@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,46 +12,50 @@ namespace BusinessLogic.Cost
     public class ParallelCostCalculator<T> : ICostCalculator<T> where T : ISolution
     {
 
-        private bool m_full;
-        private bool m_dirty;
+        private bool _mFull;
+        private bool _mDirty;
 
         public bool Transmission { get; set; }
         public bool CacheEnabled { get; set; }
         
         public bool Full
         {
-            get { return m_full; }
+            get { return _mFull; }
             set
             {
-                if (m_full == value) return;
-                m_full = value;
-                m_dirty = true;
+                if (_mFull == value) return;
+                _mFull = value;
+                _mDirty = true;
             }
         }
 
-        private Dictionary<int, NodeCostCalculator> _mCalcMap;
+        private ConcurrentDictionary<int, NodeCostCalculator> _mCalcMap;
         private readonly ParallelOptions _mOptions;
 
         public ParallelCostCalculator(int maxDegreeOfParallelism = -1)
         {
             if (maxDegreeOfParallelism == -1) maxDegreeOfParallelism = Environment.ProcessorCount;
             _mOptions = new ParallelOptions {MaxDegreeOfParallelism = maxDegreeOfParallelism};
-            _mCalcMap = new Dictionary<int, NodeCostCalculator>(maxDegreeOfParallelism);
+            _mCalcMap = new ConcurrentDictionary<int, NodeCostCalculator>();
+            // Initialize dummy calculator to ensure that the cache is updated.
+            var dummy = new NodeCostCalculator(new ParameterEvaluator(Full) { CacheEnabled = CacheEnabled });
         }
 
         public void UpdateCost(IEnumerable<T> chromosomes)
         {        
             // If dirty, new cost calculators must be initialized.
-            if (m_dirty) _mCalcMap = new Dictionary<int, NodeCostCalculator>(_mCalcMap.Count);
-            foreach (var calculator in _mCalcMap) calculator.Value.CacheEnabled = CacheEnabled;
-            // Initialize dummy calculator to ensure that the cache is updated.
-            var dummy = new NodeCostCalculator(new ParameterEvaluator(Full) {CacheEnabled = CacheEnabled});
+            if (_mDirty) _mCalcMap = new ConcurrentDictionary<int, NodeCostCalculator>();
+            foreach (var calculator in _mCalcMap) calculator.Value.CacheEnabled = CacheEnabled;                
             
             Parallel.ForEach(chromosomes, _mOptions, chromosome =>
             {
-                // Very expensive, of extra thread are spawned (they are, apparently..).
+                // Very expensive if extra thread are spawned (they are, apparently..).
                 var id = Thread.CurrentThread.ManagedThreadId;
-                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.Add(id, new NodeCostCalculator(new ParameterEvaluator(Full) { CacheEnabled = CacheEnabled }));
+                if (!_mCalcMap.ContainsKey(id))
+                {
+                    var newCalculator = new NodeCostCalculator(new ParameterEvaluator(Full) {CacheEnabled = CacheEnabled});
+                    _mCalcMap.TryAdd(id, newCalculator);
+                }
                 // If non-nodechromosomes are used, this FUCKS UP (like, BADLY)!
                 chromosome.UpdateCost(solution => _mCalcMap[id].SystemCost((solution as NodeChromosome).Genes, Transmission));
             });
