@@ -15,10 +15,11 @@ namespace BusinessLogic.Cost
 
         private bool _mFull;
         private bool _mDirty;
+        private int _mEvaluations;
 
         public bool Transmission { get; set; }
         public bool CacheEnabled { get; set; }
-
+        
         public int Evaluations
         {
             get { return _mEvaluations; }
@@ -41,19 +42,19 @@ namespace BusinessLogic.Cost
         public ParallelCostCalculator(int maxDegreeOfParallelism = -1)
         {
             if (maxDegreeOfParallelism == -1) maxDegreeOfParallelism = Environment.ProcessorCount;
-            _mOptions = new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism };
+            _mOptions = new ParallelOptions {MaxDegreeOfParallelism = maxDegreeOfParallelism};
             _mCalcMap = new ConcurrentDictionary<int, NodeCostCalculator>();
             // Initialize dummy calculator to ensure that the cache is updated.
             var dummy = new NodeCostCalculator(new ParameterEvaluator(Full) { CacheEnabled = CacheEnabled });
-
+     
         }
 
         public void UpdateCost(IEnumerable<T> chromosomes)
-        {
+        {        
             // If dirty, new cost calculators must be initialized.
             if (_mDirty) _mCalcMap = new ConcurrentDictionary<int, NodeCostCalculator>();
             foreach (var calculator in _mCalcMap) calculator.Value.CacheEnabled = CacheEnabled;
-
+    
             Parallel.ForEach(chromosomes, _mOptions, chromosome =>
             {
                 // Very expensive if extra thread are spawned (they are, apparently..).
