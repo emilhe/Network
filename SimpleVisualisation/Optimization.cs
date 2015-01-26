@@ -11,11 +11,12 @@ namespace Main
         public static void Genetic(int k, int n, string key = "")
         {
             // Adjust gene pool.
-            GenePool.K = 1;
+            GenePool.K = k;
             // Setup stuff.
             var strategy = new GeneticNodeOptimizationStrategy();
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
+            //population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
             var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> {Full = false, Transmission = false});
             // Do stuff.
             var optimum = optimizer.Optimize(population);
@@ -34,7 +35,7 @@ namespace Main
             var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> { Full = false, Transmission = false });
             // Do stuff.
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEcukooConstraintTransK={0}{1}.txt", k,key));
+            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\VE50cukooWithTransK={0}{1}.txt", k,key));
         }
 
         //public static void ParticleSwarm()

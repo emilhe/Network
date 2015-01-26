@@ -39,7 +39,7 @@ namespace UnitTest
             private const int EliteCount = 15;
             private const int EliteMixCount = 1;
 
-            public bool TerminationCondition(HelloWorldChromosome[] chromosomes)
+            public bool TerminationCondition(HelloWorldChromosome[] chromosomes, int evaluations)
             {
                 return Math.Abs(chromosomes[0].Cost) < 1e-10;
             }

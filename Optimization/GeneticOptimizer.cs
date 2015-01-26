@@ -25,7 +25,7 @@ namespace Optimization
             var best = population[0].Cost;
             Console.WriteLine("Generation {0}, Cost = {1}", Generation, best);
 
-            while (!_mStrat.TerminationCondition(population))
+            while (!_mStrat.TerminationCondition(population, _mCostCalculator.Evaluations))
             {
                 // Do genetic stuff.
                 _mStrat.Select(population);

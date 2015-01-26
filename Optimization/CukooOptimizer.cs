@@ -33,7 +33,7 @@ namespace Optimization
             var eliteN = (int) Math.Round(nests.Length*(1 - _mStrat.AbandonRate));
             var newEggs = new T[eliteN];
 
-            while (!_mStrat.TerminationCondition(nests))
+            while (!_mStrat.TerminationCondition(nests, _mCostCalculator.Evaluations))
             {
                 Generation++;
                 // Abandon bad nests.

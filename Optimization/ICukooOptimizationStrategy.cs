@@ -12,7 +12,7 @@ namespace Optimization
 
         double AbandonRate { get; }
 
-        bool TerminationCondition(T[] nests);
+        bool TerminationCondition(T[] nests, int evaluations);
         T LevyFlight(T nest, T bestNest, double scaling = 1);
         T CrossOver(T badNest, T goodNest);
     }
