@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BusinessLogic.Cost;
+using BusinessLogic.Cost.Optimization;
 using BusinessLogic.Nodes;
 
 namespace BusinessLogic.Utils
 {
-    public class Utils
+    public class Stuff
     {
 
         public static int HoursInYear = 8766;

@@ -13,52 +13,12 @@ namespace Utils
         public const double AcCostPerKm = 400;
         public const double DcCostPerKm = 1500;
         // Cost in €/MW
-        public const double DcConverter = 150000;
+        public const double DcConverterCost = 150000;
         // Link properties.
         public static readonly Dictionary<string, string> LinkType =
             FileUtils.DictionaryFromFile<string, string>(@"C:\EmherSN\data\LineType.txt");
         public static readonly Dictionary<string, int> LinkLength =
             FileUtils.DictionaryFromFile<string, int>(@"C:\EmherSN\data\LineLength.txt");
-
-        /// <summary>
-        /// Get the cost of a link.
-        /// </summary>
-        /// <param name="from"> start country </param>
-        /// <param name="to"> end country </param>
-        /// <param name="diffAcDc"> differentiate dc and ac links </param>
-        /// <returns> link cost per MW </returns>
-        public static double GetLinkCost(string from, string to, bool diffAcDc = true)
-        {
-            return GetLinkCost(GetKey(from, to), diffAcDc);
-        }
-
-        /// <summary>
-        /// Get the cost of a link.
-        /// </summary>
-        /// <param name="key"> key </param>
-        /// <param name="diffAcDc"> differentiate dc and ac links </param>
-        /// <returns> link cost per MW </returns>
-        public static double GetLinkCost(string key, bool diffAcDc = true)
-        {
-            if (!diffAcDc) return LinkLength[key] * AcCostPerKm;
-
-            if (!LinkType.ContainsKey(key)) throw new ArgumentException("Link type not found: " + key);
-            if (LinkType[key].Equals("AC")) return LinkLength[key] * AcCostPerKm;
-            if (LinkType[key].Equals("DC")) return LinkLength[key] * DcCostPerKm + 2 * DcConverter;
-
-            throw new ArgumentException("Unknown link type.");
-        }
-
-        /// <summary>
-        /// Get the length of a link.
-        /// </summary>
-        /// <param name="from"> start country </param>
-        /// <param name="to"> end country </param>
-        /// <returns> link length in km </returns>
-        public static double GetLinkLength(string from, string to)
-        {
-            return LinkLength[GetKey(from, to)];
-        }
 
         public static string GetKey(string from, string to)
         {
@@ -69,6 +29,19 @@ namespace Utils
             if (LinkLength.ContainsKey(key2)) key = key2;
             if (key == null) throw new ArgumentException("Link not found: " + key1);
             return key;
+        }
+
+        #endregion
+
+        // Source: Rolando code.
+        #region Annualization factor
+
+        private const double Rate = 4;
+
+        public static double AnnualizationFactor(double lifetime)
+        {
+            if (Rate == 0) return lifetime;
+            return (1 - Math.Pow((1 + (Rate / 100.0)), -lifetime)) / (Rate / 100.0);
         }
 
         #endregion
@@ -116,8 +89,6 @@ namespace Utils
             OpExVariable = 56.0
         };
 
-        #endregion
-
         public class Asset
         {
             public string Name { get; set; }
@@ -128,6 +99,8 @@ namespace Utils
             // Euros/MWh/year                        
             public double OpExVariable { get; set; }
         }
+
+        #endregion
 
     }
 }

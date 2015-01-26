@@ -19,7 +19,7 @@ namespace UnitTest
         {
             // Basic initialization
             var nodes = ConfigurationUtils.CreateNodesWithBackup();
-            var edges = BusinessLogic.Utils.Utils.StraightLine(nodes);
+            var edges = Stuff.StraightLine(nodes);
             var model = new NetworkModel(nodes, new ConstrainedFlowExportStrategy(nodes, edges));
             var simulation = new SimulationCore(model);
             // Try a simulation which should work.
@@ -53,7 +53,7 @@ namespace UnitTest
                 node.Model.Alpha = 0.65;
                 node.Model.Gamma = 1.028;
             }
-            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
+            simulation.Simulate(Stuff.HoursInYear); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
             foreach (var node in nodes)
@@ -61,7 +61,7 @@ namespace UnitTest
                 node.Model.Alpha = 0.65;
                 node.Model.Gamma = 1.027;
             }
-            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
+            simulation.Simulate(Stuff.HoursInYear); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
 
@@ -70,7 +70,7 @@ namespace UnitTest
         {
             // Basic initialization
             var nodes = ConfigurationUtils.CreateNodesWithBackup();
-            var edges = BusinessLogic.Utils.Utils.StraightLine(nodes);
+            var edges = Stuff.StraightLine(nodes);
             var model = new NetworkModel(nodes, new CooperativeExportStrategy(new MinimalFlowStrategy(nodes, edges)));
             var simulation = new SimulationCore(model);
             // Try a simulation which should work.
@@ -79,7 +79,7 @@ namespace UnitTest
                 node.Model.Alpha = 0.65;
                 node.Model.Gamma = 1.028;
             }
-            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
+            simulation.Simulate(Stuff.HoursInYear); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
             foreach (var node in nodes)
@@ -87,7 +87,7 @@ namespace UnitTest
                 node.Model.Alpha = 0.65;
                 node.Model.Gamma = 1.027;
             }
-            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
+            simulation.Simulate(Stuff.HoursInYear); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
 
@@ -104,7 +104,7 @@ namespace UnitTest
                 node.Model.Alpha = 0.55;
                 node.Model.Gamma = 1.328;
             }
-            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
+            simulation.Simulate(Stuff.HoursInYear); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
             foreach (var node in nodes)
@@ -112,7 +112,7 @@ namespace UnitTest
                 node.Model.Alpha = 0.55;
                 node.Model.Gamma = 1.187;
             }
-            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
+            simulation.Simulate(Stuff.HoursInYear); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
 
@@ -129,7 +129,7 @@ namespace UnitTest
                 node.Model.Alpha = 0.57;
                 node.Model.Gamma = 1.536;
             }
-            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
+            simulation.Simulate(Stuff.HoursInYear); // One year.
             Assert.AreEqual(true, simulation.Output.Success);
             // Try a simulation which should NOT work.
             foreach (var node in nodes)
@@ -137,7 +137,7 @@ namespace UnitTest
                 node.Model.Alpha = 0.57;
                 node.Model.Gamma = 1.530;
             }
-            simulation.Simulate(BusinessLogic.Utils.Utils.HoursInYear); // One year.
+            simulation.Simulate(Stuff.HoursInYear); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
         }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic;
+using BusinessLogic.Utils;
 using Controls.Charting;
 using SimpleImporter;
 using Utils;

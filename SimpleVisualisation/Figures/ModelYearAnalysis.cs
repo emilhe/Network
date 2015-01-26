@@ -172,7 +172,7 @@ namespace Main.Figures
             // Fill in data.
             foreach (var flow in flows)
             {
-                var length = Costs.GetLinkLength(flow.Properties["From"], flow.Properties["To"]);
+                var length = Costs.LinkLength[Costs.GetKey(flow.Properties["From"], flow.Properties["To"])];
                 var capacity = MathUtils.CalcCapacity(flow.GetAllValues());
                 allFlow += length * capacity;
             }
@@ -339,7 +339,7 @@ namespace Main.Figures
             // Fill in data.
             foreach (var flow in flows)
             {
-                var length = Costs.GetLinkLength(flow.Properties["From"], flow.Properties["To"]);
+                var length = Costs.LinkLength[Costs.GetKey(flow.Properties["From"], flow.Properties["To"])];
                 var capacity = MathUtils.CalcCapacity(flow.GetAllValues());
                 allFlow += capacity*length;
                 for (int i = 0; i < years; i++)

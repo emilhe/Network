@@ -285,7 +285,7 @@ namespace BusinessLogic.Simulation
                 }
                 // Do simulation.
                 watch.Restart();
-                simulation.Simulate((int) (Utils.Utils.HoursInYear*years), LogLevelEnum.None);
+                simulation.Simulate((int) (Stuff.HoursInYear*years), LogLevelEnum.None);
                 if(PrintDebugInfo) Console.WriteLine("Mix " + mix + "; Penetation " + pen + ": " +
                                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
                 return simulation.Output.Success;
@@ -303,7 +303,7 @@ namespace BusinessLogic.Simulation
                 node.Model.Gamma = penetration;
                 node.Model.Alpha = mixing;
             }
-            simulation.Simulate((int)(Utils.Utils.HoursInYear * years), LogLevel);
+            simulation.Simulate((int)(Stuff.HoursInYear * years), LogLevel);
             if (PrintDebugInfo) Console.WriteLine("Mix " + mixing + "; Penetation " + penetration + ": " +
                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
 
@@ -322,7 +322,7 @@ namespace BusinessLogic.Simulation
                 node.Model.Alpha = genes[node.Name].Alpha;
                 node.Model.OffshoreFraction = genes[node.Name].OffshoreFraction;
             }
-            simulation.Simulate((int) (Utils.Utils.HoursInYear*years), LogLevel);
+            simulation.Simulate((int) (Utils.Stuff.HoursInYear*years), LogLevel);
             if (PrintDebugInfo)
                 Console.WriteLine("NodeGenes: " +
                                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));

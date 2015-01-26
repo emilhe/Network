@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.Cost;
+using BusinessLogic.Cost.Optimization;
 using Optimization;
 using Utils;
 

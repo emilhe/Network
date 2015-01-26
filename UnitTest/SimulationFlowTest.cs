@@ -51,7 +51,7 @@ namespace UnitTest
             node1.Generators.Add(genOne);
             node2.Generators.Add(genTwo);
             var nodes = new List<CountryNode> { node1, node2 };
-            var edges = BusinessLogic.Utils.Utils.StraightLine(nodes);
+            var edges = BusinessLogic.Utils.Stuff.StraightLine(nodes);
 
             // Run model.
             RunModel(nodes, edges, 0, 2);

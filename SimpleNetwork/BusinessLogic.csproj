@@ -101,13 +101,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessClient.cs" />
-    <Compile Include="Cost\CukooNodeOptimizationStrategy.cs" />
-    <Compile Include="Cost\GenePool.cs" />
-    <Compile Include="Cost\GeneticNodeOptimizationStrategy.cs" />
+    <Compile Include="Cost\CostModels\IBackupCostModel.cs" />
+    <Compile Include="Cost\Optimization\CukooNodeOptimizationStrategy.cs" />
+    <Compile Include="Cost\Optimization\GenePool.cs" />
+    <Compile Include="Cost\Optimization\GeneticNodeOptimizationStrategy.cs" />
     <Compile Include="Cost\INodeCostCalculator.cs" />
-    <Compile Include="Cost\NodeGenes.cs" />
-    <Compile Include="Cost\NodeGenesFactory.cs" />
+    <Compile Include="Cost\Optimization\NodeGenes.cs" />
+    <Compile Include="Cost\Optimization\NodeGenesFactory.cs" />
     <Compile Include="Cost\ParallelCostCalculator.cs" />
+    <Compile Include="Cost\CostModels\FixedLengthModel.cs" />
+    <Compile Include="Cost\CostModels\ISolarCostModel.cs" />
+    <Compile Include="Cost\CostModels\ITransmissionCostModel.cs" />
+    <Compile Include="Cost\CostModels\IWindCostModel.cs" />
+    <Compile Include="Cost\CostModels\VariableLengthModel.cs" />
     <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
     <Compile Include="ExportStrategies\ExportHelper.cs" />
     <Compile Include="ExportStrategies\ConstrainedFlowExportStrategy.cs" />
@@ -123,10 +129,9 @@
     <Compile Include="Interfaces\IFailureStrategy.cs" />
     <Compile Include="Interfaces\ITickListener.cs" />
     <Compile Include="Cost\NodeCostCalculator.cs" />
-    <Compile Include="Cost\NodeChromosome.cs" />
-    <Compile Include="Cost\NodeGene.cs" />
+    <Compile Include="Cost\Optimization\NodeChromosome.cs" />
+    <Compile Include="Cost\Optimization\NodeGene.cs" />
     <Compile Include="Simulation\ISimulation.cs" />
-    <Compile Include="MixController.cs" />
     <Compile Include="Nodes\ReModel.cs" />
     <Compile Include="Nodes\SuperNode.cs" />
     <Compile Include="Simulation\SimulationController.cs" />
@@ -142,7 +147,6 @@
     <Compile Include="Interfaces\ITimeSeriesItem.cs" />
     <Compile Include="NetworkModel.cs" />
     <Compile Include="Interfaces\IExportStrategy.cs" />
-    <Compile Include="MixOptimizer.cs" />
     <Compile Include="Nodes\CountryNode.cs" />
     <Compile Include="Generators\SuperGenerator.cs" />
     <Compile Include="TimeSeries\BasicTimeSeries.cs" />
@@ -164,13 +168,13 @@
     <Compile Include="TimeSeries\DenseTimeSeries.cs" />
     <Compile Include="TimeSeries\SparseTimeSeries.cs" />
     <Compile Include="TimeSeries\TickTimeSeriesItem.cs" />
-    <Compile Include="ConfigurationUtils.cs" />
+    <Compile Include="Utils\ConfigurationUtils.cs" />
     <Compile Include="Utils\ConstrainedFlowOptimizer.cs" />
     <Compile Include="Utils\GridEvaluator.cs" />
     <Compile Include="Utils\LineEvaluator.cs" />
     <Compile Include="Utils\MismatchOptimizer.cs" />
     <Compile Include="Utils\ParameterEvaluator.cs" />
-    <Compile Include="Utils\Utils.cs" />
+    <Compile Include="Utils\Stuff.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

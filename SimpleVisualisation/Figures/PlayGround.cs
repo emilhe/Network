@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BusinessLogic.Cost;
+using BusinessLogic.Cost.Optimization;
+using BusinessLogic.Cost.Transmission;
 using BusinessLogic.Utils;
 using Controls;
 using Controls.Article;
@@ -21,6 +23,8 @@ namespace Main.Figures
 
         #region Data export to JSON for external rendering
 
+        #region Primary data
+
         public static void ExportChromosomeData()
         {
             var mix = 1;
@@ -35,9 +39,9 @@ namespace Main.Figures
             layouts.Add(NodeGenesFactory.SpawnCfMax(1, 1, 2), "k=2cfMaxWind.txt");
             layouts.Add(NodeGenesFactory.SpawnCfMax(0, 1, 2), "k=2cfMaxSolar.txt");
             // Beta layouts.
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(1, 1e-3, mix)), "k=1beta.txt");
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(2, 1e-3, mix)), "k=2beta.txt");
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(3, 1e-3, mix)), "k=3beta.txt");
+            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(1, 1e-3, mix)), "k=1beta.txt");
+            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(2, 1e-3, mix)), "k=2beta.txt");
+            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(3, 1e-3, mix)), "k=3beta.txt");
             // Maximum CF layouts.
             layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 1), "k=1cfMax.txt");
             layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 2), "k=2cfMax.txt");
@@ -82,6 +86,55 @@ namespace Main.Figures
 
         #endregion
 
+        #region Sensitivity analysis
+
+        /// <summary>
+        /// Transmission sensitivity analysis.
+        /// </summary>
+        public static void ExportTcCalcAnalysisData()
+        {
+            var evaluator = new ParameterEvaluator(false);
+            var varaibleLength = new VariableLengthModel();
+            var fixedLength = new FixedLengthModel();
+
+            // What genes?
+            var genes = NodeGenesFactory.SpawnBeta(0, 1, 1);
+            var capacities = evaluator.LinkCapacities(genes);
+
+            // What to do with data?
+            Console.WriteLine("Fixed length cost = {0}", fixedLength.Eval(capacities));
+            Console.WriteLine("Variable length cost = {0}", varaibleLength.Eval(capacities));
+        }
+
+        /// <summary>
+        /// Solar cost sensitivity analysis.
+        /// </summary>
+        public static void ExportSolarCostAnalysisData()
+        {
+            var n = 10;
+            var calc = new NodeCostCalculator(new ParameterEvaluator(false));
+            var dict = new Dictionary<string, List<double>>();
+            // TEMPORARY ANALYSIS
+            for (int i = 0; i < n; i+=2)
+            {
+                var scale = (double) (n - i)/(n);
+                calc.SolarCostModel = new ScaledSolarCostModel(scale);
+                dict.Add(scale.ToString("0.0"), new List<double>(n));
+                for (int j = 0; j <= n; j++)
+                {
+                    var genes = NodeGenesFactory.SpawnCfMax((double)j / n, 1.0, 1.0);
+                    dict[scale.ToString("0.0")].Add(calc.SystemCost(genes, true));
+                }
+            }
+            dict.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\sTmp\solarAnalysis.txt");
+        }
+
+        // TODO: Energy atlas parameter sensitivity analysis
+
+        #endregion
+
+        #endregion
+
         private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes, double> evalX, Func<NodeGenes, Dictionary<string, double>> evalY)
         {
             // Prepare the data structures.
@@ -92,7 +145,7 @@ namespace Main.Figures
             var data = new Dictionary<string, Dictionary<double, BetaWrapper>>();
             for (int j = 0; j < betas.Length; j++)
             {
-                betas[j] = BusinessLogic.Utils.Utils.FindBeta(kValues[j], 1e-3);
+                betas[j] = Stuff.FindBeta(kValues[j], 1e-3);
                 for (int i = 0; i <= alphaRes; i++)
                 {
                     alphas[i] = alphaStart + (i) * delta;
@@ -163,7 +216,7 @@ namespace Main.Figures
             };
             for (int j = 0; j < betas.Length; j++)
             {
-                betas[j] = BusinessLogic.Utils.Utils.FindBeta(kValues[j], 1e-3);
+                betas[j] = Stuff.FindBeta(kValues[j], 1e-3);
             }
 
             for (int j = 0; j < betas.Length; j++)
@@ -240,9 +293,9 @@ namespace Main.Figures
             layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, 0.0), "k=1.txt");
             // Beta layouts.
             (NodeGenesFactory.SpawnBeta(mix, 1, 1.0)).Export().ToJsonFile(basePath + "beta=1.txt");
-            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(1.5, 1e-3, mix))).Export().ToJsonFile(basePath + "k=15beta.txt");
-            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(2, 1e-3, mix))).Export().ToJsonFile(basePath + "k=2beta.txt");
-            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Utils.FindBeta(3, 1e-3, mix))).Export().ToJsonFile(basePath + "k=3beta.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(1.5, 1e-3, mix))).Export().ToJsonFile(basePath + "k=15beta.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(2, 1e-3, mix))).Export().ToJsonFile(basePath + "k=2beta.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(3, 1e-3, mix))).Export().ToJsonFile(basePath + "k=3beta.txt");
             // Maximum CF layouts.
             (NodeGenesFactory.SpawnCfMax(mix, 1, 1.5)).Export().ToJsonFile(basePath + "k=15nuMax.txt");
             (NodeGenesFactory.SpawnCfMax(mix, 1, 2)).Export().ToJsonFile(basePath + "k=2nuMax.txt");
@@ -270,21 +323,21 @@ namespace Main.Figures
             //const string basePath = @"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraint";
             ////var layout = FileUtils.FromJsonFile<NodeGenes>(basePath + "K=1.txt");
             //var layout = new NodeGenes(0.95, 1, 1);
-            //var betaLayout = new NodeGenes(layout.Alpha, layout.Gamma, BusinessLogic.Utils.Utils.FindBeta(1, 1e-3));
+            //var betaLayout = new NodeGenes(layout.Alpha, layout.Gamma, BusinessLogic.Stuff.Stuff.FindBeta(1, 1e-3));
             //view.SetData(new[] { layout, betaLayout}, false);
             //Save(view, "LayoutK=1.png");
             //layout = new NodeGenes(0.95, 1, 2);
             ////layout = FileUtils.FromJsonFile<NodeGenes>(basePath + "K=2.txt");
-            //betaLayout = new NodeGenes(layout.Alpha, layout.Gamma, BusinessLogic.Utils.Utils.FindBeta(2, 1e-3));
+            //betaLayout = new NodeGenes(layout.Alpha, layout.Gamma, BusinessLogic.Stuff.Stuff.FindBeta(2, 1e-3));
             //view.SetData(new[] { layout, betaLayout });
             //Save(view, "LayoutK=2.png");
             ////layout = FileUtils.FromJsonFile<NodeGenes>(basePath + "K=5.txt");
             //layout = new NodeGenes(0.95, 1, 5);
-            //betaLayout = new NodeGenes(layout.Alpha, layout.Gamma, BusinessLogic.Utils.Utils.FindBeta(5, 1e-3));
+            //betaLayout = new NodeGenes(layout.Alpha, layout.Gamma, BusinessLogic.Stuff.Stuff.FindBeta(5, 1e-3));
             //view.SetData(new[] { layout, betaLayout });
             //Save(view, "LayoutK=5.png");
             //var layout = FileUtils.FromJsonFile<NodeGenes>(basePath + "K=1mio.txt");
-            //var betaLayout = new NodeGenes(0.95, 1, BusinessLogic.Utils.Utils.FindBeta(1e6, 1e-3));
+            //var betaLayout = new NodeGenes(0.95, 1, BusinessLogic.Stuff.Stuff.FindBeta(1e6, 1e-3));
             //view.SetData(new[] { betaLayout }, false);
             //view.MainChart.ChartAreas[0].AxisY.Interval = 20;
 

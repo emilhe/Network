@@ -222,12 +222,14 @@ namespace Utils
         public static readonly Dictionary<string, double> OffshoreFrations = new Dictionary<string, double>()
         {
             {"Denmark", 0.50},
-            {"Germany", 0.25},
+            {"Germany", 0.50},
             {"Great Britain", 0.50},
             {"Ireland", 0.50},
             {"Netherlands", 0.50},
-            {"Norway", 0.25},
-            {"Sweden", 0.25},
+            {"France", 0.50},
+            {"Belgium", 0.50},
+            {"Norway", 0.50},
+            {"Sweden", 0.50},
         };
 
         #endregion

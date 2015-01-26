@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net.Configuration;
-using System.Xml.Linq;
 using BusinessLogic.Generators;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
@@ -10,7 +7,7 @@ using BusinessLogic.Storages;
 using SimpleImporter;
 using Utils;
 
-namespace BusinessLogic
+namespace BusinessLogic.Utils
 {
     public class ConfigurationUtils
     {
@@ -52,12 +49,12 @@ namespace BusinessLogic
 
         public static List<CountryNode> CreateNodes(TsSource source = TsSource.ISET, double offset = 0)
         {
-            return AccessClient.GetAllCountryDataOld(source, (int)(offset * Utils.Utils.HoursInYear));
+            return AccessClient.GetAllCountryDataOld(source, (int)(offset * Utils.Stuff.HoursInYear));
         }
 
         public static List<CountryNode> CreateNodesNew(double offset = 0, Dictionary<string, double> offshoreFractions = null)
         {
-            var nodes = AccessClient.GetAllCountryDataNew(TsSource.VE50PCT, (int)(offset * Utils.Utils.HoursInYear));
+            var nodes = AccessClient.GetAllCountryDataNew(TsSource.VE50PCT, (int)(offset * Utils.Stuff.HoursInYear));
             if (offshoreFractions == null) return nodes;
 
             foreach (var key in offshoreFractions.Keys)

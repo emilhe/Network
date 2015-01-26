@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BusinessLogic.Cost.CostModels;
+using BusinessLogic.Cost.Transmission;
 using BusinessLogic.Utils;
 using Utils;
 
@@ -12,18 +14,13 @@ namespace BusinessLogic.Cost
         public bool CacheEnabled { get { return _mEvaluator.CacheEnabled; } set { _mEvaluator.CacheEnabled = value; } }
         private readonly ParameterEvaluator _mEvaluator;
 
-        private const double Rate = 4;
-        private const double LifeTime = 30;
+        // Default cost models.
+        public ITransmissionCostModel TcCostModel = new VariableLengthModel();
+        public IBackupCostModel BcCostModel = new BackupCostModelImpl();        
+        public ISolarCostModel SolarCostModel = new SolarCostModelImpl();
+        public IWindCostModel WindCostModel = new WindCostModelImpl();
 
-        private static double _mAnnualizationFactor;
-        private static double AnnualizationFactor
-        {
-            get
-            {
-                if (_mAnnualizationFactor == 0) _mAnnualizationFactor = CalcAnnualizationFactor(Rate);
-                return _mAnnualizationFactor;
-            }
-        }
+        public const double Lifetime = 30;
 
         #region Public interface
 
@@ -43,7 +40,7 @@ namespace BusinessLogic.Cost
             foreach (var cost in BaseCosts(nodeGenes)) costs.Add(cost.Key, cost.Value);
             foreach (var cost in BackupCosts(nodeGenes)) costs.Add(cost.Key, cost.Value);
             // Scale costs to get LCOE.
-            var scaling = _mEvaluator.Nodes.Select(item => item.Model.AvgLoad).Sum()*Utils.Utils.HoursInYear*AnnualizationFactor;
+            var scaling = _mEvaluator.Nodes.Select(item => item.Model.AvgLoad).Sum()*Utils.Stuff.HoursInYear*Costs.AnnualizationFactor(Lifetime); //TODO: Why annualization factor here???
             foreach (var key in costs.Keys.ToArray()) costs[key] = costs[key] / scaling;
 
             return costs;
@@ -64,13 +61,13 @@ namespace BusinessLogic.Cost
                 costs += tc;
             }
             var be = _mEvaluator.BackupEnergy(nodeGenes);
-            costs += BackupEnergyCost(be);
+            costs += BcCostModel.BackupEnergyCost(be);
             var bc = _mEvaluator.BackupCapacity(nodeGenes);
-            costs += BackupCapacityCost(bc);
-            parameterOverview.Add("BE", be / (avgLoad * Utils.Utils.HoursInYear));
+            costs += BcCostModel.BackupCapacityCost(bc);
+            parameterOverview.Add("BE", be / (avgLoad * Utils.Stuff.HoursInYear));
             parameterOverview.Add("BC", bc / avgLoad);
             parameterOverview.Add("CF", _mEvaluator.CapacityFactor(nodeGenes));
-            var scaling = _mEvaluator.Nodes.Select(item => item.Model.AvgLoad).Sum() * Utils.Utils.HoursInYear * AnnualizationFactor;
+            var scaling = _mEvaluator.Nodes.Select(item => item.Model.AvgLoad).Sum() * Utils.Stuff.HoursInYear * Costs.AnnualizationFactor(Lifetime);
             parameterOverview.Add("LCOE", costs/scaling);
 
             return parameterOverview;
@@ -85,7 +82,7 @@ namespace BusinessLogic.Cost
             var cost = BaseCosts(nodeGenes).Values.Sum() + BackupCosts(nodeGenes).Values.Sum();
             if (includeTransmission) cost += TransmissionCapacityCost(nodeGenes);
             // Scale costs to get LCOE.
-            var scaling = _mEvaluator.Nodes.Select(item => item.Model.AvgLoad).Sum() * Utils.Utils.HoursInYear * AnnualizationFactor;
+            var scaling = _mEvaluator.Nodes.Select(item => item.Model.AvgLoad).Sum() * Stuff.HoursInYear * Costs.AnnualizationFactor(Lifetime);
 
             return cost/scaling;
         }
@@ -97,7 +94,7 @@ namespace BusinessLogic.Cost
         // Cost of transmission network.
         private double TransmissionCapacityCost(NodeGenes nodeGenes)
         {
-            return _mEvaluator.LinkCapacities(nodeGenes).Sum(link => link.Value*Costs.GetLinkCost(link.Key));
+            return TcCostModel.Eval(_mEvaluator.LinkCapacities(nodeGenes));
         }
 
         // Cost of wind/solar facilities.
@@ -117,13 +114,13 @@ namespace BusinessLogic.Cost
                 offshoreWindCapacity += gene.Gamma * gene.Alpha * gene.OffshoreFraction * node.AvgLoad / CountryInfo.GetOffshoreWindCf(node.Name);
             }
 
-            var onshoreCost = OnshoreWindCost(onshoreWindCapacity);
-            var offshoreCost = OffshoreWindCost(offshoreWindCapacity);
+            var onshoreCost = WindCostModel.OnshoreWindCost(onshoreWindCapacity);
+            var offshoreCost = WindCostModel.OffshoreWindCost(offshoreWindCapacity);
 
             return new Dictionary<string, double>
             {
                 {"Wind",onshoreCost + offshoreCost},
-                {"Solar", SolarCost(solarCapacity)},
+                {"Solar", SolarCostModel.SolarCost(solarCapacity)},
                 // TODO: Maybe split costs up later?
                 //{"Onshore wind", onshoreCost},
                 //{"Offshore wind", offshoreCost},
@@ -135,44 +132,13 @@ namespace BusinessLogic.Cost
         {
             return new Dictionary<string, double>
             {
-                {"Backup", BackupCapacityCost(_mEvaluator.BackupCapacity(nodeGenes))},
-                {"Fuel", BackupEnergyCost(_mEvaluator.BackupEnergy(nodeGenes))}
+                {"Backup", BcCostModel.BackupCapacityCost(_mEvaluator.BackupCapacity(nodeGenes))},
+                {"Fuel", BcCostModel.BackupEnergyCost(_mEvaluator.BackupEnergy(nodeGenes))}
             };
-        }
-
-        private static double BackupEnergyCost(double energy)
-        {
-            return energy*Costs.CCGT.OpExVariable*AnnualizationFactor;
-        }
-
-        private static double BackupCapacityCost(double capacity)
-        {
-            return capacity*(Costs.CCGT.CapExFixed*1e6 + Costs.CCGT.OpExFixed*1e3*AnnualizationFactor);
-        }
-
-        private static double OffshoreWindCost(double capacity)
-        {
-            return capacity*(Costs.OffshoreWind.CapExFixed*1e6 + Costs.OffshoreWind.OpExFixed*1e3*AnnualizationFactor);
-        }
-
-        private static double OnshoreWindCost(double capacity)
-        {
-            return capacity * (Costs.OnshoreWind.CapExFixed * 1e6 + Costs.OnshoreWind.OpExFixed * 1e3 * AnnualizationFactor);
-        }
-
-        private static double SolarCost(double capacity)
-        {
-            return capacity*(Costs.Solar.CapExFixed*1e6 + Costs.Solar.OpExFixed*1e3*AnnualizationFactor);
         }
 
         #endregion
 
-        // WTF is this?
-        private static double CalcAnnualizationFactor(double rate)
-        {
-            if (rate == 0) return LifeTime;
-            return (1 - Math.Pow((1 + (rate/100.0)), -LifeTime))/(rate/100.0);
-        }
     }
 
 }

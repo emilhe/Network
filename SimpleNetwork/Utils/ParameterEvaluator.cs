@@ -102,7 +102,7 @@ namespace BusinessLogic.Utils
             _mBeCtrl.NodeFuncs.Add("No storage", input =>
             {
                 foreach (var node in Nodes)
-                    node.Model.SetOffset((int) input.Offset*Utils.HoursInYear);
+                    node.Model.SetOffset((int) input.Offset*Stuff.HoursInYear);
                 return Nodes;
             });
             // Backup capacity controller.
@@ -118,7 +118,7 @@ namespace BusinessLogic.Utils
             _mBcCtrl.NodeFuncs.Add("No storage", input =>
             {
                 foreach (var node in Nodes)
-                    node.Model.SetOffset((int) input.Offset*Utils.HoursInYear);
+                    node.Model.SetOffset((int) input.Offset*Stuff.HoursInYear);
                 return Nodes;
             });
             // Transmission capacity controller.
@@ -133,7 +133,7 @@ namespace BusinessLogic.Utils
             _mTcCtrl.NodeFuncs.Add("No storage", input =>
             {
                 foreach (var node in Nodes)
-                    node.Model.SetOffset((int) input.Offset*Utils.HoursInYear);
+                    node.Model.SetOffset((int) input.Offset*Stuff.HoursInYear);
                 return Nodes;
             });
             // TODO: Make source configurable
@@ -168,7 +168,7 @@ namespace BusinessLogic.Utils
             else
             {   
                 // TODO: Make config a variable? For now, just use default...
-                var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\ModelYear\noStorageAlpha0.5to1Gamma1.txt");
+                var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\Analysis\ModelYear\noStorageAlpha0.5to1Gamma1.txt");
                 _mCore = new ModelYearCore(config);
             }
         }
