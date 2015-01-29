@@ -26,31 +26,13 @@ namespace BusinessLogic.Interfaces
         double GetValue(int tick);
 
         /// <summary>
-        /// Add a data point to the time series.
-        /// </summary>
-        /// <param name="tick"> tick </param>
-        /// <param name="value"> data point value </param>
-        void AddData(int tick, double value);
-
-        /// <summary>
-        /// Append a data point to the time series.
-        /// </summary>
-        /// <param name="value"> data point value </param>
-        void AppendData(double value);
-
-        /// <summary>
         /// Calcualate average (expensive operation).
         /// </summary>
         /// <returns> average </returns>
         double GetAverage();
 
         /// <summary>
-        /// Scale all data by.
-        /// </summary>
-        void SetScale(double scale);
-
-        /// <summary>
-        /// Get all values from the time series (not matter the time stamp).
+        /// Get all values from the time series (no matter the time stamp).
         /// </summary>
         /// <returns></returns>
         List<double> GetAllValues();
@@ -64,6 +46,16 @@ namespace BusinessLogic.Interfaces
         /// Which properties (besides country) should be included in the name?
         /// </summary>
         List<string> DisplayProperties { get; }
+
+        /// <summary>
+        /// Scale all data by.
+        /// </summary>
+        void SetScale(double scale);
+
+        /// <summary>
+        /// Offset all data by.
+        /// </summary>
+        void SetOffset(int ticks);
 
     }
 

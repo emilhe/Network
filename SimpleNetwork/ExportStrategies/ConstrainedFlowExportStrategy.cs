@@ -134,7 +134,7 @@ namespace BusinessLogic.ExportStrategies
 
         public void Start(int ticks)
         {
-            _mFlowTimeSeriesMap = new Dictionary<int, ITimeSeries>();
+            _mFlowTimeSeriesMap = new Dictionary<int, DenseTimeSeries>();
 
             for (int i = 0; i < _mNodes.Count; i++)
             {
@@ -171,12 +171,12 @@ namespace BusinessLogic.ExportStrategies
 
         public List<ITimeSeries> CollectTimeSeries()
         {
-            var result = _mFlowTimeSeriesMap.Values.ToList();
+            var result = _mFlowTimeSeriesMap.Select(item => (ITimeSeries) item.Value).ToList();
             foreach (var ts in result) ts.Properties.Add("Flow", "NewFlow");
             return result;
         }
 
-        private Dictionary<int, ITimeSeries> _mFlowTimeSeriesMap = new Dictionary<int, ITimeSeries>();
+        private Dictionary<int, DenseTimeSeries> _mFlowTimeSeriesMap = new Dictionary<int, DenseTimeSeries>();
 
         #endregion
 

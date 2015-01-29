@@ -47,17 +47,17 @@ namespace BusinessLogic.Nodes
             }
         }
 
-        public DenseTimeSeries LoadTimeSeries { get; private set; }
-        public DenseTimeSeries OnshoreWindTimeSeries { get; private set; }
-        public DenseTimeSeries OffshoreWindTimeSeries { get; private set; }
-        public DenseTimeSeries SolarTimeSeries { get; private set; }
+        public ITimeSeries LoadTimeSeries { get; private set; }
+        public ITimeSeries OnshoreWindTimeSeries { get; private set; }
+        public ITimeSeries OffshoreWindTimeSeries { get; private set; }
+        public ITimeSeries SolarTimeSeries { get; private set; }
 
         private double _mAlpha;
         private double _mGamma;
         private double _mOffshoreFraction;
         private readonly double _mAvgLoad;
 
-        public ReModel(string name, DenseTimeSeries load, DenseTimeSeries solar, DenseTimeSeries onshoreWind, DenseTimeSeries offshoreWind = null)
+        public ReModel(string name, ITimeSeries load, ITimeSeries solar, ITimeSeries onshoreWind, ITimeSeries offshoreWind = null)
         {
             Name = name;
             LoadTimeSeries = load;
@@ -65,7 +65,7 @@ namespace BusinessLogic.Nodes
             OffshoreWindTimeSeries = offshoreWind;
             SolarTimeSeries = solar;
 
-            _mAvgLoad = LoadTimeSeries.Average(item => item.Value);
+            _mAvgLoad = LoadTimeSeries.GetAverage();
 
             Alpha = 0.5;
             Gamma = 1.0;

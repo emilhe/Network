@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms.VisualStyles;
-using BusinessLogic;
 using BusinessLogic.Cost;
+using BusinessLogic.Cost.Optimization;
 using BusinessLogic.Utils;
 using Controls;
 using Controls.Charting;
@@ -153,7 +149,7 @@ namespace Main.Configurations
                 for (int i = 0; i <= alphaRes; i++)
                 {
                     alphas[i] = alphaStart + (i)*delta;
-                    betas[j] = BusinessLogic.Utils.Utils.FindBeta(kValues[j], 1e-3);
+                    betas[j] = Stuff.FindBeta(kValues[j], 1e-3);
                     betaPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]), inclTrans);
                     maxCfPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]), inclTrans);
                 }

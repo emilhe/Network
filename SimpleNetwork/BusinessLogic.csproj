@@ -152,7 +152,7 @@
     <Compile Include="TimeSeries\BasicTimeSeries.cs" />
     <Compile Include="TimeSeries\IndexedTimeSeries.cs" />
     <Compile Include="TimeSeries\Mapping.cs" />
-    <Compile Include="TimeSeries\SuperTimeSeries.cs" />
+    <Compile Include="TimeSeries\ImmutableTimeSeries.cs" />
     <Compile Include="Utils\FlowOptimizer.cs" />
     <Compile Include="Interfaces\IGenerator.cs" />
     <Compile Include="Interfaces\IStorage.cs" />

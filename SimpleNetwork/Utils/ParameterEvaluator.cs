@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Cost;
 using BusinessLogic.Nodes;
@@ -134,6 +135,42 @@ namespace BusinessLogic.Utils
             {
                 foreach (var node in Nodes)
                     node.Model.SetOffset((int) input.Offset*Stuff.HoursInYear);
+                return Nodes;
+            });
+            // TODO: Make source configurable
+            Nodes = ConfigurationUtils.CreateNodesNew();
+        }
+    }
+
+    public class FastCore : IParameterEvaluatorCore
+    {
+        public List<CountryNode> Nodes { get; private set; }
+        public ModelYearConfig Config { get { return _mConfig; } }
+        public SimulationController BeController { get { return _mCtrlTrans; } }
+        public SimulationController BcController { get { return _mCtrlTrans; } }
+        public SimulationController TcController { get { throw new InvalidOperationException(); } }
+
+        private readonly SimulationController _mCtrlTrans;
+
+        private readonly ModelYearConfig _mConfig;
+
+        public FastCore(ModelYearConfig config)
+        {
+            _mConfig = config;
+            // Backup controller.
+            _mCtrlTrans = new SimulationController();
+            _mCtrlTrans.ExportStrategies.Add(new ExportStrategyInput
+            {
+                ExportStrategy = ExportStrategy.Cooperative,
+                DistributionStrategy = DistributionStrategy.SkipFlow
+            });
+            _mCtrlTrans.LogLevel = LogLevelEnum.System;
+            _mCtrlTrans.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["be"].Key });
+            _mCtrlTrans.NodeFuncs.Clear();
+            _mCtrlTrans.NodeFuncs.Add("No storage", input =>
+            {
+                foreach (var node in Nodes)
+                    node.Model.SetOffset((int)input.Offset * Stuff.HoursInYear);
                 return Nodes;
             });
             // TODO: Make source configurable

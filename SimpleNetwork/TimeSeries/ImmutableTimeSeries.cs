@@ -2,54 +2,39 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
-using ProtoBuf;
 using SimpleImporter;
 
 namespace BusinessLogic.TimeSeries
 {
     /// <summary>
-    /// Implementation of a continious time series.
+    /// Use when performance is critical; arrays are slightly faster than lists.
     /// </summary>
-    public class DenseTimeSeries : ITimeSeries
+    public class ImmutableTimeSeries : ITimeSeries
     {
 
-        public int Count { get { return _mValues.Count; } }
+        public int Count { get { return _mValues.Length ; } }
 
-        private readonly List<double> _mValues;
+        private readonly double[] _mValues;
         private double _mScale = 1;
         private int _mOffset;
 
-        public List<double> Values { get { return _mValues; } }
-
-        /// <summary>
-        /// Constructor used when data are loaded from external source.
-        /// </summary>
-        public DenseTimeSeries(TimeSeriesDal source)
+        public ImmutableTimeSeries(TimeSeriesDal source)
         {
             _mCore.Properties = source.Properties;
-            _mValues = source.Data ?? new List<double>();
+            _mValues = source.Data == null ? new double[0] : source.Data.ToArray();
         }
 
-        public DenseTimeSeries(string name, int capacity = 100)
+        public void SetOffset(int ticks)
         {
-            Name = name;
-            _mValues = new List<double>(capacity);
-        }
-
-        public void AppendData(double value)
-        {
-            _mValues.Add(value);
+            _mOffset = ticks;
         }
 
         public double GetValue(int tick)
         {
-            return _mValues[tick + _mOffset] * _mScale;
-        }
-
-        public double GetAverage(int from, int length)
-        {
-            return _mValues.Skip(from).Take(length).Average();
+            return _mValues[tick + _mOffset]*_mScale;
         }
 
         public double GetAverage()
@@ -58,26 +43,13 @@ namespace BusinessLogic.TimeSeries
         }
 
         public void SetScale(double scale)
-        {   
+        {
             _mScale = scale;
         }
 
         public List<double> GetAllValues()
         {
-            return _mValues;
-        }
-
-        /// <summary>
-        /// Offset all data by.
-        /// </summary>
-        public void SetOffset(int ticks)
-        {
-            _mOffset = ticks;
-        }
-
-        public void AddData(int tick, double value)
-        {
-            throw new NotImplementedException("Cannot add data to dense time series (only append is supported)");
+            throw new NotImplementedException();
         }
 
         #region Delegation

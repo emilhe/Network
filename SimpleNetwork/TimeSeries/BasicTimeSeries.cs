@@ -18,7 +18,6 @@ namespace BusinessLogic.TimeSeries
         public Dictionary<string, string> Properties { get; set; }
         public List<string> DisplayProperties { get; set; }
 
-
         public string Name
         {
             get { return Properties["Name"]; }

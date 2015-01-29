@@ -9,6 +9,9 @@ using BusinessLogic.Interfaces;
 
 namespace BusinessLogic.TimeSeries
 {
+    /// <summary>
+    /// Wrapper for sparse time series; makes it possible to get the value at a particular time step.
+    /// </summary>
     public class IndexedSparseTimeSeries : ITimeSeries
     {
 
@@ -34,15 +37,7 @@ namespace BusinessLogic.TimeSeries
             return _mCore.GetValue(_mIdx[idx]);
         }
 
-        public IEnumerator<ITimeSeriesItem> GetEnumerator()
-        {
-            return _mCore.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return ((IEnumerable) _mCore).GetEnumerator();
-        }
+        #region Delegation
 
         public string Name
         {
@@ -60,24 +55,9 @@ namespace BusinessLogic.TimeSeries
             return ((ITimeSeries) _mCore).GetValue(tick);
         }
 
-        public void AddData(int tick, double value)
-        {
-            ((ITimeSeries) _mCore).AddData(tick, value);
-        }
-
-        public void AppendData(double value)
-        {
-            ((ITimeSeries) _mCore).AppendData(value);
-        }
-
         public double GetAverage()
         {
             return ((ITimeSeries) _mCore).GetAverage();
-        }
-
-        public void SetScale(double scale)
-        {
-            ((ITimeSeries) _mCore).SetScale(scale);
         }
 
         public List<double> GetAllValues()
@@ -94,5 +74,32 @@ namespace BusinessLogic.TimeSeries
         {
             get { return _mCore.DisplayProperties; }
         }
+
+        public void SetScale(double scale)
+        {
+            ((ITimeSeries) _mCore).SetScale(scale);
+        }
+
+        public void SetOffset(int ticks)
+        {
+            ((ITimeSeries) _mCore).SetOffset(ticks);
+        }
+
+        #endregion
+
+        #region Enumeration
+
+        public IEnumerator<ITimeSeriesItem> GetEnumerator()
+        {
+            return _mCore.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable) _mCore).GetEnumerator();
+        }
+
+        #endregion
+
     }
 }

@@ -49,15 +49,9 @@ namespace BusinessLogic
             return result;
         }
 
-        //private void AddGenerator(CountryNode countryNode, TsType type, TsSource source, int offset)
-        //{
-        //    countryNode.Generators.Add(new TimeSeriesGenerator(type.GetDescription(),
-        //        GetTs(countryNode.Name, type, source, offset)));
-        //}
-
-        private static DenseTimeSeries GetTs(string country, TsType type, TsSource source, int offset)
+        private static ImmutableTimeSeries GetTs(string country, TsType type, TsSource source, int offset)
         {
-            var tsBll = new DenseTimeSeries(ProtoCache.LoadTimeSeriesFromImport(CsvImporter.GenerateFileKey(country, type, source)));
+            var tsBll = new ImmutableTimeSeries(ProtoCache.LoadTimeSeriesFromImport(CsvImporter.GenerateFileKey(country, type, source)));
             tsBll.SetOffset(offset);
 
             return tsBll;

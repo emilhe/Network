@@ -12,7 +12,7 @@ namespace BusinessLogic.Simulation
 
         #region Fields
 
-        private Dictionary<string, ITimeSeries> _mSystemTimeSeries;
+        private Dictionary<string, DenseTimeSeries> _mSystemTimeSeries;
         private readonly Stopwatch _mWatch;
         private readonly bool _mDebug;
         private bool _mSuccess;
@@ -140,7 +140,7 @@ namespace BusinessLogic.Simulation
             }
 
             // System time series setup.
-            var systemTimeSeries = new List<ITimeSeries>
+            var systemTimeSeries = new List<DenseTimeSeries>
             {
                 new DenseTimeSeries("Mismatch", _mTicks),
                 new DenseTimeSeries("Curtailment", _mTicks)

@@ -24,8 +24,8 @@ namespace BusinessLogic.Generators
         }
 
         #region Measurement
-        
-        private ITimeSeries _mTimeSeries;
+
+        private DenseTimeSeries _mTimeSeries;
         private bool _mMeasuring;
 
         public bool Measuring { get { return _mMeasuring; } }

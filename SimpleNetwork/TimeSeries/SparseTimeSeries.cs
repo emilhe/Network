@@ -19,6 +19,8 @@ namespace BusinessLogic.TimeSeries
 
         private readonly Dictionary<int, double> _mValues;
 
+        private double _mScale = 1;
+
         public SparseTimeSeries(string name, int capacity = 100)
         {
             _mCore.Properties.Add("Name", name);
@@ -31,6 +33,27 @@ namespace BusinessLogic.TimeSeries
             _mValues = source.DataIndices.Zip(source.Data, (k,v) => new {k,v}).ToDictionary(x => x.k, x => x.v);
         }
 
+        public double GetValue(int tick)
+        {
+            if (!_mValues.ContainsKey(tick)) return double.NaN;
+            return _mValues[tick]*_mScale;
+        }
+
+        public double GetAverage()
+        {
+            return _mValues.Values.Average() * _mScale;
+        }
+
+        public void SetScale(double scale)
+        {
+            _mScale = scale;
+        }
+
+        public void SetOffset(int ticks)
+        {
+            throw new NotImplementedException();
+        }
+
         public void AddData(int tick, double value)
         {
             // For now, just overwrite extra data.
@@ -40,25 +63,16 @@ namespace BusinessLogic.TimeSeries
 
         public double GetLastValue(int tick)
         {
+            // This operation is VERY expensive. Consider using the indexed verion if you call this method often.
             var keys = _mValues.Keys.Where(item => item <= tick);
             return !keys.Any() ? double.NaN : GetValue(keys.Last());
         }
 
+        #region Enumeration
 
-        public double GetValue(int tick)
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            if (!_mValues.ContainsKey(tick)) return double.NaN;
-            return _mValues[tick];
-        }
-
-        public double GetAverage()
-        {
-            return _mValues.Values.Average();
-        }
-
-        public void SetScale(double scale)
-        {
-            foreach (var pair in _mValues) _mValues[pair.Key] = pair.Value * scale;
+            return GetEnumerator();
         }
 
         public IEnumerator<ITimeSeriesItem> GetEnumerator()
@@ -69,15 +83,7 @@ namespace BusinessLogic.TimeSeries
                     .GetEnumerator();
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public void AppendData(double value)
-        {
-            throw new NotImplementedException("Cannot append data to sparse time series.");
-        }
+        #endregion
 
         #region Data extraction
 
@@ -123,5 +129,7 @@ namespace BusinessLogic.TimeSeries
 
         #endregion
 
+
     }
+
 }

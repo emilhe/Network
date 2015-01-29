@@ -22,19 +22,29 @@ namespace BusinessLogic.ExportStrategies
         private IList<INode> _mNodes;
         private Response _mSystemResponse;
         private double[] _mMismatches;
-        private double[] _mStorageMap;
+
+        private Dictionary<int, IStorage[]> _mStorageMap;
+        private double[] _mStorageMappings;
         private int _mStorageLevel;
+
 
         public void Bind(IList<INode> nodes, double[] mismatches)
         {
             _mNodes = nodes;
             _mMismatches = mismatches;
 
-            _mStorageMap =
+            _mStorageMap = new Dictionary<int, IStorage[]>();
+            _mStorageMappings =
                 _mNodes.SelectMany(item => item.StorageCollection.Select(subItem => subItem.Key))
                     .Distinct()
                     .OrderByDescending(item => item)
                     .ToArray();
+            for (int i = 0; i < _mStorageMappings.Length; i++)
+            {
+                _mStorageMap.Add(i, _mNodes.Select(item => item.StorageCollection)
+                    .Where(item => item.Contains(_mStorageMappings[i]))
+                    .Select(item => item.Get(_mStorageMappings[i])).ToArray());
+            }
         }
 
         #region Global balancing
@@ -48,22 +58,22 @@ namespace BusinessLogic.ExportStrategies
             _mSystemResponse = respFunc();
 
             // Restore lower levels if possible.
-            for (_mStorageLevel = 0; _mStorageLevel < _mStorageMap.Length; _mStorageLevel++)
+            for (_mStorageLevel = 0; _mStorageLevel < _mStorageMappings.Length; _mStorageLevel++)
             {
                 if (SufficientStorageAtCurrentLevel()) break;
 
                 // Restore the lower storage level.
                 for (int index = 0; index < _mNodes.Count; index++)
                 {
-                    if (!_mNodes[index].StorageCollection.Contains(_mStorageMap[_mStorageLevel])) continue;
-                    _mMismatches[index] += _mNodes[index].StorageCollection.Get(_mStorageMap[_mStorageLevel])
+                    if (!_mNodes[index].StorageCollection.Contains(_mStorageMappings[_mStorageLevel])) continue;
+                    _mMismatches[index] += _mNodes[index].StorageCollection.Get(_mStorageMappings[_mStorageLevel])
                         .InjectMax(_mSystemResponse);
                 }
             }
 
             // Calculate curtailment.
             result.Curtailment = 0.0;
-            if (_mStorageMap[_mStorageLevel] == -1)
+            if (_mStorageMappings[_mStorageLevel] == -1)
             {
                 result.Curtailment = _mMismatches.Sum();
             }
@@ -78,11 +88,12 @@ namespace BusinessLogic.ExportStrategies
         /// <returns> true if there is </returns>
         private bool SufficientStorageAtCurrentLevel()
         {
-            var storage =
-                _mNodes.Select(item => item.StorageCollection)
-                    .Where(item => item.Contains(_mStorageMap[_mStorageLevel]))
-                    .Select(item => item.Get(_mStorageMap[_mStorageLevel]).AvailableEnergy(_mSystemResponse))
-                    .Sum();
+            var storage = _mStorageMap[_mStorageLevel].Select(item => item.AvailableEnergy(_mSystemResponse)).Sum();
+            //var storage =
+            //    _mNodes.Select(item => item.StorageCollection)
+            //        .Where(item => item.Contains(_mStorageMappings[_mStorageLevel]))
+            //        .Select(item => item.Get(_mStorageMappings[_mStorageLevel]).AvailableEnergy(_mSystemResponse))
+            //        .Sum();
 
             switch (_mSystemResponse)
             {
@@ -109,7 +120,7 @@ namespace BusinessLogic.ExportStrategies
 
             for (int i = 0; i < _mNodes.Count; i++)
             {
-                foreach (double efficiency in _mStorageMap)
+                foreach (double efficiency in _mStorageMappings)
                 {
                     if (!condition(i)) continue;
                     if (!allowCurtailment && efficiency == -1) continue;
@@ -136,7 +147,7 @@ namespace BusinessLogic.ExportStrategies
         /// </summary>
         public void DistributePower()
         {
-            DistributionStrategy.DistributePower(_mNodes, _mMismatches, _mStorageMap[_mStorageLevel]);
+            DistributionStrategy.DistributePower(_mNodes, _mMismatches, _mStorageMappings[_mStorageLevel]);
         }
 
         /// <summary>
