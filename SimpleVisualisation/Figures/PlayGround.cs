@@ -89,24 +89,6 @@ namespace Main.Figures
         #region Sensitivity analysis
 
         /// <summary>
-        /// Transmission sensitivity analysis.
-        /// </summary>
-        public static void ExportTcCalcAnalysisData()
-        {
-            var evaluator = new ParameterEvaluator(false);
-            var varaibleLength = new VariableLengthModel();
-            var fixedLength = new FixedLengthModel();
-
-            // What genes?
-            var genes = NodeGenesFactory.SpawnBeta(0, 1, 1);
-            var capacities = evaluator.LinkCapacities(genes);
-
-            // What to do with data?
-            Console.WriteLine("Fixed length cost = {0}", fixedLength.Eval(capacities));
-            Console.WriteLine("Variable length cost = {0}", varaibleLength.Eval(capacities));
-        }
-
-        /// <summary>
         /// Solar cost sensitivity analysis.
         /// </summary>
         public static void ExportSolarCostAnalysisData()
@@ -129,7 +111,30 @@ namespace Main.Figures
             dict.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\sTmp\solarAnalysis.txt");
         }
 
-        // TODO: Energy atlas parameter sensitivity analysis
+        public static void ExportOffshoreCostAnalysisData()
+        {
+            // SPLIT COST CHART
+
+            // CHROMOSOME CHARTS
+        }
+
+        ///// <summary>
+        ///// Transmission sensitivity analysis.
+        ///// </summary>
+        //public static void ExportTcCalcAnalysisData()
+        //{
+        //    var evaluator = new ParameterEvaluator(false);
+        //    var varaibleLength = new VariableLengthModel();
+        //    var fixedLength = new FixedLengthModel();
+
+        //    // What genes?
+        //    var genes = NodeGenesFactory.SpawnBeta(0, 1, 1);
+        //    var capacities = evaluator.LinkCapacities(genes);
+
+        //    // What to do with data?
+        //    Console.WriteLine("Fixed length cost = {0}", fixedLength.Eval(capacities));
+        //    Console.WriteLine("Variable length cost = {0}", varaibleLength.Eval(capacities));
+        //}
 
         #endregion
 

@@ -54,7 +54,9 @@ namespace BusinessLogic.Cost
             // If dirty, new cost calculators must be initialized.
             if (_mDirty) _mCalcMap = new ConcurrentDictionary<int, NodeCostCalculator>();
             foreach (var calculator in _mCalcMap) calculator.Value.CacheEnabled = CacheEnabled;
-    
+
+            _mEvaluations += chromosomes.Count();
+
             Parallel.ForEach(chromosomes, _mOptions, chromosome =>
             {
                 // Very expensive if extra thread are spawned (they are, apparently..).

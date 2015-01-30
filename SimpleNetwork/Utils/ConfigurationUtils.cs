@@ -16,15 +16,25 @@ namespace BusinessLogic.Utils
 
         public static EdgeSet GetEuropeEdges(List<CountryNode> nodes)
         {
-           return GetEdges(nodes.Select(item => (INode) item).ToList(), "NtcMatrix", 1);
+            return GetEdges(nodes.Select(item => item.Name).ToList(), "NtcMatrix", 1);
+        }
+
+        public static EdgeSet GetEuropeEdges(List<string> nodes)
+        {
+           return GetEdges(nodes, "NtcMatrix", 1);
         }
 
         public static EdgeSet GetEdges(List<INode> nodes, string key, double frac)
         {
+            return GetEdges(nodes.Select(item => item.Name).ToList(), key, frac);
+        }
+
+        public static EdgeSet GetEdges(List<string> nodes, string key, double frac)
+        {
             var result = new EdgeSet(nodes.Count);
             // Create mapping between countryname and index.
             var idxMap = new Dictionary<string, int>();
-            for (int i = 0; i < nodes.Count; i++) idxMap.Add(nodes[i].Name, i);
+            for (int i = 0; i < nodes.Count; i++) idxMap.Add(nodes[i], i);
             // Connect the countries.
             var ntcData = ProtoStore.LoadLinkData(key);
             foreach (var row in ntcData)
