@@ -183,8 +183,19 @@ namespace BusinessLogic.Utils
     public class ParameterEvaluator
     {
 
-        public List<CountryNode> Nodes { get { return _mCore.Nodes; }}        
-        
+        public List<CountryNode> Nodes { get { return _mCore.Nodes; }}
+
+        public bool InvalidateCache
+        {
+            get { return _mCore.BcController.InvalidateCache; }
+            set
+            {
+                _mCore.BcController.InvalidateCache = value;
+                _mCore.BeController.InvalidateCache = value;
+                _mCore.TcController.InvalidateCache = value;
+            }
+        }
+
         public bool CacheEnabled
         {
             get { return _mCore.BcController.CacheEnabled; }
