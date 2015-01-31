@@ -119,11 +119,10 @@ namespace BusinessLogic.Cost
 
             return new Dictionary<string, double>
             {
-                {"Wind",onshoreCost + offshoreCost},
+                //{"Wind",onshoreCost + offshoreCost},
                 {"Solar", SolarCostModel.SolarCost(solarCapacity)},
-                // TODO: Maybe split costs up later?
-                //{"Onshore wind", onshoreCost},
-                //{"Offshore wind", offshoreCost},
+                {"Onshore wind", onshoreCost},
+                {"Offshore wind", offshoreCost},
             };
         }
 
