@@ -217,28 +217,31 @@ namespace Utils
 
         #endregion
 
-        #region Offshore mappings
-
-        public static readonly Dictionary<string, double> OffshoreFrations = new Dictionary<string, double>()
-        {
-            {"Denmark", 0.50},
-            {"Germany", 0.50},
-            {"Great Britain", 0.50},
-            {"Ireland", 0.50},
-            {"Netherlands", 0.50},
-            {"France", 0.50},
-            {"Belgium", 0.50},
-            {"Norway", 0.50},
-            {"Sweden", 0.50},
-        };
-
-        #endregion
-
         #region Mean load mappings
 
         // Source: 32 years of VE data.
         private static readonly Dictionary<string, double> MeanLoad =
             FileUtils.DictionaryFromFile<string, double>(@"C:\EmherSN\data\MeanLoad.txt");
+
+        #endregion
+
+        #region Offshore mappings
+
+        public static Dictionary<string, double> OffshoreFrations(double scale = 0.5)
+        {
+            return new Dictionary<string, double>()
+            {
+                {"Denmark", scale},
+                {"Germany", scale},
+                {"Great Britain", scale},
+                {"Ireland", scale},
+                {"Netherlands", scale},
+                {"France", scale},
+                {"Belgium", scale},
+                {"Norway", scale},
+                {"Sweden", scale},
+            };
+        }
 
         #endregion
 

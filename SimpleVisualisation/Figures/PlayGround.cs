@@ -18,38 +18,52 @@ namespace Main.Figures
     class PlayGround
     {
 
-        private const string GeneticPath =
-            @"C:\proto\onshoreVEcukooConstraintTransK={0}.txt";
+        private const string MainOptimumPath = @"C:\Users\Emil\Dropbox\Master Thesis\Results\VE50cukooWithTransK={0}onshoreX1.txt";
+        private const string Offshore25OptimumPath = @"C:\Users\Emil\Dropbox\Master Thesis\Results\VE50cukooWithTransK={0}offshore50pct1.txt";
+        private const string Offshore50OptimumPath = @"C:\Users\Emil\Dropbox\Master Thesis\Results\VE50cukooWithTransK={0}offshore50pct1.txt";
+        private const string SolarOptimumPath = @"C:\Users\Emil\Dropbox\Master Thesis\Results\VE50cukooWithTransK={0}onshore50pctSolarCost0.txt";
 
         #region Data export to JSON for external rendering
 
         #region Primary data
 
+        // TODO: Change optima to cukoo
         public static void ExportChromosomeData()
         {
             var mix = 1;
             var basePath = @"C:\Users\Emil\Dropbox\Master Thesis\Python\chromosomes\";
             var layouts = new Dictionary<NodeGenes, string>();
 
-            // Homogeneous layout.
-            //layouts.Add(new NodeGenes(1,1), "homo.txt");
             // Standard beta/max CF layouts
             layouts.Add(NodeGenesFactory.SpawnBeta(1, 1, 1), "beta=1wind.txt");
             layouts.Add(NodeGenesFactory.SpawnBeta(0, 1, 1), "beta=1solar.txt");
             layouts.Add(NodeGenesFactory.SpawnCfMax(1, 1, 2), "k=2cfMaxWind.txt");
             layouts.Add(NodeGenesFactory.SpawnCfMax(0, 1, 2), "k=2cfMaxSolar.txt");
-            // Beta layouts.
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(1, 1e-3, mix)), "k=1beta.txt");
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(2, 1e-3, mix)), "k=2beta.txt");
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(3, 1e-3, mix)), "k=3beta.txt");
-            // Maximum CF layouts.
+            
+            // Beta layouts for different K values.
+            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, Stuff.FindBeta(1, 1e-3, mix)), "k=1beta.txt");
+            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, Stuff.FindBeta(2, 1e-3, mix)), "k=2beta.txt");
+            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, Stuff.FindBeta(3, 1e-3, mix)), "k=3beta.txt");
+            
+            // Maximum CF layouts for different K values.
             layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 1), "k=1cfMax.txt");
             layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 2), "k=2cfMax.txt");
             layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 3), "k=3cfMax.txt");
-            // Genetic layouts.
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(GeneticPath, 1)), "k=1genetic.txt.");
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(GeneticPath, 2)), "k=2genetic.txt");
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(GeneticPath, 3)), "k=3genetic.txt");
+            
+            // Optimized layouts.
+            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, 1)), "k=1genetic.txt.");
+            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, 2)), "k=2genetic.txt");
+            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, 3)), "k=3genetic.txt");
+
+            // Optimized OFFSHORE layouts.
+            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(Offshore50OptimumPath, 1)), "k=1genetic.txt.");
+            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(Offshore50OptimumPath, 2)), "k=2genetic.txt");
+            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(Offshore50OptimumPath, 3)), "k=3genetic.txt");
+
+            // Optimized SOLAR layouts.
+            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(SolarOptimumPath, 1)), "k=1genetic.txt.");
+            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(SolarOptimumPath, 2)), "k=2genetic.txt");
+            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(SolarOptimumPath, 3)), "k=3genetic.txt");
 
             // Save the data as JSON.
             foreach (var pair in layouts) pair.Key.Export().ToJsonFile(basePath + pair.Value);  
@@ -66,7 +80,13 @@ namespace Main.Figures
         public static void ExportCostDetailsData(List<double> kValues, bool inclTrans = false)
         {
             var costCalc = new NodeCostCalculator(new ParameterEvaluator(true));
-            var data = CalcCostDetails(kValues, 1, genes => costCalc.DetailedSystemCosts(genes, inclTrans));
+            var geneMap = new Dictionary<string, Func<double, NodeGenes>>
+            {
+                {@"Beta@K={0}", k => NodeGenesFactory.SpawnBeta(1, 1, Stuff.FindBeta(k, 1e-3))},
+                {@"CfMax@K={0}", k => NodeGenesFactory.SpawnCfMax(1, 1, k)},
+                {@"CS@K={0}", k => FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, k))}
+            };
+            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.DetailedSystemCosts(genes, inclTrans));
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\costs\cost.txt");
         }
@@ -84,6 +104,22 @@ namespace Main.Figures
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\sigmas\sigma.txt");
         }
 
+        // TODO: What grid data?
+        public static void ExportGridData()
+        {
+            //var ntcData =
+            //    ProtoStore.LoadLinkData("NtcMatrix")
+            //        .Where(item => !item.CountryFrom.Equals(item.CountryTo))
+            //        .Where(item => item.LinkCapacity > 0)
+            //        .Select(item => new LinkDataRow
+            //        {
+            //            CountryFrom = CountryInfo.GetShortAbbrev(item.CountryFrom),
+            //            CountryTo = CountryInfo.GetShortAbbrev(item.CountryTo),
+            //            LinkCapacity = item.LinkCapacity/1000
+            //        });
+            //ntcData.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\transmission\ntcEdges.txt");
+        }
+
         #endregion
 
         #region Sensitivity analysis
@@ -91,31 +127,56 @@ namespace Main.Figures
         /// <summary>
         /// Solar cost sensitivity analysis.
         /// </summary>
-        public static void ExportSolarCostAnalysisData()
+        public static void ExportSolarCostAnalysisData(List<double> kValues, bool inclTrans = false)
         {
-            var n = 10;
-            var calc = new NodeCostCalculator(new ParameterEvaluator(false));
-            var dict = new Dictionary<string, List<double>>();
-            // TEMPORARY ANALYSIS
-            for (int i = 0; i < n; i+=2)
+            var scales = new[] {1.0, 2.0, 4.0};
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator(false));  // TODO: CHANGE TO FULL
+            var data = CalcBetaCurves(kValues, 0.0, genes => genes.Alpha, genes =>
             {
-                var scale = (double) (n - i)/(n);
-                calc.SolarCostModel = new ScaledSolarCostModel(scale);
-                dict.Add(scale.ToString("0.0"), new List<double>(n));
-                for (int j = 0; j <= n; j++)
+                var dict = new Dictionary<string, double>();
+                foreach (var scale in scales)
                 {
-                    var genes = NodeGenesFactory.SpawnCfMax((double)j / n, 1.0, 1.0);
-                    dict[scale.ToString("0.0")].Add(calc.SystemCost(genes, true));
+                    costCalc.SolarCostModel = new ScaledSolarCostModel(1/scale);
+                    dict.Add(scale + "", costCalc.SystemCost(genes, inclTrans));
                 }
-            }
-            dict.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\sTmp\solarAnalysis.txt");
+                return dict;
+            }, SolarOptimumPath);
+
+            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\solar\solarAnalysis.txt");
         }
 
-        public static void ExportOffshoreCostAnalysisData()
+        public static void ExportOffshoreCostAnalysisData(List<double> kValues, bool inclTrans = false)
         {
-            // SPLIT COST CHART
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator(true));
+            var geneMap = new Dictionary<string, Func<double, NodeGenes>>
+            {
+                {@"0%@K={0}", k =>
+                {
+                    var result = FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, k));
+                    GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.0);
+                    GenePool.ApplyOffshoreFraction(result);
+                    return result;
+                }},
+                {@"25%@K={0}", k => 
+                                    {
+                    var result = FileUtils.FromJsonFile<NodeGenes>(string.Format(Offshore25OptimumPath, k));
+                    GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.25);
+                    GenePool.ApplyOffshoreFraction(result);
+                    return result;
+                }},
+                {@"50%@K={0}", k => 
+                                    {
+                    var result = FileUtils.FromJsonFile<NodeGenes>(string.Format(Offshore50OptimumPath, k));
+                    GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.50);
+                    GenePool.ApplyOffshoreFraction(result);
+                    return result;
+                }}
+            };
+            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.DetailedSystemCosts(genes, inclTrans));
+            // Reset offshore fractions.
+            GenePool.OffshoreFractions = null;
 
-            // CHROMOSOME CHARTS
+            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\costs\costOffshore.txt");
         }
 
         ///// <summary>
@@ -140,7 +201,7 @@ namespace Main.Figures
 
         #endregion
 
-        private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes, double> evalX, Func<NodeGenes, Dictionary<string, double>> evalY)
+        private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes, double> evalX, Func<NodeGenes, Dictionary<string, double>> evalY, string optPath = MainOptimumPath)
         {
             // Prepare the data structures.
             var alphaRes = 15;
@@ -196,7 +257,7 @@ namespace Main.Figures
             {
                 var genes =
                     FileUtils.FromJsonFile<NodeGenes>(
-                        string.Format(GeneticPath,
+                        string.Format(optPath,
                             kValues[j]));
                 var xValue = evalX(genes);
                 var results = evalY(genes);
@@ -210,45 +271,27 @@ namespace Main.Figures
             return data;
         }
 
-        private static CostWrapper CalcCostDetails(List<double> kValues, double alpha, Func<NodeGenes, Dictionary<string, double>> eval)
+        private static CostWrapper CalcCostDetails(List<double> kValues, Dictionary<string, Func<double, NodeGenes>> geneMap, Func<NodeGenes, Dictionary<string, double>> eval, string optPath = MainOptimumPath)
         {
             // Prepare the data structures.
-            var betas = new double[kValues.Count];
             var data = new CostWrapper
             {
                 Costs = new Dictionary<string, List<double>>(),
                 Labels = new List<string>()
             };
-            for (int j = 0; j < betas.Length; j++)
-            {
-                betas[j] = Stuff.FindBeta(kValues[j], 1e-3);
-            }
 
-            for (int j = 0; j < betas.Length; j++)
+            foreach(var k in kValues)
             {
-                // Add BETA point.
-                data.Labels.Add(string.Format(@"$\beta$={0}", betas[j].ToString("0.0")));
-                var results = eval(NodeGenesFactory.SpawnBeta(alpha, 1, betas[j]));
-                foreach (var pair in results)
+                foreach (var key in geneMap.Keys)
                 {
-                    if (!data.Costs.ContainsKey(pair.Key)) data.Costs.Add(pair.Key, new List<double>());
-                    data.Costs[pair.Key].Add(pair.Value);
-                }
-                // Add MaxCF point.
-                data.Labels.Add(string.Format(@"K={0}", kValues[j].ToString("0")));
-                results = eval(NodeGenesFactory.SpawnCfMax(alpha, 1, kValues[j]));
-                foreach (var pair in results)
-                {
-                    data.Costs[pair.Key].Add(pair.Value);
-                }
-                // Add genetic point.
-                data.Labels.Add(string.Format(@"CS@K={0}", kValues[j].ToString("0")));
-                var genes = FileUtils.FromJsonFile<NodeGenes>(string.Format(GeneticPath,kValues[j]));
-                results = eval(genes);
-                foreach (var pair in results)
-                {
-                    data.Costs[pair.Key].Add(pair.Value);
-                }
+                    data.Labels.Add(string.Format(key, k));
+                    var results = eval(geneMap[key](k));
+                    foreach (var pair in results)
+                    {
+                        if (!data.Costs.ContainsKey(pair.Key)) data.Costs.Add(pair.Key, new List<double>());
+                        data.Costs[pair.Key].Add(pair.Value);
+                    }
+                }                
             }
 
             return data;
