@@ -10,7 +10,7 @@ namespace Optimization
     {
 
         int Evaluations { get; }
-        void UpdateCost(IEnumerable<T> solutions);
+        void UpdateCost(IList<T> solutions);
 
     }
 }

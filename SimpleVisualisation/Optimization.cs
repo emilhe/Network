@@ -17,7 +17,7 @@ namespace Main
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
             //population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
-            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> {Full = false, Transmission = false});
+            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelNodeCostCalculator {Full = false, Transmission = false});
             // Do stuff.
             var optimum = optimizer.Optimize(population);
             optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEgeneticConstraintTransK={0}{1}.txt", k, key));
@@ -32,7 +32,7 @@ namespace Main
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
             //population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
-            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelCostCalculator<NodeChromosome> { Full = false, Transmission = false });
+            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelNodeCostCalculator { Full = false, Transmission = false });
             // Do stuff.
             var optimum = optimizer.Optimize(population);
             optimum.Genes.ToJsonFile(string.Format(@"C:\proto\VE50cukooWithTransK={0}{1}.txt", k,key));
@@ -66,7 +66,7 @@ namespace Main
 
         public static void SimulatedAnnealing()
         {
-            var optimizer = new SaOptimizer<NodeChromosome>(new ParallelCostCalculator<NodeChromosome>())
+            var optimizer = new SaOptimizer<NodeChromosome>(new ParallelNodeCostCalculator())
             {
                 // Performance CRITIAL parameters.
                 Alpha = 0.9999,
