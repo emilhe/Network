@@ -148,7 +148,7 @@ namespace BusinessLogic.Utils
         public ModelYearConfig Config { get { return _mConfig; } }
         public SimulationController BeController { get { return _mCtrlTrans; } }
         public SimulationController BcController { get { return _mCtrlTrans; } }
-        public SimulationController TcController { get { throw new InvalidOperationException(); } }
+        public SimulationController TcController { get { return _mCtrlTrans; } }
 
         private readonly SimulationController _mCtrlTrans;
 
