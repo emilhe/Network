@@ -74,7 +74,7 @@ namespace Main.Figures
             var costCalc = new NodeCostCalculator(new ParameterEvaluator(true));
             var data = CalcBetaCurves(kValues, 0.0, genes => genes.Alpha, genes => costCalc.ParameterOverview(genes, inclTrans));
 
-            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\dataS2.txt");
+            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\data.txt");
         }
 
         public static void ExportCostDetailsData(List<double> kValues, bool inclTrans = false)
@@ -130,7 +130,7 @@ namespace Main.Figures
         public static void ExportSolarCostAnalysisData(List<double> kValues, bool inclTrans = false)
         {
             var scales = new[] {1.0, 2.0, 4.0};
-            var costCalc = new NodeCostCalculator(new ParameterEvaluator(false));  // TODO: CHANGE TO FULL
+            var costCalc = new NodeCostCalculator(new ParameterEvaluator(true));
             var data = CalcBetaCurves(kValues, 0.0, genes => genes.Alpha, genes =>
             {
                 var dict = new Dictionary<string, double>();
@@ -204,7 +204,7 @@ namespace Main.Figures
         private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes, double> evalX, Func<NodeGenes, Dictionary<string, double>> evalY, string optPath = MainOptimumPath)
         {
             // Prepare the data structures.
-            var alphaRes = 15;
+            var alphaRes = 20;
             var delta = (1 - alphaStart) / alphaRes;
             var alphas = new double[alphaRes + 1];
             var betas = new double[kValues.Count];
