@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
 using BusinessLogic.Cost.Transmission;
@@ -10,7 +9,6 @@ using BusinessLogic.Utils;
 using Controls;
 using Controls.Article;
 using Controls.Charting;
-using Newtonsoft.Json.Linq;
 using Utils;
 
 namespace Main.Figures
@@ -71,35 +69,40 @@ namespace Main.Figures
 
         public static void ExportParameterOverviewData(List<double> kValues, bool inclTrans = false)
         {
-            var costCalc = new NodeCostCalculator(new ParameterEvaluator(true));
-            var data = CalcBetaCurves(kValues, 0.0, genes => genes.Alpha, genes => costCalc.ParameterOverview(genes, inclTrans));
+            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true };
+            var data = CalcBetaCurves(kValues, 0.0, 
+                genes => genes.Select(item => item.Alpha).ToArray(), 
+                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes, inclTrans)));
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\data.txt");
         }
 
         public static void ExportCostDetailsData(List<double> kValues, bool inclTrans = false)
         {
-            var costCalc = new NodeCostCalculator(new ParameterEvaluator(true));
+            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true};
             var geneMap = new Dictionary<string, Func<double, NodeGenes>>
             {
                 {@"Beta@K={0}", k => NodeGenesFactory.SpawnBeta(1, 1, Stuff.FindBeta(k, 1e-3))},
                 {@"CfMax@K={0}", k => NodeGenesFactory.SpawnCfMax(1, 1, k)},
                 {@"CS@K={0}", k => FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, k))}
             };
-            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.DetailedSystemCosts(genes, inclTrans));
+            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.DetailedSystemCosts(nodeGenes, inclTrans)));
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\costs\cost.txt");
         }
 
         public static void ExportMismatchData(List<double> kValues, bool inclTrans = false)
         {
-            var paramEval = new ParameterEvaluator(true);
-            var costCalc = new NodeCostCalculator(paramEval);
-            var data = CalcBetaCurves(kValues, 0.0, paramEval.Sigma, genes => new Dictionary<string, double>
-            {
-                {"CF", paramEval.CapacityFactor(genes)},
-                {"LCOE", costCalc.SystemCost(genes, inclTrans)}
-            });
+            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true, Transmission = inclTrans };
+            var data = CalcBetaCurves(kValues, 0.0,
+                genes =>
+                    costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.Evaluator.Sigma(nodeGenes))
+                        .ToArray(),
+                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => new Dictionary<string, double>
+                {
+                    {"CF", calculator.Evaluator.CapacityFactor(nodeGenes)},
+                    {"LCOE", calculator.SystemCost(nodeGenes, inclTrans)}
+                }).ToArray());
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\sigmas\sigma.txt");
         }
@@ -129,25 +132,27 @@ namespace Main.Figures
         /// </summary>
         public static void ExportSolarCostAnalysisData(List<double> kValues, bool inclTrans = false)
         {
-            var scales = new[] {1.0, 2.0, 4.0};
-            var costCalc = new NodeCostCalculator(new ParameterEvaluator(true));
-            var data = CalcBetaCurves(kValues, 0.0, genes => genes.Alpha, genes =>
+            var scales = new[] { 1.0, 2.0, 4.0 };
+            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true };
+            var data = CalcBetaCurves(kValues, 0.0, 
+                genes => genes.Select(item => item.Alpha).ToArray(), 
+                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => 
             {
                 var dict = new Dictionary<string, double>();
                 foreach (var scale in scales)
                 {
-                    costCalc.SolarCostModel = new ScaledSolarCostModel(1/scale);
-                    dict.Add(scale + "", costCalc.SystemCost(genes, inclTrans));
+                    calculator.SolarCostModel = new ScaledSolarCostModel(1 / scale);
+                    dict.Add(scale + "", calculator.SystemCost(nodeGenes, inclTrans));
                 }
                 return dict;
-            }, SolarOptimumPath);
+            }), SolarOptimumPath);
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\solar\solarAnalysis.txt");
         }
 
         public static void ExportOffshoreCostAnalysisData(List<double> kValues, bool inclTrans = false)
         {
-            var costCalc = new NodeCostCalculator(new ParameterEvaluator(true));
+            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true };
             var geneMap = new Dictionary<string, Func<double, NodeGenes>>
             {
                 {@"0%@K={0}", k =>
@@ -172,7 +177,7 @@ namespace Main.Figures
                     return result;
                 }}
             };
-            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.DetailedSystemCosts(genes, inclTrans));
+            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.DetailedSystemCosts(nodeGenes, inclTrans)));
             // Reset offshore fractions.
             GenePool.OffshoreFractions = null;
 
@@ -201,10 +206,10 @@ namespace Main.Figures
 
         #endregion
 
-        private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes, double> evalX, Func<NodeGenes, Dictionary<string, double>> evalY, string optPath = MainOptimumPath)
+        private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes[], double[]> evalX, Func<NodeGenes[], Dictionary<string, double>[]> evalY, string optPath = MainOptimumPath)
         {
             // Prepare the data structures.
-            var alphaRes = 20;
+            var alphaRes = 15;
             var delta = (1 - alphaStart) / alphaRes;
             var alphas = new double[alphaRes + 1];
             var betas = new double[kValues.Count];
@@ -217,16 +222,35 @@ namespace Main.Figures
                     alphas[i] = alphaStart + (i) * delta;
                 }
             }
-
-            // Calculate beta curves.
+            // Prepare genes.
+            var optGenes = new NodeGenes[betas.Length];
+            var betaGenes = new NodeGenes[betas.Length*(alphaRes+1)];
+            var cfMaxGenes = new NodeGenes[betas.Length * (alphaRes+1)];
             for (int j = 0; j < betas.Length; j++)
             {
                 for (int i = 0; i <= alphaRes; i++)
                 {
-                    var genes = NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]);
-                    var xValue = evalX(genes);
-                    var results = evalY(genes);
-                    foreach (var pair in results)
+                    betaGenes[j + i*betas.Length] = NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]);
+                    cfMaxGenes[j + i*betas.Length] = NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]);
+                }
+                optGenes[j] = FileUtils.FromJsonFile<NodeGenes>(
+                    string.Format(optPath,
+                        kValues[j]));
+            }
+            // Do evaluation.
+            var optXValues = evalX(optGenes);            
+            var optYValues = evalY(optGenes);
+            var xValues = evalX(betaGenes);        
+            var betaValues = evalY(betaGenes);
+            var cfMaxValues = evalY(cfMaxGenes);
+            // Extract data.
+            for (int j = 0; j < betas.Length; j++)
+            {
+                for (int i = 0; i <= alphaRes; i++)
+                {
+                    var xValue = xValues[j + i*betas.Length];
+                    var betaValue = betaValues[j + i * betas.Length];
+                    foreach (var pair in betaValue)
                     {
                         if (!data.ContainsKey(pair.Key)) data.Add(pair.Key, new Dictionary<double, BetaWrapper>());
                         if (!data[pair.Key].ContainsKey(kValues[j])) data[pair.Key].Add(kValues[j], new BetaWrapper()
@@ -241,37 +265,28 @@ namespace Main.Figures
                         data[pair.Key][kValues[j]].BetaY[i] = pair.Value;
                         data[pair.Key][kValues[j]].BetaX[i] = xValue;
                     }
-                    results = evalY(NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]));
-                    foreach (var pair in results)
+                    var cfMaxValue = cfMaxValues[j + i * betas.Length];
+                    foreach (var pair in cfMaxValue)
                     {
                         data[pair.Key][kValues[j]].MaxCfY[i] = pair.Value;
                         data[pair.Key][kValues[j]].MaxCfX[i] = xValue;
                     }
                 }
-
-                Console.WriteLine("Beta {0} done",betas[j]);
-            }
-
-            // Calculate genetic points.
-            for (int j = 0; j < kValues.Count; j++)
-            {
-                var genes =
-                    FileUtils.FromJsonFile<NodeGenes>(
-                        string.Format(optPath,
-                            kValues[j]));
-                var xValue = evalX(genes);
-                var results = evalY(genes);
-                foreach (var pair in results)
+                var optXValue = optXValues[j];
+                var optYValue = optYValues[j];
+                foreach (var pair in optYValue)
                 {
-                    data[pair.Key][kValues[j]].GeneticX = xValue;
+                    data[pair.Key][kValues[j]].GeneticX = optXValue;
                     data[pair.Key][kValues[j]].GeneticY = pair.Value;
                 }
+
+                Console.WriteLine("Beta {0} done",betas[j]);
             }
 
             return data;
         }
 
-        private static CostWrapper CalcCostDetails(List<double> kValues, Dictionary<string, Func<double, NodeGenes>> geneMap, Func<NodeGenes, Dictionary<string, double>> eval, string optPath = MainOptimumPath)
+        private static CostWrapper CalcCostDetails(List<double> kValues, Dictionary<string, Func<double, NodeGenes>> geneMap, Func<NodeGenes[], Dictionary<string, double>[]> eval, string optPath = MainOptimumPath)
         {
             // Prepare the data structures.
             var data = new CostWrapper
@@ -279,19 +294,32 @@ namespace Main.Figures
                 Costs = new Dictionary<string, List<double>>(),
                 Labels = new List<string>()
             };
-
-            foreach(var k in kValues)
+            var allGenes = new NodeGenes[kValues.Count*geneMap.Keys.Count];
+            var keys = geneMap.Keys.ToArray();
+            // Build layouts.
+            for (int index = 0; index < kValues.Count; index++)
             {
-                foreach (var key in geneMap.Keys)
+                var k = kValues[index];
+                for (int i = 0; i < keys.Length; i++)
                 {
+                    var key = keys[i];
                     data.Labels.Add(string.Format(key, k));
-                    var results = eval(geneMap[key](k));
-                    foreach (var pair in results)
+                    allGenes[i + index * geneMap.Keys.Count] = geneMap[key](k);
+                }
+            }
+            // Do evaluation.
+            var allResults = eval(allGenes);
+            // Extract results.
+            for (int index = 0; index < kValues.Count; index++)
+            {
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    foreach (var pair in allResults[i + index * geneMap.Keys.Count])
                     {
                         if (!data.Costs.ContainsKey(pair.Key)) data.Costs.Add(pair.Key, new List<double>());
                         data.Costs[pair.Key].Add(pair.Value);
                     }
-                }                
+                }
             }
 
             return data;
@@ -341,9 +369,9 @@ namespace Main.Figures
             layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, 0.0), "k=1.txt");
             // Beta layouts.
             (NodeGenesFactory.SpawnBeta(mix, 1, 1.0)).Export().ToJsonFile(basePath + "beta=1.txt");
-            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(1.5, 1e-3, mix))).Export().ToJsonFile(basePath + "k=15beta.txt");
-            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(2, 1e-3, mix))).Export().ToJsonFile(basePath + "k=2beta.txt");
-            (NodeGenesFactory.SpawnBeta(mix, 1, BusinessLogic.Utils.Stuff.FindBeta(3, 1e-3, mix))).Export().ToJsonFile(basePath + "k=3beta.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, Stuff.FindBeta(1.5, 1e-3, mix))).Export().ToJsonFile(basePath + "k=15beta.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, Stuff.FindBeta(2, 1e-3, mix))).Export().ToJsonFile(basePath + "k=2beta.txt");
+            (NodeGenesFactory.SpawnBeta(mix, 1, Stuff.FindBeta(3, 1e-3, mix))).Export().ToJsonFile(basePath + "k=3beta.txt");
             // Maximum CF layouts.
             (NodeGenesFactory.SpawnCfMax(mix, 1, 1.5)).Export().ToJsonFile(basePath + "k=15nuMax.txt");
             (NodeGenesFactory.SpawnCfMax(mix, 1, 2)).Export().ToJsonFile(basePath + "k=2nuMax.txt");
@@ -396,8 +424,15 @@ namespace Main.Figures
 
         public static void ParameterOverviewChart(MainForm main, List<double> betaValues, bool inclTrans = false)
         {
-            var costCalc = new NodeCostCalculator(new ParameterEvaluator(false));
-            var data = CalcBetaCurves(betaValues, 0.0, genes => genes.Alpha, genes => costCalc.ParameterOverview(genes, inclTrans));
+            var costCalc = new ParallelNodeCostCalculator()
+            {
+                CacheEnabled = false,
+                Full = false,
+                Transmission = false
+            };
+            var data = CalcBetaCurves(betaValues, 0.0, 
+                genes => genes.Select(item => item.Alpha).ToArray(),
+                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\data.txt");
 
@@ -419,49 +454,49 @@ namespace Main.Figures
             main.Show(view);
         }
 
-        public static void ParameterOverviewChartGenetic(MainForm main, List<double> kValues, bool inclTrans = false)
-        {
-            var costCalc = new NodeCostCalculator(new ParameterEvaluator(false));
-            var data = CalcBetaCurves(kValues, 0.5, genes => genes.Alpha, genes => costCalc.ParameterOverview(genes, inclTrans));
+        //public static void ParameterOverviewChartGenetic(MainForm main, List<double> kValues, bool inclTrans = false)
+        //{
+        //    var costCalc = new NodeCostCalculator(new ParameterEvaluator(false));
+        //    var data = CalcBetaCurves(kValues, 0.5, genes => genes.Alpha, genes => costCalc.ParameterOverview(genes, inclTrans));
 
-            //// Calculate genetic points.
-            //for (int j = 0; j < kValues.Count; j++)
-            //{
-            //    var genes =
-            //        FileUtils.FromJsonFile<NodeGenes>(
-            //            string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK={0}.txt",
-            //                kValues[j]));
-            //    var results = costCalc.ParameterOverview(genes, inclTrans);
-            //    foreach (var pair in results)
-            //    {
-            //        data[pair.Key][kValues[j]].GeneticX = genes.Alpha;
-            //        data[pair.Key][kValues[j]].GeneticY = pair.Value;
-            //    }
-            //}
+        //    //// Calculate genetic points.
+        //    //for (int j = 0; j < kValues.Count; j++)
+        //    //{
+        //    //    var genes =
+        //    //        FileUtils.FromJsonFile<NodeGenes>(
+        //    //            string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\geneticWithConstraintK={0}.txt",
+        //    //                kValues[j]));
+        //    //    var results = costCalc.ParameterOverview(genes, inclTrans);
+        //    //    foreach (var pair in results)
+        //    //    {
+        //    //        data[pair.Key][kValues[j]].GeneticX = genes.Alpha;
+        //    //        data[pair.Key][kValues[j]].GeneticY = pair.Value;
+        //    //    }
+        //    //}
 
-            // Map to view.
-            var view = new ParameterOverviewChart();
-            foreach (var variables in data)
-            {
-                view.AddData(variables.Key, variables.Value.Values.ToList(), true);
-            }
+        //    // Map to view.
+        //    var view = new ParameterOverviewChart();
+        //    foreach (var variables in data)
+        //    {
+        //        view.AddData(variables.Key, variables.Value.Values.ToList(), true);
+        //    }
 
-            // Adjust view.
-            view.MainChart.ChartAreas["BC"].AxisX.Minimum = 0.5;
-            view.MainChart.ChartAreas["BE"].AxisX.Minimum = 0.5;
-            view.MainChart.ChartAreas["TC"].AxisX.Minimum = 0.5;
-            view.MainChart.ChartAreas["CF"].AxisX.Minimum = 0.5;
+        //    // Adjust view.
+        //    view.MainChart.ChartAreas["BC"].AxisX.Minimum = 0.5;
+        //    view.MainChart.ChartAreas["BE"].AxisX.Minimum = 0.5;
+        //    view.MainChart.ChartAreas["TC"].AxisX.Minimum = 0.5;
+        //    view.MainChart.ChartAreas["CF"].AxisX.Minimum = 0.5;
 
-            view.MainChart.ChartAreas["BC"].AxisY.Minimum = 0.7;
-            view.MainChart.ChartAreas["BE"].AxisY.Minimum = 0.15;
-            view.MainChart.ChartAreas["BE"].AxisY.Maximum = 0.35;
-            //view.MainChart.ChartAreas["TC"].AxisY.Minimum = 0.5;
-            view.MainChart.ChartAreas["CF"].AxisY.Minimum = 0.1;
+        //    view.MainChart.ChartAreas["BC"].AxisY.Minimum = 0.7;
+        //    view.MainChart.ChartAreas["BE"].AxisY.Minimum = 0.15;
+        //    view.MainChart.ChartAreas["BE"].AxisY.Maximum = 0.35;
+        //    //view.MainChart.ChartAreas["TC"].AxisY.Minimum = 0.5;
+        //    view.MainChart.ChartAreas["CF"].AxisY.Minimum = 0.1;
 
-            ChartUtils.SaveChart(view.MainChart, 1000, 1000, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\ParameterOverviewGenetic.png");
+        //    ChartUtils.SaveChart(view.MainChart, 1000, 1000, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\ParameterOverviewGenetic.png");
 
-            main.Show(view);
-        }
+        //    main.Show(view);
+        //}
 
         private static void Save(NodeGeneChart view, string name)
         {

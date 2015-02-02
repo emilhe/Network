@@ -126,7 +126,7 @@ namespace Optimization
         private void EvalPopulation(T[] unorderedPopulation)
         {
             var start = DateTime.Now;
-            _mCostCalculator.UpdateCost(unorderedPopulation.Where(item => item.InvalidCost));
+            _mCostCalculator.UpdateCost(unorderedPopulation.Where(item => item.InvalidCost).ToList());
             var end = DateTime.Now.Subtract(start).TotalSeconds;
             Console.WriteLine("Evaluation took {0} seconds.", end);
         }
