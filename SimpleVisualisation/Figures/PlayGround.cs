@@ -230,8 +230,8 @@ namespace Main.Figures
             {
                 for (int i = 0; i <= alphaRes; i++)
                 {
-                    betaGenes[j + i*betas.Length] = NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]);
-                    cfMaxGenes[j + i*betas.Length] = NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]);
+                    betaGenes[i + j * (alphaRes+1)] = NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]);
+                    cfMaxGenes[i + j * (alphaRes + 1)] = NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]);
                 }
                 optGenes[j] = FileUtils.FromJsonFile<NodeGenes>(
                     string.Format(optPath,
@@ -248,8 +248,8 @@ namespace Main.Figures
             {
                 for (int i = 0; i <= alphaRes; i++)
                 {
-                    var xValue = xValues[j + i*betas.Length];
-                    var betaValue = betaValues[j + i * betas.Length];
+                    var xValue = xValues[i + j * (alphaRes + 1)];
+                    var betaValue = betaValues[i + j * (alphaRes + 1)];
                     foreach (var pair in betaValue)
                     {
                         if (!data.ContainsKey(pair.Key)) data.Add(pair.Key, new Dictionary<double, BetaWrapper>());
@@ -265,7 +265,7 @@ namespace Main.Figures
                         data[pair.Key][kValues[j]].BetaY[i] = pair.Value;
                         data[pair.Key][kValues[j]].BetaX[i] = xValue;
                     }
-                    var cfMaxValue = cfMaxValues[j + i * betas.Length];
+                    var cfMaxValue = cfMaxValues[i + j * (alphaRes + 1)];
                     foreach (var pair in cfMaxValue)
                     {
                         data[pair.Key][kValues[j]].MaxCfY[i] = pair.Value;
@@ -314,7 +314,7 @@ namespace Main.Figures
             {
                 for (int i = 0; i < keys.Length; i++)
                 {
-                    foreach (var pair in allResults[i + index * geneMap.Keys.Count])
+                    foreach (var pair in allResults[i + index * keys.Length])
                     {
                         if (!data.Costs.ContainsKey(pair.Key)) data.Costs.Add(pair.Key, new List<double>());
                         data.Costs[pair.Key].Add(pair.Value);
