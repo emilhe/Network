@@ -107,7 +107,8 @@ namespace BusinessLogic.Cost
                 genes.Add(map(gene.Key), new NodeGene
                 {
                     Alpha = gene.Value.Alpha,
-                    Gamma = gene.Value.Gamma
+                    Gamma = gene.Value.Gamma,
+                    OffshoreFraction = gene.Value.OffshoreFraction,
                 });
             }
         }
