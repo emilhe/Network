@@ -69,24 +69,24 @@ namespace Main.Figures
 
         public static void ExportParameterOverviewData(List<double> kValues, bool inclTrans = false)
         {
-            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true, Transmission = inclTrans };
+            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true };
             var data = CalcBetaCurves(kValues, 0.0, 
                 genes => genes.Select(item => item.Alpha).ToArray(), 
-                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
+                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes, inclTrans)));
 
-            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\dataS2.txt");
+            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\data.txt");
         }
 
         public static void ExportCostDetailsData(List<double> kValues, bool inclTrans = false)
         {
-            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true, Transmission = inclTrans };
+            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true};
             var geneMap = new Dictionary<string, Func<double, NodeGenes>>
             {
                 {@"Beta@K={0}", k => NodeGenesFactory.SpawnBeta(1, 1, Stuff.FindBeta(k, 1e-3))},
                 {@"CfMax@K={0}", k => NodeGenesFactory.SpawnCfMax(1, 1, k)},
                 {@"CS@K={0}", k => FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, k))}
             };
-            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.DetailedSystemCosts(nodeGenes)));
+            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.DetailedSystemCosts(nodeGenes, inclTrans)));
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\costs\cost.txt");
         }
@@ -133,7 +133,7 @@ namespace Main.Figures
         public static void ExportSolarCostAnalysisData(List<double> kValues, bool inclTrans = false)
         {
             var scales = new[] { 1.0, 2.0, 4.0 };
-            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true, Transmission = inclTrans };
+            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true };
             var data = CalcBetaCurves(kValues, 0.0, 
                 genes => genes.Select(item => item.Alpha).ToArray(), 
                 genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => 
@@ -152,7 +152,7 @@ namespace Main.Figures
 
         public static void ExportOffshoreCostAnalysisData(List<double> kValues, bool inclTrans = false)
         {
-            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true, Transmission = inclTrans };
+            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true };
             var geneMap = new Dictionary<string, Func<double, NodeGenes>>
             {
                 {@"0%@K={0}", k =>
@@ -177,7 +177,7 @@ namespace Main.Figures
                     return result;
                 }}
             };
-            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.DetailedSystemCosts(nodeGenes)));
+            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.DetailedSystemCosts(nodeGenes, inclTrans)));
             // Reset offshore fractions.
             GenePool.OffshoreFractions = null;
 
