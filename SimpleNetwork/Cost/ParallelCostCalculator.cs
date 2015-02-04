@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BusinessLogic.Cost.Transmission;
 using BusinessLogic.Utils;
 using Optimization;
 
@@ -16,6 +17,7 @@ namespace BusinessLogic.Cost
         private bool _mFull;
         private bool _mDirty;
         private int _mEvaluations;
+        private ISolarCostModel _mSolarCostModel = new SolarCostModelImpl();
 
         public bool Transmission { get; set; }
         public bool CacheEnabled { get; set; }
@@ -36,6 +38,16 @@ namespace BusinessLogic.Cost
             }
         }
 
+        public ISolarCostModel SolarCostModel
+        {
+            set
+            {
+                if (_mSolarCostModel == value) return;
+                _mSolarCostModel = value;
+                _mDirty = true;
+            }
+        }
+
         private ConcurrentDictionary<int, NodeCostCalculator> _mCalcMap;
         private readonly ParallelOptions _mOptions;
 
@@ -45,7 +57,7 @@ namespace BusinessLogic.Cost
             _mOptions = new ParallelOptions {MaxDegreeOfParallelism = maxDegreeOfParallelism};
             _mCalcMap = new ConcurrentDictionary<int, NodeCostCalculator>();
             // Initialize dummy calculator to ensure that the cache is updated.
-            var dummy = new NodeCostCalculator(new ParameterEvaluator(Full) { CacheEnabled = CacheEnabled }); 
+            var dummy = SpawnCalc();
         }
 
         public void UpdateCost(IList<NodeChromosome> chromosomes)
@@ -57,7 +69,7 @@ namespace BusinessLogic.Cost
             {
                 // Very expensive if extra thread are spawned (they are, apparently..).
                 var id = Thread.CurrentThread.ManagedThreadId;
-                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.TryAdd(id, new NodeCostCalculator(new ParameterEvaluator(Full) { CacheEnabled = CacheEnabled }));
+                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.TryAdd(id, SpawnCalc());
                 chromosome.UpdateCost(solution => _mCalcMap[id].SystemCost((solution as NodeChromosome).Genes, Transmission));
             });
         }
@@ -71,7 +83,7 @@ namespace BusinessLogic.Cost
             {
                 // Very expensive if extra thread are spawned (they are, apparently..).
                 var id = Thread.CurrentThread.ManagedThreadId;
-                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.TryAdd(id, new NodeCostCalculator(new ParameterEvaluator(Full) { CacheEnabled = CacheEnabled }));
+                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.TryAdd(id, SpawnCalc());
                 result[i] = evalFunc(_mCalcMap[id], chromosomes[i]);
             });
 
@@ -83,6 +95,11 @@ namespace BusinessLogic.Cost
             // If dirty, new cost calculators must be initialized.
             if (_mDirty) _mCalcMap = new ConcurrentDictionary<int, NodeCostCalculator>();
             foreach (var calculator in _mCalcMap) calculator.Value.CacheEnabled = CacheEnabled;
+        }
+
+        private NodeCostCalculator SpawnCalc()
+        {
+            return new NodeCostCalculator(new ParameterEvaluator(Full) {CacheEnabled = CacheEnabled});
         }
 
     }

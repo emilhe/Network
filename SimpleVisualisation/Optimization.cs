@@ -1,5 +1,7 @@
-﻿using BusinessLogic.Cost;
+﻿using System;
+using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
+using BusinessLogic.Cost.Transmission;
 using Optimization;
 using Utils;
 
@@ -23,7 +25,7 @@ namespace Main
             optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEgeneticConstraintTransK={0}{1}.txt", k, key));
         }
 
-        public static void Cukoo(int k, int n = 250, string key = "")
+        public static void Cukoo(int k, int n = 500, string key = "")
         {
             // Adjust gene pool.
             GenePool.K = k;
@@ -31,11 +33,17 @@ namespace Main
             var strategy = new CukooNodeOptimizationStrategy();
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
-            //population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
-            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelNodeCostCalculator { Full = false, Transmission = false });
+            population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
+            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelNodeCostCalculator
+            {
+                Full = false, 
+                Transmission = false,
+                SolarCostModel = new ScaledSolarCostModel(0.25)
+            });
             // Do stuff.
             var optimum = optimizer.Optimize(population);
             optimum.Genes.ToJsonFile(string.Format(@"C:\proto\VE50cukooWithTransK={0}{1}.txt", k,key));
+            Console.WriteLine("K = {0} has cost {1}", k, optimum.Cost);
         }
 
         //public static void ParticleSwarm()

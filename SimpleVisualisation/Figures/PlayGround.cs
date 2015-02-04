@@ -37,31 +37,28 @@ namespace Main.Figures
             layouts.Add(NodeGenesFactory.SpawnBeta(0, 1, 1), "beta=1solar.txt");
             layouts.Add(NodeGenesFactory.SpawnCfMax(1, 1, 2), "k=2cfMaxWind.txt");
             layouts.Add(NodeGenesFactory.SpawnCfMax(0, 1, 2), "k=2cfMaxSolar.txt");
-            
-            // Beta layouts for different K values.
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, Stuff.FindBeta(1, 1e-3, mix)), "k=1beta.txt");
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, Stuff.FindBeta(2, 1e-3, mix)), "k=2beta.txt");
-            layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, Stuff.FindBeta(3, 1e-3, mix)), "k=3beta.txt");
-            
-            // Maximum CF layouts for different K values.
-            layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 1), "k=1cfMax.txt");
-            layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 2), "k=2cfMax.txt");
-            layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, 3), "k=3cfMax.txt");
-            
-            // Optimized layouts.
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, 1)), "k=1genetic.txt.");
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, 2)), "k=2genetic.txt");
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, 3)), "k=3genetic.txt");
+
+            // Layouts for different K values.
+            for (int k = 1; k < 4; k++)
+            {
+                // Beta layouts.
+                layouts.Add(NodeGenesFactory.SpawnBeta(mix, 1, Stuff.FindBeta(k, 1e-3, mix)), string.Format("k={0}beta.txt", k));
+                // Maximum CF layouts.
+                layouts.Add(NodeGenesFactory.SpawnCfMax(mix, 1, k), string.Format("k={0}cfMax.txt", k));
+                // Optimized layouts.
+                layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(MainOptimumPath, k)), string.Format("k={0}optimized.txt.",k));
+                // Reduced solar cost layouts (optimized).
+                layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(SolarOptimumPath, k)), string.Format("k={0}reducedSolarCost.txt.",k));
+            }
 
             // Optimized OFFSHORE layouts.
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(Offshore50OptimumPath, 1)), "k=1genetic.txt.");
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(Offshore50OptimumPath, 2)), "k=2genetic.txt");
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(Offshore50OptimumPath, 3)), "k=3genetic.txt");
-
-            // Optimized SOLAR layouts.
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(SolarOptimumPath, 1)), "k=1genetic.txt.");
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(SolarOptimumPath, 2)), "k=2genetic.txt");
-            layouts.Add(FileUtils.FromJsonFile<NodeGenes>(string.Format(SolarOptimumPath, 3)), "k=3genetic.txt");
+            GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.5);
+            for (int k = 1; k < 4; k++)
+            {
+                var genes = FileUtils.FromJsonFile<NodeGenes>(string.Format(Offshore50OptimumPath, k));
+                GenePool.ApplyOffshoreFraction(genes);
+                layouts.Add(genes, string.Format("k={0}offshore50pct.txt", k));
+            }
 
             // Save the data as JSON.
             foreach (var pair in layouts) pair.Key.Export().ToJsonFile(basePath + pair.Value);  
