@@ -19,7 +19,7 @@ namespace LaTeX
         {
             var builder = new StringBuilder();
 
-            builder.AppendLine(@"\begin{table}");
+            builder.AppendLine(@"\begin{table}[h!]");
             builder.AppendLine(@"\centering");
             builder.AppendLine(@"\caption{" + Caption + "}");
             builder.AppendLine(@"\label{tab:" + Label + "}");
