@@ -7,6 +7,7 @@ namespace LaTeX
     {
 
         public string[] Header { get; set; }
+        public string[] Units { get; set; }
         public List<string[]> Rows { get; set; }
 
         public string Caption { get; set; }
@@ -20,14 +21,17 @@ namespace LaTeX
             var builder = new StringBuilder();
 
             builder.AppendLine(@"\begin{table}[h!]");
-            builder.AppendLine(@"\centering");
             builder.AppendLine(@"\caption{" + Caption + "}");
             builder.AppendLine(@"\label{tab:" + Label + "}");
-            builder.AppendLine(Injection);
-            builder.AppendLine(@"\begin{tabular}{" + Format + @"} \hline");
+            if(!string.IsNullOrEmpty(Injection)) builder.AppendLine(Injection);
+            builder.AppendLine(@"\begin{adjustbox}{center}");
+            builder.AppendLine(@"\begin{tabular}{" + Format + @"}  \hline");
             AppendHeader(builder);
+            builder.AppendLine(@" \hline");
             AppendRows(builder);
+            builder.AppendLine(@" \hline");
             builder.AppendLine(@"\end{tabular}");
+            builder.AppendLine(@"\end{adjustbox}");
             builder.AppendLine(@"\end{table}");
 
             return builder.ToString();
@@ -38,9 +42,16 @@ namespace LaTeX
             for (int i = 0; i < Header.Length; i++)
             {
                 builder.Append(Header[i]);
-                builder.Append(i < Header.Length - 1 ? " & " : @"\\ \hline");
+                builder.Append(i < Header.Length - 1 ? " & " : @"\\");
             }
+            if (Units == null) return;
+
             builder.AppendLine();
+            for (int i = 0; i < Units.Length; i++)
+            {
+                builder.Append(Units[i]);
+                builder.Append(i < Units.Length - 1 ? " & " : @"\\");
+            }
         }
 
         private void AppendRows(StringBuilder builder)
@@ -53,7 +64,7 @@ namespace LaTeX
                     builder.Append(row[j]);
                     builder.Append(j < row.Length - 1 ? " & " : @"\\");
                 }
-                builder.AppendLine(i < Rows.Count - 1 ? "" : @" \hline");
+                if(i < Rows.Count - 1) builder.AppendLine();
             }
         }
 

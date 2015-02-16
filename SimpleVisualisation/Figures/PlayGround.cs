@@ -18,13 +18,13 @@ namespace Main.Figures
     {
 
         // These layouts are NOT well defined.
-        private const string DefaultOptimumPath = @"C:\proto\VE50cukooK={0}@default.txt";
+        public const string DefaultOptimumPath = @"C:\proto\VE50cukooK={0}@default.txt";
 
-        private const string SolarCost25PctOptimumPath = @"C:\proto\VE50cukooK={0}@solar25pct.txt";
-        private const string SolarCost50PctOptimumPath = @"C:\proto\VE50cukooK={0}@solar50pct.txt";
+        public const string SolarCost25PctOptimumPath = @"C:\proto\VE50cukooK={0}@solar25pct.txt";
+        public const string SolarCost50PctOptimumPath = @"C:\proto\VE50cukooK={0}@solar50pct.txt";
 
-        private const string Offshore25PctOptimumPath = @"C:\proto\VE50cukooK={0}@offshore25pct.txt";
-        private const string Offshore50PctOptimumPath = @"C:\proto\VE50cukooK={0}@offshore50pct.txt";
+        public const string Offshore25PctOptimumPath = @"C:\proto\VE50cukooK={0}@offshore25pct.txt";
+        public const string Offshore50PctOptimumPath = @"C:\proto\VE50cukooK={0}@offshore50pct.txt";
         
         #region Data export to JSON for external rendering
 

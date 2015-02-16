@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using Controls;
 using LaTeX;
 using NUnit.Framework;
 using Utils;
@@ -41,7 +44,8 @@ namespace Main.Documentation
         {
             var table = new Table
             {
-                Header = new[] { "Asset", @"CapEx [€/W]", @"Fixed OpEx [€/kW/year]", @"Variable OpEx [€/MWh]" },
+                Header = new[] { "Asset", @"CapEx", @"Fixed OpEx", @"Variable OpEx" },
+                Units = new[] { "", @"[€/W]", @"[€/kW/year]", @"[€/MWh]" },
                 Caption = @"Cost assumptions for different assets.",
                 Label = "cost-assumptions",
                 Format = "lrrr",
@@ -62,6 +66,43 @@ namespace Main.Documentation
             }
 
             File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\costInfo.tex", table.ToTeX());
+        }
+
+        public static void PrintReducedSolarAlphas()
+        {
+            var results = FileUtils.FromJsonFile<Dictionary<string, Dictionary<double, BetaWrapper>>>
+                (@"C:\Users\Emil\Dropbox\Master Thesis\Python\solar\solarAnalysis.txt");
+            
+            foreach (var result in results)
+            {
+                var ks = result.Value.Keys.OrderBy(item => item).ToArray();
+                var betaOpt = new double[ks.Length];
+                var maxCfOpt = new double[ks.Length];
+                var geneticOpt = new double[ks.Length];
+                var idx = 0;
+                foreach (var k in ks)
+                {
+                    var item = result.Value[k];
+                    betaOpt[idx] = item.BetaX[Array.IndexOf(item.BetaY, item.BetaY.Min())];
+                    maxCfOpt[idx] = item.MaxCfX[Array.IndexOf(item.MaxCfY, item.MaxCfY.Min())];
+                    geneticOpt[idx] = item.GeneticX;
+                    idx ++;
+                }
+                // Create tabular stuff.
+                var builder = new StringBuilder();
+                foreach (var k in ks) builder.Append(" & K = " + k);
+                builder.AppendLine(@" \\ \hline");
+                builder.Append(@"$\beta$");
+                foreach (var b in betaOpt) builder.Append(" & " + b.ToString("0.##"));
+                builder.AppendLine(@" \\ ");
+                builder.Append(@"$\nu_{max}$");
+                foreach (var c in maxCfOpt) builder.Append(" & " + c.ToString("0.##"));
+                builder.AppendLine(@" \\ ");
+                builder.Append(@"CS");
+                foreach (var g in geneticOpt) builder.Append(" & " + g.ToString("0.##"));
+                builder.AppendLine(@" \\ \hline");
+                File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\solarScale" + result.Key.Substring(1,1) + ".tex", builder.ToString());
+            }
         }
 
         public static void PrintCapacityFactors()
@@ -92,7 +133,7 @@ namespace Main.Documentation
                 var col = idx / 10;
                 if (col == 0) table.Rows.Add(new string[12]);
 
-                table.Rows[idx % 10][col * 4 + 0] = CountryInfo.GetAbbrev(country);
+                table.Rows[idx % 10][col * 4 + 0] = CountryInfo.GetShortAbbrev(country);
                 table.Rows[idx % 10][col * 4 + 1] = (cfOnW[country] < 1e-3)? "-" : cfOnW[country].ToString("0.00");
                 table.Rows[idx % 10][col * 4 + 2] = (cfOffW[country] < 1e-3) ? "-" : cfOffW[country].ToString("0.00");
                 table.Rows[idx % 10][col * 4 + 3] = (cfS[country] < 1e-3) ? "-" : cfS[country].ToString("0.00");
