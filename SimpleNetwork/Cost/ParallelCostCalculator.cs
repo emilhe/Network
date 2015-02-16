@@ -14,8 +14,8 @@ namespace BusinessLogic.Cost
     public class ParallelNodeCostCalculator : ICostCalculator<NodeChromosome>
     {
 
-        private bool _mFull;
-        private bool _mDirty;
+        private bool _mFull = false;
+        private bool _mDirty = false;
         private int _mEvaluations;
         private ISolarCostModel _mSolarCostModel = new SolarCostModelImpl();
 
@@ -99,7 +99,7 @@ namespace BusinessLogic.Cost
 
         private NodeCostCalculator SpawnCalc()
         {
-            return new NodeCostCalculator(new ParameterEvaluator(Full) {CacheEnabled = CacheEnabled});
+            return new NodeCostCalculator(new ParameterEvaluator(Full) { CacheEnabled = CacheEnabled }) { SolarCostModel = _mSolarCostModel };
         }
 
     }
