@@ -140,7 +140,7 @@ namespace BusinessLogic.Cost
         {
             var u = Rnd.NextDouble()*Sigma;
             var v = Rnd.NextDouble();
-            return Math.Pow(u/Math.Abs(v), 1.0/Beta);
+            return u / Math.Pow(Math.Abs(v), 1.0 / Beta);
         }
 
         #endregion
