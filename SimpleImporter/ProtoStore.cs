@@ -309,6 +309,8 @@ namespace SimpleImporter
         public string CountryTo { get; set; }
         [ProtoMember(3)]
         public double LinkCapacity { get; set; }
+        //[ProtoMember(3)]
+        public string Type { get; set; }
     }
 
     #endregion
