@@ -28,12 +28,16 @@ namespace BusinessLogic.Cost
         // Offshore fractions
         public static Dictionary<string, double> OffshoreFractions;
 
-        // Parameters used for Levy flight.
+        // Parameters used for Levy flight, num values are numerical values valid for Beta = 3/2.
         private const double Beta = 3.0/2.0;
+        private const double Knum = 1.5992;
+        private const double Cnum = 2.737;
+        //private const double SigmaNum = 0.696575;
         private static readonly double Sigma =
             Math.Pow(
                 SpecialFunction.gamma(1.0 + Beta) * Math.Sin(Math.PI * Beta / 2.0) /
                 (SpecialFunction.gamma((1.0 + Beta) / 2.0) * Beta * Math.Pow(2.0, ((Beta - 1.0) / 2.0))), (1.0 / Beta));
+        
         private static readonly double StepScale = 25;
 
         #region Gene modification
@@ -138,9 +142,11 @@ namespace BusinessLogic.Cost
 
         private static double LevyStep()
         {
-            var u = Rnd.NextDouble()*Sigma;
-            var v = Rnd.NextDouble();
-            return u / Math.Pow(Math.Abs(v), 1.0 / Beta);
+            var x = Rnd.NextGaussian(0, Sigma);
+            var y = Rnd.NextGaussian();
+            var v = x / Math.Pow(Math.Abs(y), 1.0 / Beta);
+            var w = (Knum - 1) * (Math.Exp(-v / Cnum) + 1) * v;
+            return w;
         }
 
         #endregion
