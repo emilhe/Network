@@ -9,6 +9,7 @@ using BusinessLogic.Utils;
 using Controls;
 using Controls.Article;
 using Controls.Charting;
+using SimpleImporter;
 using Utils;
 
 namespace Main.Figures
@@ -83,12 +84,12 @@ namespace Main.Figures
         {
             var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true };
             var data = CalcBetaCurves(kValues, 0.0, 
-                genes => genes.Select(item => item.Alpha).ToArray(), 
-                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes, inclTrans)));
+                genes => genes.Select(item => item.Alpha).ToArray(),
+                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes, inclTrans)), @"C:\proto\VE50cukooK={0}@TRANS10k.txt");
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\data.txt");
         }
-
+        
         public static void ExportCostDetailsData(List<double> kValues, bool inclTrans = false)
         {
             var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true};
@@ -96,11 +97,25 @@ namespace Main.Figures
             {
                 {@"Beta@K={0}", k => NodeGenesFactory.SpawnBeta(1, 1, Stuff.FindBeta(k, 1e-3))},
                 {@"CfMax@K={0}", k => NodeGenesFactory.SpawnCfMax(1, 1, k)},
-                {@"CS@K={0}", k => FileUtils.FromJsonFile<NodeGenes>(string.Format(DefaultOptimumPath, k))}
+                {@"CS@K={0}", k => FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\VE50cukooK={0}@TRANS10k.txt", k))}
             };
             var data = CalcCostDetails(kValues, geneMap, genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.DetailedSystemCosts(nodeGenes, inclTrans)));
 
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\costs\cost.txt");
+        }
+
+        public static void ExportCostTransDetailsData(List<double> kValues, bool inclTrans = false)
+        {
+            var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true};
+            var geneMap = new Dictionary<string, Func<double, NodeGenes>>
+            {
+                {@"Beta@K={0}", k => NodeGenesFactory.SpawnBeta(1, 1, Stuff.FindBeta(k, 1e-3))},
+                {@"CfMax@K={0}", k => NodeGenesFactory.SpawnCfMax(1, 1, k)},
+                {@"CS@K={0}", k => FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\VE50cukooK={0}@TRANS10k.txt", k))}
+            };
+            var data = CalcCostDetails(kValues, geneMap, genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.DetailedSystemCosts(nodeGenes, inclTrans)));
+
+            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\costs\costTrans.txt");
         }
 
         public static void ExportMismatchData(List<double> kValues, bool inclTrans = false)
@@ -197,23 +212,43 @@ namespace Main.Figures
             data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\costs\costOffshore.txt");
         }
 
-        ///// <summary>
-        ///// Transmission sensitivity analysis.
-        ///// </summary>
-        //public static void ExportTcCalcAnalysisData()
-        //{
-        //    var evaluator = new ParameterEvaluator(false);
-        //    var varaibleLength = new VariableLengthModel();
-        //    var fixedLength = new FixedLengthModel();
+        /// <summary>
+        /// Transmission sensitivity analysis.
+        /// </summary>
+        public static void ExportTcCalcAnalysisData()
+        {
+            var evaluator = new ParameterEvaluator(true);
+            var layouts = new[]
+            {
+                "VE50cukooK=1@TRANS10k",
+                "VE50cukooK=2@TRANS10k",
+                "VE50cukooK=3@TRANS10k",
+                "VE50cukooK=1@default",
+                "VE50cukooK=2@default",
+                "VE50cukooK=3@default"
+            };
+            
+            foreach (var layout in layouts)
+            {
+                // What genes?
+                var genes = FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\{0}.txt", layout));
+                var capacities = evaluator.LinkCapacities(genes);
+                var links = capacities.Select(MapLink);
+                links.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Python\transmission\{0}LINKS.txt", layout));
+            }
 
-        //    // What genes?
-        //    var genes = NodeGenesFactory.SpawnBeta(0, 1, 1);
-        //    var capacities = evaluator.LinkCapacities(genes);
+        }
 
-        //    // What to do with data?
-        //    Console.WriteLine("Fixed length cost = {0}", fixedLength.Eval(capacities));
-        //    Console.WriteLine("Variable length cost = {0}", varaibleLength.Eval(capacities));
-        //}
+        private static LinkDataRow MapLink(KeyValuePair<string, double> pair)
+        {
+            return new LinkDataRow
+            {
+                LinkCapacity = pair.Value,
+                CountryFrom = CountryInfo.GetShortAbbrev(pair.Key.Split('-')[0]),
+                CountryTo = CountryInfo.GetShortAbbrev(pair.Key.Split('-')[1]),
+                Type = Costs.LinkType[pair.Key]
+            };
+        }
 
         #endregion
 

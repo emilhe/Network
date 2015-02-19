@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
 using BusinessLogic.Cost.Transmission;
@@ -25,25 +26,30 @@ namespace Main
             optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEgeneticConstraintTransK={0}{1}.txt", k, key));
         }
 
-        public static void Cukoo(int k, int n = 500, string key = "")
+        public static void Cukoo(int k, int n = 500, string key = "", NodeChromosome seed = null, ParallelNodeCostCalculator calc = null)
         {
+            var name = string.Format(@"C:\proto\VE50cukooK={0}@{1}.txt", k, key);
             // Adjust gene pool.
             GenePool.K = k;
             // Setup stuff.
             var strategy = new CukooNodeOptimizationStrategy();
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
-            population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
-            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, new ParallelNodeCostCalculator
+            if (seed != null) population[0] = seed;
+            //population[1] = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(name));
+            if (calc == null)
             {
-                Full = false, 
-                Transmission = false,
-                SolarCostModel = new ScaledSolarCostModel(0.25)
-            });
+                calc = new ParallelNodeCostCalculator
+                {
+                    Full = false,
+                    Transmission = false,
+                };
+            }
+            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, calc);
             // Do stuff.
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\VE50cukooWithTransK={0}{1}.txt", k,key));
-            Console.WriteLine("K = {0} has cost {1}", k, optimum.Cost);
+            optimum.Genes.ToJsonFile(name);
+            Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
         }
 
         //public static void ParticleSwarm()
