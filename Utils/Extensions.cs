@@ -102,11 +102,11 @@ namespace Utils
             {
                 n++;
                 var delta = value - mean;
-                mean += delta / n;
-                sum += delta * (value - mean);
+                mean += delta/n;
+                sum += delta*(value - mean);
             }
             if (1 < n)
-                stdDev = Math.Sqrt(sum / (n - 1));
+                stdDev = Math.Sqrt(sum/(n - 1));
 
             return stdDev;
 
@@ -176,13 +176,54 @@ namespace Utils
             var u1 = r.NextDouble();
             var u2 = r.NextDouble();
 
-            var rand_std_normal = Math.Sqrt(-2.0 * Math.Log(u1)) *
-                                Math.Sin(2.0 * Math.PI * u2);
+            var rand_std_normal = Math.Sqrt(-2.0*Math.Log(u1))*
+                                  Math.Sin(2.0*Math.PI*u2);
 
-            var rand_normal = mu + sigma * rand_std_normal;
+            var rand_normal = mu + sigma*rand_std_normal;
 
             return rand_normal;
         }
+
+        public static double NextLevy(this Random r, double alpha = 0.5, double beta = 1, double mu = 0,
+            double sigma = 1)
+        {
+            // Uniform on the interval [-0.5 pi, 0.5 pi].
+            var v = (r.NextDouble() - 0.5)*Math.PI;
+            // Exponential distribution with mean 1.
+            var w = -Math.Log(r.NextDouble());
+
+            return (alpha == 1.0)
+                ? LevyAlphaEqualOne(v, w, beta, mu, sigma)
+                : LevyAlphaNotEqualOne(v, w, alpha, beta, mu, sigma);
+        }
+
+        private static double LevyAlphaNotEqualOne(double v, double w, double alpha, double beta, double mu, double sigma)
+        {
+            // Can be precalculated to decrease computation time.
+            var b = Math.Atan(beta*Math.Tan(Math.PI*alpha/2))/alpha;
+            var s = Math.Pow(1+Math.Pow(beta*Math.Tan(Math.PI*alpha/2),2), 1/(2*alpha));
+                   
+            // Lévy alpha-stable distribution with sigma = 1 and mu = 0;
+            var x = s*Math.Sin(alpha*(v + b))/Math.Pow(Math.Cos(v), 1/alpha)
+                    *Math.Pow(Math.Cos(v - alpha*(v + b))/w, (1 - alpha)/alpha);
+            // Lévy alpha-stable distribution scaled with sigma and mu;
+            var y = sigma * x + 2/Math.PI*beta*sigma*Math.Log(sigma) + mu;
+
+            return y;
+        }
+
+        private static double LevyAlphaEqualOne(double v, double w, double beta, double mu, double sigma)
+        {
+            // Lévy alpha-stable distribution with sigma = 1 and mu = 0;
+            var x = 2/Math.PI*
+                    ((Math.PI/2 + beta*v)*Math.Tan(v) - beta*Math.Log(Math.PI/2*w*Math.Cos(v)/(Math.PI/2 + beta*v)));
+            // Lévy alpha-stable distribution scaled with sigma and mu;
+            var y = sigma*x + mu;
+
+            return y;
+        }
+
+
 
         #endregion
 
@@ -203,13 +244,16 @@ namespace Utils
 
         public static T Parse<T>(string s) where T : IConvertible
         {
-            if (typeof (T) == typeof (string)) return (T) Convert.ChangeType(s, typeof (T));
-            if (typeof (T) == typeof (double)) return (T) Convert.ChangeType(Double.Parse(s), typeof (T));
-            if (typeof (T) == typeof (double)) return (T) Convert.ChangeType(Double.Parse(s), typeof (T));
-            if (typeof (T) == typeof (int)) return (T) Convert.ChangeType(Int32.Parse(s), typeof (T));
-            throw new ArgumentException(String.Format("{0} is not supported by ditionary parsing.", typeof (T)));
+            if (typeof(T) == typeof(string)) return (T)Convert.ChangeType(s, typeof(T));
+            if (typeof(T) == typeof(double)) return (T)Convert.ChangeType(Double.Parse(s), typeof(T));
+            if (typeof(T) == typeof(double)) return (T)Convert.ChangeType(Double.Parse(s), typeof(T));
+            if (typeof(T) == typeof(int)) return (T)Convert.ChangeType(Int32.Parse(s), typeof(T));
+            throw new ArgumentException(String.Format("{0} is not supported by ditionary parsing.", typeof(T)));
         }
 
         #endregion
+
     }
 }
+
+    
