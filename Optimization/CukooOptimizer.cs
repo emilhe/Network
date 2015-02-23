@@ -64,11 +64,11 @@ namespace Optimization
                 }
                 UpdateNests(nests, trailEggs);
                 // Generate new trails eggs by differential evolution.
-                var rndOrder1 = new int[nests.Length].Linspace().Shuffle(_mRnd).ToArray();
-                var rndOrder2 = new int[nests.Length].Linspace().Shuffle(_mRnd).ToArray();
+                //var rndOrder1 = new int[nests.Length].Linspace().Shuffle(_mRnd).ToArray();
+                //var rndOrder2 = new int[nests.Length].Linspace().Shuffle(_mRnd).ToArray();
                 for (int i = deN; i < n; i++)
                 {
-                    trailEggs[i] = _mStrat.DifferentialEvolution(nests[i], nests[rndOrder1[i]], nests[rndOrder2[i]]);
+                    trailEggs[i] = _mStrat.DifferentialEvolution(nests[i], nests);
                 }
                 nests = UpdateNests(nests, trailEggs);
                 bestNest = nests[0];
