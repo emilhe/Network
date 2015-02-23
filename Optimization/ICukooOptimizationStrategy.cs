@@ -10,10 +10,15 @@ namespace Optimization
     public interface ICukooOptimizationStrategy<T> where T : ISolution
     {
 
-        double AbandonRate { get; }
+        double DifferentialEvolutionRate { get; }
+        double CrossOverRate { get; }
+        double LevyRate { get; }
 
         bool TerminationCondition(T[] nests, int evaluations);
-        T LevyFlight(T nest, T bestNest, double scaling = 1);
+
+        T DifferentialEvolution(T nest, T nest1, T nest2);
+        T LevyFlight(T nest, T bestNests);
         T CrossOver(T badNest, T goodNest);
+
     }
 }

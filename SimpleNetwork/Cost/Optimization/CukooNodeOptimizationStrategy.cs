@@ -7,9 +7,22 @@ namespace BusinessLogic.Cost.Optimization
     public class CukooNodeOptimizationStrategy : ICukooOptimizationStrategy<NodeChromosome>
     {
 
-        public double AbandonRate { get { return 0.75; } }
-        private const int StagnationLimit = 10;
+        public double CrossOverRate
+        {
+            get { return 0; } // Best value of 0:0.1.
+        }
 
+        public double LevyRate
+        {
+            get { return 1; } // Best value is 1.
+        }
+
+        public double DifferentialEvolutionRate
+        {
+            get { return 1; } // Best value is 1.
+        }
+
+        private const int StagnationLimit = 10;
         private double _mLastCost = double.MaxValue;
         private int _mStagnationCount;
 
@@ -29,9 +42,14 @@ namespace BusinessLogic.Cost.Optimization
             return _mStagnationCount == StagnationLimit;
         }
 
-        public NodeChromosome LevyFlight(NodeChromosome nest, NodeChromosome bestNest, double scaling = 1.0)
+        public NodeChromosome LevyFlight(NodeChromosome nest, NodeChromosome bestNest)
         {
-            return GenePool.DoLevyFlight(nest, bestNest, scaling);   
+            return GenePool.DoLevyFlight(nest, bestNest);   
+        }
+
+        public NodeChromosome DifferentialEvolution(NodeChromosome nest, NodeChromosome nest1, NodeChromosome nest2)
+        {
+            return GenePool.DoDifferentialEvolution(nest, nest1, nest2);
         }
 
         public NodeChromosome CrossOver(NodeChromosome badNest, NodeChromosome goodNest)
@@ -47,5 +65,6 @@ namespace BusinessLogic.Cost.Optimization
             if(!GenePool.Renormalize(result)) throw new Exception("Unable to renormalize");
             return result;
         }
+
     }
 }
