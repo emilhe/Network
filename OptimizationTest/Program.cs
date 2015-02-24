@@ -184,6 +184,8 @@ namespace OptimizationTest
 
         public double StepScale = 1;
         private static readonly double Phi = (1 + Math.Sqrt(5))/2.0;
+        private int[] m_rndOrder1;
+        private int[] m_rndOrder2;
 
         public double[] Min { get; set; }
         public double[] Max { get; set; }
@@ -196,7 +198,7 @@ namespace OptimizationTest
 
         public double LevyFlightAggressiveness
         {
-            get { return 0.25; } // Mest precise vaue is 0, fastest is ~ 0.25.
+            get { return 0; } // Mest precise vaue is 0, fastest is ~ 0.25.
         }
 
         public double DifferentialEvolutionRate
@@ -216,6 +218,10 @@ namespace OptimizationTest
 
         public bool TerminationCondition(Tuple[] nests, int evaluations)
         {
+            // Update the random ordering on 
+            m_rndOrder1 = new int[nests.Length].Linspace().Shuffle(Rnd).ToArray();
+            m_rndOrder2 = new int[nests.Length].Linspace().Shuffle(Rnd).ToArray();
+
             // Check convergence.
             if (evaluations > 100000) return true;
             return Math.Abs(nests[0].Cost - Optima[0]) < 5*1e-5;
@@ -255,18 +261,20 @@ namespace OptimizationTest
             return result;
         }
 
-        public Tuple DifferentialEvolution(Tuple nest, Tuple nest1, Tuple nest2)
+        public Tuple DifferentialEvolution(Tuple[] nests, int i)
         {
             // Do nest abandoning step (DE inspired).
-            var result = new Tuple(nest.Dimension);
-            for (int i = 0; i < result.Dimension; i++)
+            var result = new Tuple(nests[i].Dimension);
+            var nest1 = nests[m_rndOrder1[i]];
+            var nest2 = nests[m_rndOrder2[i]];
+            for (int j = 0; j < result.Dimension; j++)
             {
                 // Do the DE step.
-                var value = nest.GetValue(i) + (nest1.GetValue(i) - nest2.GetValue(i))*Rnd.NextDouble();
+                var value = nests[i].GetValue(j) + (nest1.GetValue(j) - nest2.GetValue(j))*Rnd.NextDouble();
                 // Enforce boundaries.
-                if (value < Min[i]) value = Min[i];
-                if (value > Max[i]) value = Max[i];
-                result.SetValue(i, value);
+                if (value < Min[j]) value = Min[j];
+                if (value > Max[j]) value = Max[j];
+                result.SetValue(j, value);
             }
 
             return result;

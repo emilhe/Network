@@ -24,7 +24,8 @@ namespace Optimization
 
         bool TerminationCondition(T[] nests, int evaluations);
 
-        T DifferentialEvolution(T nest, T nest1, T nest2);
+        //T DifferentialEvolution(T nest, T nest1, T nest2);
+        T DifferentialEvolution(T[] nests, int i);
         T LevyFlight(T nest, T bestNests);
         T CrossOver(T badNest, T goodNest);
 

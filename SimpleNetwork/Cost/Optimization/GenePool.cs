@@ -27,18 +27,7 @@ namespace BusinessLogic.Cost
 
         // Offshore fractions
         public static Dictionary<string, double> OffshoreFractions;
-
-        // Parameters used for Levy flight, num values are numerical values valid for Beta = 3/2.
-        private const double Beta = 3.0/2.0;
-        private const double Knum = 1.5992;
-        private const double Cnum = 2.737;
-        //private const double SigmaNum = 0.696575;
-        private static readonly double Sigma =
-            Math.Pow(
-                SpecialFunction.gamma(1.0 + Beta) * Math.Sin(Math.PI * Beta / 2.0) /
-                (SpecialFunction.gamma((1.0 + Beta) / 2.0) * Beta * Math.Pow(2.0, ((Beta - 1.0) / 2.0))), (1.0 / Beta));
-        
-        private static readonly double StepScale = 25;
+        private const double StepScale = 1;
 
         #region Gene modification
 
@@ -100,13 +89,13 @@ namespace BusinessLogic.Cost
 
         #region Levy flight
 
-        public static NodeChromosome DoLevyFlight(NodeChromosome chromosome, NodeChromosome best, double scaling = 1)
+        public static NodeChromosome DoLevyFlight(NodeChromosome chromosome, NodeChromosome best)
         {
             double rescaling;
             NodeChromosome guess;
             do
             {
-                guess = LevyFlight(chromosome, best, scaling);
+                guess = LevyFlight(chromosome, best);
                 rescaling = GammaRescaling(guess);
             } while (rescaling.Equals(double.NegativeInfinity));
             ScaleGamma(guess, rescaling);
@@ -115,10 +104,10 @@ namespace BusinessLogic.Cost
                 
         }
 
-        private static NodeChromosome LevyFlight(NodeChromosome chromosome, NodeChromosome best, double scaling)
+        private static NodeChromosome LevyFlight(NodeChromosome chromosome, NodeChromosome best)
         {
             var genes = new Dictionary<string, NodeGene>();
-            var levy = LevyStep();            
+            var levy = LevyStep();
 
             foreach (var key in chromosome.Genes.Keys.ToArray())
             {
@@ -126,12 +115,11 @@ namespace BusinessLogic.Cost
                 var oldGene = chromosome.Genes[key];
                 var newGene = new NodeGene {Alpha = oldGene.Alpha, Gamma = oldGene.Gamma};
                 // First do alpha.
-                newGene.Alpha += scaling*StepScale*levy*Rnd.NextDouble()*(bestGene.Alpha - oldGene.Alpha);
+                newGene.Alpha += StepScale*levy*Rnd.NextDouble()*(bestGene.Alpha - oldGene.Alpha);
                 if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
                 if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
                 // Then gamma.
-                //levy = LevyStep();       
-                newGene.Gamma += scaling*StepScale*levy*Rnd.NextDouble()*(bestGene.Gamma - oldGene.Gamma);
+                newGene.Gamma += StepScale*levy*Rnd.NextDouble()*(bestGene.Gamma - oldGene.Gamma);
                 if (newGene.Gamma < GammaMin) newGene.Gamma = GammaMin;
                 if (newGene.Gamma > GammaMax) newGene.Gamma = GammaMax;
                 genes.Add(key, newGene);
@@ -142,14 +130,56 @@ namespace BusinessLogic.Cost
 
         private static double LevyStep()
         {
-            var x = Rnd.NextGaussian(0, Sigma);
-            var y = Rnd.NextGaussian();
-            var v = x / Math.Pow(Math.Abs(y), 1.0 / Beta);
-            var w = (Knum - 1) * (Math.Exp(-v / Cnum) + 1) * v;
-            return w;
+            return Rnd.NextLevy(0.5, 1);
         }
 
         #endregion
+
+        #region Differential evolution
+
+        public static NodeChromosome DoDifferentialEvolution(NodeChromosome chromosome, NodeChromosome[] chromosomes)
+        {
+            double rescaling;
+            NodeChromosome guess;
+            do
+            {
+                var i = (int) Math.Round(Rnd.NextDouble()*(chromosomes.Length - 1));
+                var j = (int)Math.Round(Rnd.NextDouble() * (chromosomes.Length - 1));
+                guess = DifferentialEvolution(chromosome, chromosomes[i], chromosomes[j]);
+                rescaling = GammaRescaling(guess);
+            } while (rescaling.Equals(double.NegativeInfinity));
+            ScaleGamma(guess, rescaling);
+            ApplyOffshoreFraction(guess);
+            return guess;
+
+        }
+
+        private static NodeChromosome DifferentialEvolution(NodeChromosome chromosome, NodeChromosome other1, NodeChromosome other2)
+        {
+            var genes = new Dictionary<string, NodeGene>();
+
+            foreach (var key in chromosome.Genes.Keys.ToArray())
+            {
+                var gene = chromosome.Genes[key];
+                var gene1 = other1.Genes[key];
+                var gene2 = other2.Genes[key];
+                var newGene = new NodeGene { Alpha = gene.Alpha, Gamma = gene.Gamma };
+                // First do alpha.
+                newGene.Alpha += (gene1.Alpha - gene2.Alpha)*(Rnd.NextDouble() - 1)*2;
+                if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
+                if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
+                // Then gamma.
+                newGene.Gamma += (gene1.Gamma - gene2.Gamma)*(Rnd.NextDouble() - 1)*2;
+                if (newGene.Gamma < GammaMin) newGene.Gamma = GammaMin;
+                if (newGene.Gamma > GammaMax) newGene.Gamma = GammaMax;
+                genes.Add(key, newGene);
+            }
+
+            return new NodeChromosome(new NodeGenes(genes));
+        }
+
+        #endregion
+
 
         #endregion
 

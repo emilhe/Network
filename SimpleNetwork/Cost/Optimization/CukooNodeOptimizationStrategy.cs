@@ -9,7 +9,7 @@ namespace BusinessLogic.Cost.Optimization
 
         public double CrossOverRate
         {
-            get { return 0; } // Best value of 0:0.1.
+            get { return 0.10; } // Best value of 0:0.1.
         }
 
         public double LevyFlightRate
@@ -28,7 +28,7 @@ namespace BusinessLogic.Cost.Optimization
 
         public bool TerminationCondition(NodeChromosome[] nests, int evaluations)
         {
-            return (evaluations > 2500);
+            return (evaluations > 25000);
 
             if (Math.Abs(nests[0].Cost - _mLastCost) > 1e-2)
             {
@@ -47,9 +47,9 @@ namespace BusinessLogic.Cost.Optimization
             return GenePool.DoLevyFlight(nest, bestNest);   
         }
 
-        public NodeChromosome DifferentialEvolution(NodeChromosome nest, NodeChromosome nest1, NodeChromosome nest2)
+        public NodeChromosome DifferentialEvolution(NodeChromosome nest, NodeChromosome[] nests)
         {
-            return GenePool.DoDifferentialEvolution(nest, nest1, nest2);
+            return GenePool.DoDifferentialEvolution(nest, nests);
         }
 
         public NodeChromosome CrossOver(NodeChromosome badNest, NodeChromosome goodNest)
