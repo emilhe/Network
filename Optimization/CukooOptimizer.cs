@@ -36,42 +36,50 @@ namespace Optimization
             // New trail eggs are generated in the trails eggs vector.
             var n = nests.Length;
             var trailEggs = new T[n];
-            var lvN = (int)Math.Round(nests.Length * (_mStrat.LevyRate));
+            var deN = (int) Math.Round(nests.Length*(_mStrat.DifferentialEvolutionRate));
+            var lvN = (int) Math.Round(nests.Length*(_mStrat.LevyFlightRate));
             var coN = (int) Math.Round(nests.Length*(_mStrat.CrossOverRate));
-            var deN = (int) Math.Round(nests.Length * (1-_mStrat.DifferentialEvolutionRate));      
+            var deForceN = (int) Math.Round(nests.Length*(1 - _mStrat.DifferentialEvolutionAggressiveness));
+            var lvForceN = (int) Math.Round(nests.Length*(1 - _mStrat.LevyFlightAggressiveness));
 
             while (!_mStrat.TerminationCondition(nests, _mCostCalculator.Evaluations))
             {
                 Generation++;
+
                 // Generate new trail eggs by cross over.            
                 for (int i = 0; i < coN; i++)
                 {
                     var j = (int)Math.Round((coN - 1) * _mRnd.NextDouble());
-                    // Cross over not possible; do levy flight.
-                    if (i == j)
-                    {
-                        trailEggs[i] = _mStrat.LevyFlight(nests[i], bestNest);
-                        continue;
-                    }
+                    // Cross over not possible.
+                    if (i == j) trailEggs[i] = nests[i];
                     // Cross over possible; do it.
-                    trailEggs[i] = _mStrat.CrossOver(nests[Math.Max(i, j)], nests[Math.Min(i, j)]);
+                    else trailEggs[i] = _mStrat.CrossOver(nests[Math.Max(i, j)], nests[Math.Min(i, j)]);
                 }
-                UpdateNests(nests, trailEggs);
+                UpdateNests(nests, trailEggs, n);
+
                 // Generate new trail eggs by Lévy flight.
                 for (int i = 0; i < lvN; i++)
                 {
                     trailEggs[i] = _mStrat.LevyFlight(nests[i], bestNest);
                 }
-                UpdateNests(nests, trailEggs);
+                UpdateNests(nests, trailEggs, lvForceN);
+
                 // Generate new trails eggs by differential evolution.
                 var rndOrder1 = new int[nests.Length].Linspace().Shuffle(_mRnd).ToArray();
                 var rndOrder2 = new int[nests.Length].Linspace().Shuffle(_mRnd).ToArray();
-                for (int i = deN; i < n; i++)
+                for (int i = (n-deN); i < n; i++)
                 {
                     trailEggs[i] = _mStrat.DifferentialEvolution(nests[i], nests[rndOrder1[i]], nests[rndOrder2[i]]);
                 }
-                nests = UpdateNests(nests, trailEggs);
+                //for (int i = (n - deN); i < n; i++)
+                //{
+                //    var j = (int) Math.Round(_mRnd.NextDouble()*(n - 1));
+                //    var k = (int) Math.Round(_mRnd.NextDouble()*(n - 1));
+                //    trailEggs[i] = _mStrat.DifferentialEvolution(nests[i], nests[j], nests[k]);
+                //}
+                nests = UpdateNests(nests, trailEggs, deForceN);
                 bestNest = nests[0];
+
                 // Debug info.
                 if (CacheOnDisk) bestNest.ToJsonFile(@"C:\proto\bestConfig.txt");
                 if (PrintToConsole) Console.WriteLine("Generation {0}, Cost = {1}", Generation, bestNest.Cost);
@@ -80,19 +88,19 @@ namespace Optimization
             return bestNest;
         }
 
-        private T[] UpdateNests(T[] nests, T[] trailEggs)
+        private T[] UpdateNests(T[] nests, T[] trailEggs, int forceIdx)
         {
-            return UpdateNests(nests, trailEggs, (nest, newNest) => nest.Cost > newNest.Cost);
+            return UpdateNests(nests, trailEggs, i => (i >= forceIdx) || nests[i].Cost > trailEggs[i].Cost);
         }
 
-        private T[] UpdateNests(T[] nests, T[] trailEggs, Func<T, T, bool> condition)
+        private T[] UpdateNests(T[] nests, T[] trailEggs, Func<int, bool> condition)
         {
             var n = trailEggs.Length;
             EvalPopulation(trailEggs);
             for (int i = 0; i < n; i++)
             {
                 if (trailEggs[i] == null) continue;
-                if (condition(nests[i], trailEggs[i])) nests[i] = trailEggs[i];
+                if (condition(i)) nests[i] = trailEggs[i];
             }
             return nests.OrderBy(item => item.Cost).ToArray();
         }

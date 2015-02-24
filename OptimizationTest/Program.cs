@@ -28,7 +28,6 @@ namespace OptimizationTest
             var functionList = new[]
             {
                 FunctionFactory.Easom(),
-                FunctionFactory.Griewank(),
                 FunctionFactory.JongsFirst(),
                 FunctionFactory.Michaelwicz(),
                 FunctionFactory.Easom(),
@@ -36,7 +35,8 @@ namespace OptimizationTest
                 FunctionFactory.Ackley(),
                 FunctionFactory.Rosenbrock(),
                 FunctionFactory.Schwefel(),
-                FunctionFactory.Rastrigin()
+                FunctionFactory.Rastrigin(),
+                FunctionFactory.Griewank(),
             };
 
             var total = 0.0;
@@ -189,23 +189,29 @@ namespace OptimizationTest
         public double[] Max { get; set; }
         public double[] Optima { get; set; }
 
-        private const double m_stagnationLimit = 1;
-        private double m_stagnationCount;
-        private double m_lastCost = double.MinValue;
-
-        public double CrossOverRate
+        public double DifferentialEvolutionAggressiveness
         {
-            get { return 0; } // Best value of 0:0.1.
+            get { return 0; } // Best value is 0.
         }
 
-        public double LevyRate
+        public double LevyFlightAggressiveness
         {
-            get { return 1; } // Best value is 1.
+            get { return 0.25; } // Mest precise vaue is 0, fastest is ~ 0.25.
         }
 
         public double DifferentialEvolutionRate
         {
             get { return 1; } // Best value is 1.
+        }
+
+        public double LevyFlightRate
+        {
+            get { return 1; } // Best value is 1.
+        }
+
+        public double CrossOverRate
+        {
+            get { return 0; } // Best value is 0.
         }
 
         public bool TerminationCondition(Tuple[] nests, int evaluations)
@@ -268,7 +274,6 @@ namespace OptimizationTest
 
         public void Reset()
         {
-            m_stagnationCount = 0;
         }
 
     }

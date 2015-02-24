@@ -12,7 +12,7 @@ namespace BusinessLogic.Cost.Optimization
             get { return 0; } // Best value of 0:0.1.
         }
 
-        public double LevyRate
+        public double LevyFlightRate
         {
             get { return 1; } // Best value is 1.
         }
