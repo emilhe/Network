@@ -7,9 +7,19 @@ namespace BusinessLogic.Cost.Optimization
     public class CukooNodeOptimizationStrategy : ICukooOptimizationStrategy<NodeChromosome>
     {
 
-        public double CrossOverRate
+        public double DifferentialEvolutionAggressiveness
         {
-            get { return 0.10; } // Best value of 0:0.1.
+            get { return 0; }
+        }
+
+        public double LevyFlightAggressiveness
+        {
+            get { return 0; }
+        }
+
+        public double DifferentialEvolutionRate
+        {
+            get { return 1; } // Best value is 1.
         }
 
         public double LevyFlightRate
@@ -17,9 +27,9 @@ namespace BusinessLogic.Cost.Optimization
             get { return 1; } // Best value is 1.
         }
 
-        public double DifferentialEvolutionRate
+        public double CrossOverRate
         {
-            get { return 1; } // Best value is 1.
+            get { return 0.10; } // Best value of 0:0.1.
         }
 
         private const int StagnationLimit = 10;
@@ -42,14 +52,15 @@ namespace BusinessLogic.Cost.Optimization
             return _mStagnationCount == StagnationLimit;
         }
 
+        public NodeChromosome DifferentialEvolution(NodeChromosome[] nests, int i)
+        {
+            return GenePool.DoDifferentialEvolution(nests[i], nests);
+
+        }
+
         public NodeChromosome LevyFlight(NodeChromosome nest, NodeChromosome bestNest)
         {
             return GenePool.DoLevyFlight(nest, bestNest);   
-        }
-
-        public NodeChromosome DifferentialEvolution(NodeChromosome nest, NodeChromosome[] nests)
-        {
-            return GenePool.DoDifferentialEvolution(nest, nests);
         }
 
         public NodeChromosome CrossOver(NodeChromosome badNest, NodeChromosome goodNest)
