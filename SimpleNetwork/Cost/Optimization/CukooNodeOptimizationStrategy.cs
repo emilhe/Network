@@ -7,31 +7,6 @@ namespace BusinessLogic.Cost.Optimization
     public class CukooNodeOptimizationStrategy : ICukooOptimizationStrategy<NodeChromosome>
     {
 
-        public double DifferentialEvolutionAggressiveness
-        {
-            get { return 0; }
-        }
-
-        public double LevyFlightAggressiveness
-        {
-            get { return 0; }
-        }
-
-        public double DifferentialEvolutionRate
-        {
-            get { return 1; } // Best value is 1.
-        }
-
-        public double LevyFlightRate
-        {
-            get { return 1; } // Best value is 1.
-        }
-
-        public double CrossOverRate
-        {
-            get { return 0.10; } // Best value of 0:0.1.
-        }
-
         private const int StagnationLimit = 10;
         private double _mLastCost = double.MaxValue;
         private int _mStagnationCount;
