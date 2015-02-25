@@ -45,7 +45,7 @@ namespace Main
                     Transmission = false,
                 };
             }
-            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, calc);
+            var optimizer = new OriginalCukooOptimizer<NodeChromosome>(strategy, calc);
             // Do stuff.
             var optimum = optimizer.Optimize(population);
             optimum.Genes.ToJsonFile(name);

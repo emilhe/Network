@@ -5,6 +5,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 using Optimization;
+using Optimization.OldOptimization;
 using Utils;
 
 namespace OptimizationTest
@@ -15,51 +16,137 @@ namespace OptimizationTest
 
         private static void Main(string[] args)
         {
-            //var func = FunctionFactory.Shubert();
-            //var tuple = new Tuple(2);
-            //tuple.SetValue(0, 5.791794);
-            //tuple.SetValue(1, 5.791794);
-            //var value = func.Evaluate(tuple);
-            //Console.WriteLine("The value is {0}", value);
-            //Console.ReadLine();
+            ////var func = FunctionFactory.Shubert();
+            ////var tuple = new Tuple(2);
+            ////tuple.SetValue(0, 5.791794);
+            ////tuple.SetValue(1, 5.791794);
+            ////var value = func.Evaluate(tuple);
+            ////Console.WriteLine("The value is {0}", value);
+            ////Console.ReadLine();
 
-            var n = 20; // For asym search, a value of \approx 20 is best.
-            var m = 100;
-            var functionList = new[]
-            {
-                FunctionFactory.Easom(),
-                FunctionFactory.JongsFirst(),
-                FunctionFactory.Michaelwicz(),
-                FunctionFactory.Easom(),
-                FunctionFactory.Shubert(),
-                FunctionFactory.Ackley(),
-                FunctionFactory.Rosenbrock(),
-                FunctionFactory.Schwefel(),
-                FunctionFactory.Rastrigin(),
-                FunctionFactory.Griewank(),
-            };
+            //var n = 100; // For asym search, a value of \approx 20 is best.
+            //var m = 10;
+            //var functionList = new[]
+            //{
+            //    //FunctionFactory.Easom(),
+            //    //FunctionFactory.Shubert(),
+            //    FunctionFactory.JongsFirst(30),
+            //    //FunctionFactory.Michaelwicz(10),
+            //    FunctionFactory.Ackley(30),
+            //    //FunctionFactory.Rosenbrock(10),
+            //    //FunctionFactory.Schwefel(),
+            //    //FunctionFactory.Rastrigin(),
+            //    //FunctionFactory.Griewank(),
+            //};
 
-            var total = 0.0;
-            foreach (var def in functionList)
-            {
-                var evals = TestFunction(def, n, m);
-                var success = evals.Where(item => item < 100000).Count();
-                Console.WriteLine("The success rate was {0}% for {1}.", success/((double) m)*100, def.Name);
-                var avg = evals.Where(item => item < 100000).Average();
-                if (success > 0)
-                    Console.WriteLine("Optimization took {0} function evaluations on average.",
-                        evals.Where(item => item < 100000).Average());
-                total += avg;
+            //var total = 0.0;
+            //foreach (var def in functionList)
+            //{
+            //    var evals = TestFunction(def, n, m);
+            //    var success = evals.Where(item => item < 1000000).Count();
+            //    Console.WriteLine("The success rate was {0}% for {1}.", success/((double) m)*100, def.Name);
+            //    var avg = 0.0;
+            //    if (success > 0)
+            //    {
+            //        avg = evals.Where(item => item < 1000000).Average();
+            //        Console.WriteLine("Optimization took {0} function evaluations on average.",
+            //            evals.Where(item => item < 1000000).Average());
+            //    }
+            //    total += avg;
 
-            }
-            Console.WriteLine();
-            Console.WriteLine("Total number of evaluations = {0}", total);
+            //}
+            //Console.WriteLine();
+            //Console.WriteLine("Total number of evaluations = {0}", total);
+
+            //var old = FileUtils.FromJsonFile<Dictionary<string, List<Wrapper>>>(@"C:\proto\highDimTest.txt");
+            //var upd = new Dictionary<string, Dictionary<string,double[]>>();
+
+            //foreach (var key in old.Keys)
+            //{
+            //    var dim = new double[30];
+            //    var succes = new double[30];
+            //    var evalAvg = new double[30];
+            //    var evalStd = new double[30];
+            //    var idx =0;
+            //    foreach (var wrapper in old[key])
+            //    {
+            //        dim[idx] = wrapper.Dimension;
+            //        succes[idx] = wrapper.SuccessRate;
+            //        evalAvg[idx] = wrapper.EvaluationAvg;
+            //        evalStd[idx] = wrapper.EvaluationStd;
+            //        idx++;
+            //    }
+            //    upd.Add(key, new Dictionary<string, double[]>()
+            //    {
+            //        {"Dim", dim},
+            //        {"Succes", succes},
+            //        {"EvalAvg", evalAvg},
+            //        {"EvalStd", evalStd}
+            //    });
+            //}
+
+            //upd.ToJsonFile(@"C:\proto\highDimTest2.txt");
+
+            DoStuff();
 
             Console.ReadLine();
         }
 
-        private static double[] TestFunction(FunctionDefinition func, int n, int m)
+
+        private static void DoStuff()
         {
+            var m = 100;
+            var defs = new Dictionary<string, Func<FunctionDefinition, int, double[]>>
+            {
+                {"MCS", TestFunctionModified},
+                {"CS", TestFunction}
+            };
+
+            var result = new Dictionary<string, Dictionary<string, double[]>>();
+            foreach (var def in defs)
+            {
+                var dim = new double[30];
+                var succes = new double[30];
+                var evalAvg = new double[30];
+                var evalStd = new double[30];
+
+                for (int i = 1; i < 31; i++)
+                {
+                    var evals = def.Value(FunctionFactory.Ackley(i), m);
+                    var success = evals.Where(item => item < 1000000).Count();
+                    dim[i-1] = i;
+                    succes[i-1] = success / ((double)m) * 100;
+                    if (success > 0)
+                    {
+                        evalAvg[i-1] = evals.Where(item => item < 1000000).Average();
+                        evalStd[i-1] = evals.Where(item => item < 1000000).StdDev(item => item);
+                    }
+                    Console.WriteLine("{0} passed dimension {1}", def.Key, i);
+                }
+
+                result.Add(def.Key, new Dictionary<string, double[]>
+                {
+                    {"Dim", dim},
+                    {"Succes", succes},
+                    {"EvalAvg", evalAvg},
+                    {"EvalStd", evalStd}
+                });
+            }
+
+            result.ToJsonFile(@"C:\proto\highDimTest.txt");
+        }
+
+        public class Wrapper
+        {
+            public int Dimension { get; set; }
+            public double SuccessRate { get; set; }
+            public double EvaluationAvg { get; set; }
+            public double EvaluationStd { get; set; }
+        }
+
+        private static double[] TestFunction(FunctionDefinition func, int m)
+        {
+            var n = 25; 
             var rnd = new Random();
             var calc = new CukooFunctionCostCalculator {Function = func.Evaluate};
             var strat = new CukooFunctionOptimizationStrategy
@@ -67,8 +154,9 @@ namespace OptimizationTest
                 Min = func.Min,
                 Max = func.Max,
                 Optima = func.Optima,
+                LevyFunc = Rnd => Rnd.NextLevy(1.5, 0)
             };
-            var optimizer = new CukooOptimizer<Tuple>(strat, calc)
+            var optimizer = new OriginalCukooOptimizer<Tuple>(strat, calc)
             {
                 CacheOnDisk = false,
                 PrintToConsole = false
@@ -92,6 +180,44 @@ namespace OptimizationTest
 
             return evals;
         }
+
+        private static double[] TestFunctionModified(FunctionDefinition func, int m)
+        {
+            var n = 100; 
+            var rnd = new Random();
+            var calc = new CukooFunctionCostCalculator { Function = func.Evaluate };
+            var strat = new CukooFunctionOptimizationStrategy
+            {
+                Min = func.Min,
+                Max = func.Max,
+                Optima = func.Optima,
+                LevyFunc = Rnd => Rnd.NextLevy(0.5, 1)
+            };
+            var optimizer = new ModifiedCukooOptimizer<Tuple>(strat, calc)
+            {
+                CacheOnDisk = false,
+                PrintToConsole = false
+            };
+            var evals = new double[m];
+            for (int i = 0; i < m; i++)
+            {
+                evals[i] = double.MaxValue;
+                var optimum = optimizer.Optimize(RandomNumbers(n, func.Dimensionality, rnd, func.Min, func.Max));
+                // Check is the optimum is correct.
+                for (int j = 0; j < func.Optima.Length; j++)
+                {
+                    var delta = Math.Abs(optimum.Cost - func.Optima[j]);
+                    if (!(delta < 1e-4)) continue;
+                    // Correct optimum! Write the iteration number.
+                    evals[i] = calc.Evaluations;
+                }
+                calc.Reset();
+                strat.Reset();
+            }
+
+            return evals;
+        }
+
 
         private static Tuple[] RandomNumbers(int n, int d, Random rnd, double[] min, double[] max)
         {
@@ -191,30 +317,7 @@ namespace OptimizationTest
         public double[] Max { get; set; }
         public double[] Optima { get; set; }
 
-        public double DifferentialEvolutionAggressiveness
-        {
-            get { return 0; } // Best value is 0.
-        }
-
-        public double LevyFlightAggressiveness
-        {
-            get { return 0; } // Mest precise vaue is 0, fastest is ~ 0.25.
-        }
-
-        public double DifferentialEvolutionRate
-        {
-            get { return 1; } // Best value is 1.
-        }
-
-        public double LevyFlightRate
-        {
-            get { return 1; } // Best value is 1.
-        }
-
-        public double CrossOverRate
-        {
-            get { return 0; } // Best value is 0.
-        }
+        public Func<Random,double> LevyFunc { get; set; } 
 
         public bool TerminationCondition(Tuple[] nests, int evaluations)
         {
@@ -223,7 +326,7 @@ namespace OptimizationTest
             m_rndOrder2 = new int[nests.Length].Linspace().Shuffle(Rnd).ToArray();
 
             // Check convergence.
-            if (evaluations > 100000) return true;
+            if (evaluations > 1000000) return true;
             return Math.Abs(nests[0].Cost - Optima[0]) < 5*1e-5;
 
             //if (Math.Abs(m_lastCost - nests[0].Cost) < 1e-5) m_stagnationCount++;
@@ -235,8 +338,7 @@ namespace OptimizationTest
 
         public Tuple LevyFlight(Tuple nest, Tuple bestNest)
         {
-            var levyStep = Rnd.NextLevy(1.5, 0);
-            //var levyStep = Rnd.NextLevy(0.5, 1);
+            var levyStep = LevyFunc(Rnd);
             var result = new Tuple(nest.Dimension);
             for (int i = 0; i < result.Dimension; i++)
             {

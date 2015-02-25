@@ -46,7 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CukooOptimizer.cs" />
+    <Compile Include="OriginalCukooOptimizer.cs" />
     <Compile Include="GeneticOptimizer.cs" />
     <Compile Include="IChromosome.cs" />
     <Compile Include="ICostCalculator.cs" />
@@ -56,6 +56,7 @@
     <Compile Include="IPsOptimizationStrategy.cs" />
     <Compile Include="ISolution.cs" />
     <Compile Include="IGeneticOptimizationStrategy.cs" />
+    <Compile Include="ModifiedCukooOptimizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PsOptimizer.cs" />
     <Compile Include="SaOptimizer.cs" />
