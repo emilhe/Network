@@ -14,7 +14,6 @@ namespace Optimization
 
         T DifferentialEvolution(T[] nests, int i);
         T LevyFlight(T nest, T bestNests);
-        T CrossOver(T badNest, T goodNest);
 
     }
 }

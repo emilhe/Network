@@ -14,6 +14,8 @@ namespace OptimizationTest
     internal class Program
     {
 
+        public const double max_eval = 25000;
+
         private static void Main(string[] args)
         {
             ////var func = FunctionFactory.Shubert();
@@ -24,39 +26,38 @@ namespace OptimizationTest
             ////Console.WriteLine("The value is {0}", value);
             ////Console.ReadLine();
 
-            //var n = 100; // For asym search, a value of \approx 20 is best.
-            //var m = 10;
-            //var functionList = new[]
-            //{
-            //    //FunctionFactory.Easom(),
-            //    //FunctionFactory.Shubert(),
-            //    FunctionFactory.JongsFirst(30),
-            //    //FunctionFactory.Michaelwicz(10),
-            //    FunctionFactory.Ackley(30),
-            //    //FunctionFactory.Rosenbrock(10),
-            //    //FunctionFactory.Schwefel(),
-            //    //FunctionFactory.Rastrigin(),
-            //    //FunctionFactory.Griewank(),
-            //};
+            var m = 100;
+            var functionList = new[]
+            {
+                FunctionFactory.Easom(),
+                FunctionFactory.Shubert(),
+                FunctionFactory.JongsFirst(),
+                FunctionFactory.Michaelwicz(),
+                FunctionFactory.Ackley(),
+                FunctionFactory.Rosenbrock(),
+                FunctionFactory.Schwefel(),
+                FunctionFactory.Rastrigin(),
+                FunctionFactory.Griewank(),
+            };
 
-            //var total = 0.0;
-            //foreach (var def in functionList)
-            //{
-            //    var evals = TestFunction(def, n, m);
-            //    var success = evals.Where(item => item < 1000000).Count();
-            //    Console.WriteLine("The success rate was {0}% for {1}.", success/((double) m)*100, def.Name);
-            //    var avg = 0.0;
-            //    if (success > 0)
-            //    {
-            //        avg = evals.Where(item => item < 1000000).Average();
-            //        Console.WriteLine("Optimization took {0} function evaluations on average.",
-            //            evals.Where(item => item < 1000000).Average());
-            //    }
-            //    total += avg;
+            var total = 0.0;
+            foreach (var def in functionList)
+            {
+                var evals = TestFunction(def, m);
+                var success = evals.Where(item => item < max_eval).Count();
+                Console.WriteLine("The success rate was {0}% for {1}.", success / ((double)m) * 100, def.Name);
+                var avg = 0.0;
+                if (success > 0)
+                {
+                    avg = evals.Where(item => item < max_eval).Average();
+                    Console.WriteLine("Optimization took {0} function evaluations on average.",
+                        evals.Where(item => item < max_eval).Average());
+                }
+                total += avg;
 
-            //}
-            //Console.WriteLine();
-            //Console.WriteLine("Total number of evaluations = {0}", total);
+            }
+            Console.WriteLine();
+            Console.WriteLine("Total number of evaluations = {0}", total);
 
             //var old = FileUtils.FromJsonFile<Dictionary<string, List<Wrapper>>>(@"C:\proto\highDimTest.txt");
             //var upd = new Dictionary<string, Dictionary<string,double[]>>();
@@ -87,7 +88,7 @@ namespace OptimizationTest
 
             //upd.ToJsonFile(@"C:\proto\highDimTest2.txt");
 
-            DoStuff();
+            //DoStuff();
 
             Console.ReadLine();
         }
@@ -146,7 +147,7 @@ namespace OptimizationTest
 
         private static double[] TestFunction(FunctionDefinition func, int m)
         {
-            var n = 25; 
+            var n = 20; 
             var rnd = new Random();
             var calc = new CukooFunctionCostCalculator {Function = func.Evaluate};
             var strat = new CukooFunctionOptimizationStrategy
@@ -156,7 +157,7 @@ namespace OptimizationTest
                 Optima = func.Optima,
                 LevyFunc = Rnd => Rnd.NextLevy(1.5, 0)
             };
-            var optimizer = new OriginalCukooOptimizer<Tuple>(strat, calc)
+            var optimizer = new CukooOptimizer<Tuple>(strat, calc)
             {
                 CacheOnDisk = false,
                 PrintToConsole = false
@@ -183,7 +184,7 @@ namespace OptimizationTest
 
         private static double[] TestFunctionModified(FunctionDefinition func, int m)
         {
-            var n = 100; 
+            var n = 500; 
             var rnd = new Random();
             var calc = new CukooFunctionCostCalculator { Function = func.Evaluate };
             var strat = new CukooFunctionOptimizationStrategy
@@ -193,7 +194,7 @@ namespace OptimizationTest
                 Optima = func.Optima,
                 LevyFunc = Rnd => Rnd.NextLevy(0.5, 1)
             };
-            var optimizer = new ModifiedCukooOptimizer<Tuple>(strat, calc)
+            var optimizer = new PureCukooOptimizer<Tuple>(strat, calc)
             {
                 CacheOnDisk = false,
                 PrintToConsole = false
@@ -309,7 +310,7 @@ namespace OptimizationTest
         public Random Rnd = new Random();
 
         public double StepScale = 1;
-        private static readonly double Phi = (1 + Math.Sqrt(5))/2.0;
+        //private static readonly double Phi = (1 + Math.Sqrt(5))/2.0;
         private int[] m_rndOrder1;
         private int[] m_rndOrder2;
 
@@ -326,7 +327,7 @@ namespace OptimizationTest
             m_rndOrder2 = new int[nests.Length].Linspace().Shuffle(Rnd).ToArray();
 
             // Check convergence.
-            if (evaluations > 1000000) return true;
+            if (evaluations > 25000) return true;
             return Math.Abs(nests[0].Cost - Optima[0]) < 5*1e-5;
 
             //if (Math.Abs(m_lastCost - nests[0].Cost) < 1e-5) m_stagnationCount++;
@@ -353,15 +354,15 @@ namespace OptimizationTest
             return result;
         }
 
-        public Tuple CrossOver(Tuple badNest, Tuple goodNest)
-        {
-            var result = new Tuple(badNest.Dimension);
-            for (int i = 0; i < result.Dimension; i++)
-            {
-                result.SetValue(i, goodNest.GetValue(i) + (badNest.GetValue(i) - goodNest.GetValue(i)) / Phi);
-            }
-            return result;
-        }
+        //public Tuple CrossOver(Tuple badNest, Tuple goodNest)
+        //{
+        //    var result = new Tuple(badNest.Dimension);
+        //    for (int i = 0; i < result.Dimension; i++)
+        //    {
+        //        result.SetValue(i, goodNest.GetValue(i) + (badNest.GetValue(i) - goodNest.GetValue(i)) / Phi);
+        //    }
+        //    return result;
+        //}
 
         public Tuple DifferentialEvolution(Tuple[] nests, int i)
         {

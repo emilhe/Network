@@ -29,7 +29,7 @@ namespace OptimizationTest
                         sum1 += (i + 1)*Math.Cos((i + 2)*x + (i + 1));
                         sum2 += (i + 1)*Math.Cos((i + 2)*y + (i + 1));
                     }
-                    var value = sum1 + sum2;
+                    var value = sum1*sum2;
                     return value;
                 },
                 Min = new[] { -10.0, -10.0 },

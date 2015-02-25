@@ -8,7 +8,7 @@ namespace Optimization
     /// <summary>
     /// Adjusted by myself, inspired strongly by CS.
     /// </summary>
-    public class OriginalCukooOptimizer<T> where T : ISolution
+    public class CukooOptimizer<T> where T : ISolution
     {
 
         public int Generation { get; private set; }
@@ -21,7 +21,7 @@ namespace Optimization
         private readonly ICostCalculator<T> _mCostCalculator;
         private readonly ICukooOptimizationStrategy<T> _mStrat;
 
-        public OriginalCukooOptimizer(ICukooOptimizationStrategy<T> optimizationStrategy, ICostCalculator<T> costCalculator)
+        public CukooOptimizer(ICukooOptimizationStrategy<T> optimizationStrategy, ICostCalculator<T> costCalculator)
         {
             _mStrat = optimizationStrategy;
             _mCostCalculator = costCalculator;

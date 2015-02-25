@@ -38,19 +38,19 @@ namespace BusinessLogic.Cost.Optimization
             return GenePool.DoLevyFlight(nest, bestNest);   
         }
 
-        public NodeChromosome CrossOver(NodeChromosome badNest, NodeChromosome goodNest)
-        {
-            var genes = new NodeGenes();
-            var phi = (1 + Math.Sqrt(5))/2.0;
-            foreach (var key in badNest.Genes.Keys.ToArray())
-            {
-                genes[key].Alpha = goodNest.Genes[key].Alpha + (badNest.Genes[key].Alpha - goodNest.Genes[key].Alpha)/phi;
-                genes[key].Gamma = goodNest.Genes[key].Gamma + (badNest.Genes[key].Gamma - goodNest.Genes[key].Gamma)/phi;
-            }
-            var result = new NodeChromosome(genes);
-            if(!GenePool.Renormalize(result)) throw new Exception("Unable to renormalize");
-            return result;
-        }
+        //public NodeChromosome CrossOver(NodeChromosome badNest, NodeChromosome goodNest)
+        //{
+        //    var genes = new NodeGenes();
+        //    var phi = (1 + Math.Sqrt(5))/2.0;
+        //    foreach (var key in badNest.Genes.Keys.ToArray())
+        //    {
+        //        genes[key].Alpha = goodNest.Genes[key].Alpha + (badNest.Genes[key].Alpha - goodNest.Genes[key].Alpha)/phi;
+        //        genes[key].Gamma = goodNest.Genes[key].Gamma + (badNest.Genes[key].Gamma - goodNest.Genes[key].Gamma)/phi;
+        //    }
+        //    var result = new NodeChromosome(genes);
+        //    if(!GenePool.Renormalize(result)) throw new Exception("Unable to renormalize");
+        //    return result;
+        //}
 
     }
 }

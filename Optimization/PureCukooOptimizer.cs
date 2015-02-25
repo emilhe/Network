@@ -9,7 +9,7 @@ namespace Optimization
         /// <summary>
         /// Designed by myself, inspired by MCS.
         /// </summary>
-        public class ModifiedCukooOptimizer<T> where T : ISolution
+        public class PureCukooOptimizer<T> where T : ISolution
         {
 
             public int Generation { get; private set; }
@@ -22,7 +22,7 @@ namespace Optimization
             private readonly ICostCalculator<T> _mCostCalculator;
             private readonly ICukooOptimizationStrategy<T> _mStrat;
 
-            public ModifiedCukooOptimizer(ICukooOptimizationStrategy<T> optimizationStrategy, ICostCalculator<T> costCalculator)
+            public PureCukooOptimizer(ICukooOptimizationStrategy<T> optimizationStrategy, ICostCalculator<T> costCalculator)
             {
                 _mStrat = optimizationStrategy;
                 _mCostCalculator = costCalculator;
@@ -55,23 +55,15 @@ namespace Optimization
                     {
                         nests[i] = _mStrat.LevyFlight(nests[i], bestNest);
                     }
-                    // Cross over using good nests.
+                    // Generate trail eggs using good nests.
                     for (int i = 0; i < eliteN; i++)
                     {
-                        var j = (int)Math.Round(eliteN * _mRnd.NextDouble());
-                        // Cross over not possible; do levy flight.
-                        if (i == j)
-                        {
-                            trailEggs[i] = _mStrat.LevyFlight(nests[i], bestNest);
-                            continue;
-                        }
-                        // Cross over possible; do it.
-                        trailEggs[i] = _mStrat.CrossOver(nests[Math.Max(i, j)], nests[Math.Min(i, j)]);
+                        trailEggs[i] = _mStrat.LevyFlight(nests[i], bestNest);
                     }
                     // Eval the new solutions.
                     EvalPopulation(trailEggs);
                     EvalPopulation(nests);
-                    // Drop new eggs randomly
+                    // Drop new eggs randomly.
                     for (int i = 0; i < eliteN; i++)
                     {
                         var j = (int)Math.Round((n - 1) * _mRnd.NextDouble());
