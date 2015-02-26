@@ -1,6 +1,7 @@
 ﻿ using System;
 using System.CodeDom;
-using System.Linq;
+ using System.Collections.Generic;
+ using System.Linq;
 using Utils;
 
 namespace Optimization
@@ -14,6 +15,7 @@ namespace Optimization
         public int Generation { get; private set; }
         public bool PrintToConsole { get; set; }
         public bool CacheOnDisk { get; set; }
+        public List<double> Steps { get; set; } 
 
         public double LevyFlightRate { get; set; }
         public double DifferentialEvolutionRate { get; set; }
@@ -28,6 +30,7 @@ namespace Optimization
 
             PrintToConsole = true;
             CacheOnDisk = true;
+            Steps = new List<double>();
 
             // Default values, good for most purposes.
             LevyFlightRate = 1;
@@ -36,6 +39,7 @@ namespace Optimization
 
         public T Optimize(T[] nests)
         {
+            Steps.Clear();
             // Eval generation 0.
             Generation = 0;
             EvalPopulation(nests);
@@ -64,6 +68,7 @@ namespace Optimization
                 }
                 nests = UpdateNests(nests, trailEggs);
                 bestNest = nests[0];
+                Steps.Add(bestNest.Cost);
                 // Debug info.
                 if (CacheOnDisk) bestNest.ToJsonFile(@"C:\proto\bestConfig.txt");
                 if (PrintToConsole) Console.WriteLine("Generation {0}, Cost = {1}", Generation, bestNest.Cost);

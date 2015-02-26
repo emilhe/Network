@@ -28,7 +28,7 @@ namespace Main
 
         public static void Cukoo(int k, int n = 500, string key = "", NodeChromosome seed = null, ParallelNodeCostCalculator calc = null)
         {
-            var name = string.Format(@"C:\proto\VE50cukooK={0}@{1}.txt", k, key);
+            var name = string.Format(@"C:\proto\VE50cukooK={0}@{1}", k, key);
             // Adjust gene pool.
             GenePool.K = k;
             // Setup stuff.
@@ -48,7 +48,8 @@ namespace Main
             var optimizer = new CukooOptimizer<NodeChromosome>(strategy, calc);
             // Do stuff.
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(name);
+            optimizer.Steps.ToJsonFile(name + ".tex");
+            optimum.Genes.ToJsonFile(name + "@steps.tex");
             Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
         }
 

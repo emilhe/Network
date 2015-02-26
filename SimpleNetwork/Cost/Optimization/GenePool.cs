@@ -115,11 +115,11 @@ namespace BusinessLogic.Cost
                 var oldGene = chromosome.Genes[key];
                 var newGene = new NodeGene {Alpha = oldGene.Alpha, Gamma = oldGene.Gamma};
                 // First do alpha.
-                newGene.Alpha += StepScale*levy*Rnd.NextDouble()*(bestGene.Alpha - oldGene.Alpha);
+                newGene.Alpha += StepScale*levy*(bestGene.Alpha - oldGene.Alpha);
                 if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
                 if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
                 // Then gamma.
-                newGene.Gamma += StepScale*levy*Rnd.NextDouble()*(bestGene.Gamma - oldGene.Gamma);
+                newGene.Gamma += StepScale*levy*(bestGene.Gamma - oldGene.Gamma);
                 if (newGene.Gamma < GammaMin) newGene.Gamma = GammaMin;
                 if (newGene.Gamma > GammaMax) newGene.Gamma = GammaMax;
                 genes.Add(key, newGene);

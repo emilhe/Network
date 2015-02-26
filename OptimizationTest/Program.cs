@@ -26,18 +26,18 @@ namespace OptimizationTest
             ////Console.WriteLine("The value is {0}", value);
             ////Console.ReadLine();
 
-            var m = 100;
+            var m = 10;
             var functionList = new[]
             {
-                FunctionFactory.Easom(),
-                FunctionFactory.Shubert(),
-                FunctionFactory.JongsFirst(),
-                FunctionFactory.Michaelwicz(),
-                FunctionFactory.Ackley(),
-                FunctionFactory.Rosenbrock(),
-                FunctionFactory.Schwefel(),
-                FunctionFactory.Rastrigin(),
-                FunctionFactory.Griewank(),
+                //FunctionFactory.Easom(),
+                //FunctionFactory.Shubert(),
+                FunctionFactory.JongsFirst(2),
+                FunctionFactory.Michaelwicz(2),
+                FunctionFactory.Ackley(2),
+                FunctionFactory.Rosenbrock(2),
+                FunctionFactory.Schwefel(2),
+                FunctionFactory.Rastrigin(2),
+                //FunctionFactory.Griewank(),
             };
 
             var total = 0.0;
@@ -137,14 +137,6 @@ namespace OptimizationTest
             result.ToJsonFile(@"C:\proto\highDimTest.txt");
         }
 
-        public class Wrapper
-        {
-            public int Dimension { get; set; }
-            public double SuccessRate { get; set; }
-            public double EvaluationAvg { get; set; }
-            public double EvaluationStd { get; set; }
-        }
-
         private static double[] TestFunction(FunctionDefinition func, int m)
         {
             var n = 20; 
@@ -184,7 +176,7 @@ namespace OptimizationTest
 
         private static double[] TestFunctionModified(FunctionDefinition func, int m)
         {
-            var n = 500; 
+            var n = 100; 
             var rnd = new Random();
             var calc = new CukooFunctionCostCalculator { Function = func.Evaluate };
             var strat = new CukooFunctionOptimizationStrategy
@@ -344,7 +336,7 @@ namespace OptimizationTest
             for (int i = 0; i < result.Dimension; i++)
             {
                 // Do levy flight.
-                var value = nest.GetValue(i) + levyStep * StepScale * Rnd.NextDouble() * (bestNest.GetValue(i) - nest.GetValue(i));
+                var value = nest.GetValue(i) + levyStep * StepScale * (bestNest.GetValue(i) - nest.GetValue(i));
                 // Enforce boundaries.
                 if (value < Min[i]) value = Min[i];
                 if (value > Max[i]) value = Max[i];
