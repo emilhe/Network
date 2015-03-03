@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Utils;
 
@@ -8,6 +9,7 @@ namespace Optimization
     {
 
         public int Generation { get; private set; }
+        public List<double> Steps { get; set; } 
 
         private readonly ICostCalculator<T> _mCostCalculator;
         private readonly IGeneticOptimizationStrategy<T> _mStrat;
@@ -16,10 +18,13 @@ namespace Optimization
         {
             _mStrat = optimizationStrategy;
             _mCostCalculator = costCalculator;
+
+            Steps = new List<double>();
         }
 
         public T Optimize(T[] population)
         {
+            Steps.Clear();
             Generation = 0;
             population = OrderPopulation(population);
             var best = population[0].Cost;
@@ -35,6 +40,7 @@ namespace Optimization
                 population = OrderPopulation(population);
                 // Debug info.
                 best = population[0].Cost;
+                Steps.Add(best);
                 population[0].ToJsonFile(@"C:\proto\bestConfig.txt");
                 Generation++;
                 Console.WriteLine("Generation {0}, Cost = {1}", Generation, best);
