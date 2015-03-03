@@ -88,6 +88,7 @@ namespace BusinessLogic.Simulation
                 if (_mDebug) _mWatch.Restart();
                 SignalTickChanged(tick);
                 _mModel.Evaluate(tick);
+                if (_mModel.Backup > 1e-3) _mSuccess = false; // Succes indicates that NO backup is needed.
                 SignalLoggers(tick);
                 if (_mModel.Failure) _mSuccess = false;
                 if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);

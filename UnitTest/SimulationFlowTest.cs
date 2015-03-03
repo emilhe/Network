@@ -101,6 +101,7 @@ namespace UnitTest
         {
             var model = new NetworkModel(nodes, new CooperativeExportStrategy(new MinimalFlowStrategy(nodes, edges)));
             var simulation = new SimulationCore(model);
+            simulation.LogFlows = true;
             simulation.Simulate(steps);
             var flowTs = simulation.Output.TimeSeries.First(item => item.Properties.ContainsKey("Flow"));
             var capacity = MathUtils.CalcCapacity(flowTs.GetAllValues().OrderBy(item => item).ToList());
@@ -111,7 +112,8 @@ namespace UnitTest
         {
             var model = new NetworkModel(nodes, new ConstrainedFlowExportStrategy(nodes, edges));
             var simulation = new SimulationCore(model);
-            simulation.Simulate(steps);
+            simulation.LogFlows = true;
+            simulation.Simulate(steps);       
             var flowTs = simulation.Output.TimeSeries.First(item => item.Properties.ContainsKey("Flow"));
             double capacity = 0;
             try
