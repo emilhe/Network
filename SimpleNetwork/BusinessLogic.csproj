@@ -76,9 +76,8 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Gurobi56.NET, Version=5.6.3.0, Culture=neutral, PublicKeyToken=21e2c4b1860157bc, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\gurobi563\win64\bin\Gurobi56.NET.dll</HintPath>
+    <Reference Include="Gurobi60.NET">
+      <HintPath>..\..\..\..\..\..\gurobi600\win64\bin\Gurobi60.NET.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -136,7 +135,7 @@
     <Compile Include="Nodes\SuperNode.cs" />
     <Compile Include="Simulation\SimulationController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />
-    <Compile Include="Storages\Curtailment.cs" />
+    <Compile Include="Storages\BalancingStorage.cs" />
     <Compile Include="Generators\HydroReservoirGenerator.cs" />
     <Compile Include="Storages\HydroReservoirStorage.cs" />
     <Compile Include="Storages\StorageCollection.cs" />
