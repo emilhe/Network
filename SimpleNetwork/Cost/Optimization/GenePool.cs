@@ -24,7 +24,7 @@ namespace BusinessLogic.Cost
         public static double GammaMin = 1;
         public static double GammaMax = 1;
         private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);
-
+            
         // Offshore fractions
         public static Dictionary<string, double> OffshoreFractions;
         private const double StepScale = 1;
@@ -115,11 +115,11 @@ namespace BusinessLogic.Cost
                 var oldGene = chromosome.Genes[key];
                 var newGene = new NodeGene {Alpha = oldGene.Alpha, Gamma = oldGene.Gamma};
                 // First do alpha.
-                newGene.Alpha += StepScale*levy*Rnd.NextDouble()*(bestGene.Alpha - oldGene.Alpha);
+                newGene.Alpha += StepScale*levy*(bestGene.Alpha - oldGene.Alpha);
                 if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
                 if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
                 // Then gamma.
-                newGene.Gamma += StepScale*levy*Rnd.NextDouble()*(bestGene.Gamma - oldGene.Gamma);
+                newGene.Gamma += StepScale*levy*(bestGene.Gamma - oldGene.Gamma);
                 if (newGene.Gamma < GammaMin) newGene.Gamma = GammaMin;
                 if (newGene.Gamma > GammaMax) newGene.Gamma = GammaMax;
                 genes.Add(key, newGene);
@@ -165,11 +165,11 @@ namespace BusinessLogic.Cost
                 var gene2 = other2.Genes[key];
                 var newGene = new NodeGene { Alpha = gene.Alpha, Gamma = gene.Gamma };
                 // First do alpha.
-                newGene.Alpha += (gene1.Alpha - gene2.Alpha)*(Rnd.NextDouble() - 1)*2;
+                newGene.Alpha += (gene1.Alpha - gene2.Alpha)*Rnd.NextDouble();
                 if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
                 if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
                 // Then gamma.
-                newGene.Gamma += (gene1.Gamma - gene2.Gamma)*(Rnd.NextDouble() - 1)*2;
+                newGene.Gamma += (gene1.Gamma - gene2.Gamma)*Rnd.NextDouble();
                 if (newGene.Gamma < GammaMin) newGene.Gamma = GammaMin;
                 if (newGene.Gamma > GammaMax) newGene.Gamma = GammaMax;
                 genes.Add(key, newGene);

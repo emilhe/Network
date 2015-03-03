@@ -56,6 +56,7 @@
     <Compile Include="IPsOptimizationStrategy.cs" />
     <Compile Include="ISolution.cs" />
     <Compile Include="IGeneticOptimizationStrategy.cs" />
+    <Compile Include="PureCukooOptimizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PsOptimizer.cs" />
     <Compile Include="SaOptimizer.cs" />

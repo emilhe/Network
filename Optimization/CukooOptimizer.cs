@@ -1,18 +1,25 @@
 ﻿ using System;
 using System.CodeDom;
-using System.Linq;
+ using System.Collections.Generic;
+ using System.Linq;
 using Utils;
 
 namespace Optimization
 {
+    /// <summary>
+    /// Adjusted by myself, inspired strongly by CS.
+    /// </summary>
     public class CukooOptimizer<T> where T : ISolution
     {
 
         public int Generation { get; private set; }
         public bool PrintToConsole { get; set; }
         public bool CacheOnDisk { get; set; }
+        public List<double> Steps { get; set; } 
 
-        private readonly Random _mRnd = new Random((int)DateTime.Now.Ticks);
+        public double LevyFlightRate { get; set; }
+        public double DifferentialEvolutionRate { get; set; }
+
         private readonly ICostCalculator<T> _mCostCalculator;
         private readonly ICukooOptimizationStrategy<T> _mStrat;
 
@@ -23,10 +30,16 @@ namespace Optimization
 
             PrintToConsole = true;
             CacheOnDisk = true;
+            Steps = new List<double>();
+
+            // Default values, good for most purposes.
+            LevyFlightRate = 1;
+            DifferentialEvolutionRate = 1;
         }
 
         public T Optimize(T[] nests)
         {
+            Steps.Clear();
             // Eval generation 0.
             Generation = 0;
             EvalPopulation(nests);
@@ -36,42 +49,26 @@ namespace Optimization
             // New trail eggs are generated in the trails eggs vector.
             var n = nests.Length;
             var trailEggs = new T[n];
-            var deN = (int) Math.Round(nests.Length*(_mStrat.DifferentialEvolutionRate));
-            var lvN = (int) Math.Round(nests.Length*(_mStrat.LevyFlightRate));
-            var coN = (int) Math.Round(nests.Length*(_mStrat.CrossOverRate));
-            var deForceN = (int) Math.Round(nests.Length*(1 - _mStrat.DifferentialEvolutionAggressiveness));
-            var lvForceN = (int) Math.Round(nests.Length*(1 - _mStrat.LevyFlightAggressiveness));
+            var deN = (int) Math.Round(nests.Length*(DifferentialEvolutionRate));
+            var lvN = (int) Math.Round(nests.Length*(LevyFlightRate));
 
             while (!_mStrat.TerminationCondition(nests, _mCostCalculator.Evaluations))
             {
                 Generation++;
-
-                // Generate new trail eggs by cross over.            
-                for (int i = 0; i < coN; i++)
-                {
-                    var j = (int)Math.Round((coN - 1) * _mRnd.NextDouble());
-                    // Cross over not possible.
-                    if (i == j) trailEggs[i] = nests[i];
-                    // Cross over possible; do it.
-                    else trailEggs[i] = _mStrat.CrossOver(nests[Math.Max(i, j)], nests[Math.Min(i, j)]);
-                }
-                UpdateNests(nests, trailEggs, n);
-
                 // Generate new trail eggs by Lévy flight.
                 for (int i = 0; i < lvN; i++)
                 {
                     trailEggs[i] = _mStrat.LevyFlight(nests[i], bestNest);
                 }
-                UpdateNests(nests, trailEggs, lvForceN);
-
+                UpdateNests(nests, trailEggs);
                 // Generate new trails eggs by differential evolution.
                 for (int i = (n-deN); i < n; i++)
                 {
                     trailEggs[i] = _mStrat.DifferentialEvolution(nests, i);
                 }
-                nests = UpdateNests(nests, trailEggs, deForceN);
+                nests = UpdateNests(nests, trailEggs);
                 bestNest = nests[0];
-
+                Steps.Add(bestNest.Cost);
                 // Debug info.
                 if (CacheOnDisk) bestNest.ToJsonFile(@"C:\proto\bestConfig.txt");
                 if (PrintToConsole) Console.WriteLine("Generation {0}, Cost = {1}", Generation, bestNest.Cost);
@@ -80,19 +77,13 @@ namespace Optimization
             return bestNest;
         }
 
-        private T[] UpdateNests(T[] nests, T[] trailEggs, int forceIdx)
+        private T[] UpdateNests(T[] nests, T[] trailEggs)
         {
-            return UpdateNests(nests, trailEggs, i => (i >= forceIdx) || nests[i].Cost > trailEggs[i].Cost);
-        }
-
-        private T[] UpdateNests(T[] nests, T[] trailEggs, Func<int, bool> condition)
-        {
-            var n = trailEggs.Length;
             EvalPopulation(trailEggs);
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < trailEggs.Length; i++)
             {
                 if (trailEggs[i] == null) continue;
-                if (condition(i)) nests[i] = trailEggs[i];
+                if (nests[i].Cost > trailEggs[i].Cost) nests[i] = trailEggs[i];
             }
             return nests.OrderBy(item => item.Cost).ToArray();
         }
