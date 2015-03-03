@@ -42,9 +42,7 @@ namespace Utils.Statistics
         /// </summary>
         public static double Percentile(IEnumerable<double> values, double percentile)
         {
-            var orderedValues = values.OrderBy(item => item).ToList();
-            var idx = (int)Math.Ceiling((orderedValues.Count - 1) * (percentile / 100));
-            return orderedValues[idx];
+            return FastPercentile(values.OrderBy(item => item).ToList(), percentile);
         }
 
         /// <summary>
@@ -53,7 +51,7 @@ namespace Utils.Statistics
         private static double FastPercentile(List<double> orderedData, double percentile)
         {
             var idx = (int) Math.Ceiling((orderedData.Count-1)*(percentile/100));
-            return orderedData[idx];
+            return orderedData.Count == 0 ? 0 : orderedData[idx];
         }
 
         public static double[] Linspace(double min, double max, int steps)

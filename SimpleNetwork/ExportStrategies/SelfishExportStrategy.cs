@@ -24,14 +24,14 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Balance the system; first a node takes what it can use, then it shares.
         /// </summary>
-        public BalanceResult BalanceSystem()
+        public void BalanceSystem()
         {
             _mHelper.BalanceLocally(i => _mMismatches[i] > 0, false);
 
             _mHelper.BalanceGlobally(() => Response.Charge);
             _mHelper.EqualizePower();
 
-            return _mHelper.BalanceLocally(i => _mMismatches[i] < 0, true);
+            _mHelper.BalanceLocally(i => _mMismatches[i] < 0, true);
         }
 
         #region Measurement

@@ -27,15 +27,15 @@ namespace BusinessLogic.Utils
     {
         public List<CountryNode> Nodes { get; private set; }
         public ModelYearConfig Config { get { return _mConfig; } }
-        public SimulationController BeController{get{return _mCtrlWithoutTrans;}}
-        public SimulationController BcController{get{return _mCtrlWithoutTrans;}}
+        public SimulationController BeController { get { return _mCtrlWithTrans; } }
+        public SimulationController BcController { get { return _mCtrlWithTrans; } }
         public SimulationController TcController{get{return _mCtrlWithTrans;}}
 
         private readonly ModelYearConfig _mConfig;
         private readonly SimulationController _mCtrlWithTrans;
-        private readonly SimulationController _mCtrlWithoutTrans;
+        //private readonly SimulationController _mCtrlWithoutTrans;
 
-        public FullCore()
+        public FullCore(int length = 32, List<CountryNode> nodes = null)
         {
             // Transmission eval.
             _mCtrlWithTrans = new SimulationController();
@@ -43,35 +43,39 @@ namespace BusinessLogic.Utils
             {
                 ExportStrategy = ExportStrategy.ConstrainedFlow
             });
-            _mCtrlWithTrans.LogLevel = LogLevelEnum.Flow;
-            _mCtrlWithTrans.Sources.Add(new TsSourceInput { Length = 32, Offset = 0 });
+            _mCtrlWithTrans.LogFlows = true;
+            _mCtrlWithTrans.LogNodalBalancing = true;
+            _mCtrlWithTrans.LogSystemProperties = true;
+            _mCtrlWithTrans.Sources.Add(new TsSourceInput { Length = length, Offset = 0 });
             _mCtrlWithTrans.NodeFuncs.Clear();
             _mCtrlWithTrans.NodeFuncs.Add("No storage", input => Nodes);
-            // The other eval.
-            _mCtrlWithoutTrans = new SimulationController();
-            _mCtrlWithoutTrans.ExportStrategies.Add(new ExportStrategyInput
-            {
-                ExportStrategy = ExportStrategy.Cooperative,
-                DistributionStrategy = DistributionStrategy.SkipFlow
-            });
-            _mCtrlWithoutTrans.LogLevel = LogLevelEnum.System;
-            _mCtrlWithoutTrans.Sources.Add(new TsSourceInput { Length = 32, Offset = 0 });
-            _mCtrlWithoutTrans.NodeFuncs.Clear();
-            _mCtrlWithoutTrans.NodeFuncs.Add("No storage", input => Nodes);
+            //// The other eval.
+            //_mCtrlWithoutTrans = new SimulationController();
+            //_mCtrlWithoutTrans.ExportStrategies.Add(new ExportStrategyInput
+            //{
+            //    ExportStrategy = ExportStrategy.Cooperative,
+            //    DistributionStrategy = DistributionStrategy.SkipFlow
+            //});
+            //_mCtrlWithoutTrans.LogLevel = LogLevelEnum.System;
+            //_mCtrlWithoutTrans.Sources.Add(new TsSourceInput { Length = 32, Offset = 0 });
+            //_mCtrlWithoutTrans.NodeFuncs.Clear();
+            //_mCtrlWithoutTrans.NodeFuncs.Add("No storage", input => Nodes);
             // The config (fake).
             _mConfig = new ModelYearConfig
             {
                 Parameters = new Dictionary<string, KeyValuePair<int, double>>
                 {
-                    {"be", new KeyValuePair<int, double>(0, 1.0/32.0)},
+                    {"be", new KeyValuePair<int, double>(0, 1.0/length)},
                     {"bc", new KeyValuePair<int, double>(0, 1)},
                     {"tc", new KeyValuePair<int, double>(0, 1)}
 
                 }
             };
-            // TODO: Make source configureable?
-            Nodes = ConfigurationUtils.CreateNodesNew();
+
+            if (nodes == null) nodes = ConfigurationUtils.CreateNodesNew();
+            Nodes = nodes;
         }
+
     }
 
     public class ModelYearCore : IParameterEvaluatorCore
@@ -97,7 +101,7 @@ namespace BusinessLogic.Utils
                 ExportStrategy = ExportStrategy.Cooperative,
                 DistributionStrategy = DistributionStrategy.SkipFlow
             });
-            _mBeCtrl.LogLevel = LogLevelEnum.System;
+            _mBeCtrl.LogSystemProperties = true;
             _mBeCtrl.Sources.Add(new TsSourceInput {Length = 1, Offset = _mConfig.Parameters["be"].Key});
             _mBeCtrl.NodeFuncs.Clear();
             _mBeCtrl.NodeFuncs.Add("No storage", input =>
@@ -113,7 +117,7 @@ namespace BusinessLogic.Utils
                 ExportStrategy = ExportStrategy.Cooperative,
                 DistributionStrategy = DistributionStrategy.SkipFlow
             });
-            _mBcCtrl.LogLevel = LogLevelEnum.System;
+            _mBcCtrl.LogNodalBalancing = true;
             _mBcCtrl.Sources.Add(new TsSourceInput {Length = 1, Offset = _mConfig.Parameters["bc"].Key});
             _mBcCtrl.NodeFuncs.Clear();
             _mBcCtrl.NodeFuncs.Add("No storage", input =>
@@ -128,7 +132,7 @@ namespace BusinessLogic.Utils
             {
                 ExportStrategy = ExportStrategy.ConstrainedFlow
             });
-            _mTcCtrl.LogLevel = LogLevelEnum.Flow;
+            _mTcCtrl.LogFlows = true;
             _mTcCtrl.Sources.Add(new TsSourceInput {Length = 1, Offset = _mConfig.Parameters["tc"].Key});
             _mTcCtrl.NodeFuncs.Clear();
             _mTcCtrl.NodeFuncs.Add("No storage", input =>
@@ -140,6 +144,7 @@ namespace BusinessLogic.Utils
             // TODO: Make source configurable
             Nodes = ConfigurationUtils.CreateNodesNew();
         }
+
     }
 
     public class FastCore : IParameterEvaluatorCore
@@ -164,7 +169,7 @@ namespace BusinessLogic.Utils
                 ExportStrategy = ExportStrategy.Cooperative,
                 DistributionStrategy = DistributionStrategy.SkipFlow
             });
-            _mCtrlTrans.LogLevel = LogLevelEnum.System;
+            _mCtrlTrans.LogNodalBalancing = true;
             _mCtrlTrans.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["be"].Key });
             _mCtrlTrans.NodeFuncs.Clear();
             _mCtrlTrans.NodeFuncs.Add("No storage", input =>
@@ -177,6 +182,57 @@ namespace BusinessLogic.Utils
             Nodes = ConfigurationUtils.CreateNodesNew();
         }
     }
+
+    public class NoFlowCore : IParameterEvaluatorCore
+    {
+        public List<CountryNode> Nodes { get; private set; }
+
+        public ModelYearConfig Config
+        {
+            get { return _mConfig; }
+        }
+
+        public SimulationController BeController { get { return _mCtrl; } }
+        public SimulationController BcController { get { return _mCtrl; } }
+        public SimulationController TcController { get { return _mCtrl; } }
+
+        private readonly ModelYearConfig _mConfig;
+        private readonly SimulationController _mCtrl;
+
+        public NoFlowCore(int length = 32, List<CountryNode> nodes = null)
+        {
+            // Controller.
+            _mCtrl = new SimulationController();
+            _mCtrl.ExportStrategies.Add(new ExportStrategyInput
+            {
+                ExportStrategy = ExportStrategy.None
+            });
+            _mCtrl.LogNodalBalancing = true;
+            _mCtrl.LogSystemProperties = true;
+            _mCtrl.Sources.Add(new TsSourceInput { Length = length, Offset = 0 });
+            _mCtrl.NodeFuncs.Clear();
+            _mCtrl.NodeFuncs.Add("No storage", input =>
+            {
+                foreach (var node in Nodes)
+                    node.Model.SetOffset((int)input.Offset * Stuff.HoursInYear);
+                return Nodes;
+            });
+            // The config (fake). 
+            _mConfig = new ModelYearConfig
+            {
+                Parameters = new Dictionary<string, KeyValuePair<int, double>>
+                {
+                    {"be", new KeyValuePair<int, double>(0, 1.0/length)},
+                    {"bc", new KeyValuePair<int, double>(0, 1)},
+                    {"tc", new KeyValuePair<int, double>(0, 1)}
+
+                }
+            };
+            // TODO: Make source configurable
+            Nodes = nodes;
+        }
+    }
+
 
     #endregion
 
@@ -216,7 +272,7 @@ namespace BusinessLogic.Utils
             else
             {   
                 // TODO: Make config a variable? For now, just use default...
-                var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\Analysis\ModelYear\noStorageAlpha0.5to1Gamma1.txt");
+                var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\noStorageAlpha0.5to1Gamma0.5to2.txt");
                 _mCore = new ModelYearCore(config);
             }
         }
@@ -288,10 +344,14 @@ namespace BusinessLogic.Utils
             // Run simulation.
             var data = _mCore.BcController.EvaluateTs(nodeGenes);
             // Extract system values.
-            var curtailment = (DenseTimeSeries) data[0].TimeSeries.First(item => item.Name.Equals("Curtailment"));
-            var balanceNeeds = curtailment.Values.Where(item => item < 0).Select(item => -item).OrderBy(item => item);
+            var bc = 0.0;
+            var balancingTs = data[0].TimeSeries.Where(item => item.Name.Contains("Balancing"));
+            foreach (var ts in balancingTs)
+            {
+                bc += MathUtils.Percentile(ts.GetAllValues().Select(item => Math.Max(0,-item)), 99);
+            }
 
-            return MathUtils.Percentile(balanceNeeds, 99)*config.Value;
+            return bc * config.Value;
         }
 
         // Total backup energy.
@@ -302,11 +362,9 @@ namespace BusinessLogic.Utils
             // Run simulation.
             var data = _mCore.BeController.EvaluateTs(nodeGenes);
             // Extract system values.
-            var curtailment = (DenseTimeSeries) data[0].TimeSeries.First(item => item.Name.Equals("Curtailment"));
-            var balanceNeeds =
-                curtailment.Values.Where(item => item < 0).Select(item => -item).OrderBy(item => item).ToList();
+            var balancing = (DenseTimeSeries)data[0].TimeSeries.First(item => item.Name.Equals("Backup"));
 
-            return balanceNeeds.Sum()*config.Value;
+            return balancing.GetAllValues().Sum() * config.Value;
         }
 
         #endregion

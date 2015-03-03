@@ -90,14 +90,14 @@ namespace BusinessLogic.Nodes
         {
             LoadTimeSeries.SetOffset(ticks);
             OnshoreWindTimeSeries.SetOffset(ticks);
-            OffshoreWindTimeSeries.SetOffset(ticks);
+            if (OffshoreWindTimeSeries != null) OffshoreWindTimeSeries.SetOffset(ticks);
             SolarTimeSeries.SetOffset(ticks);
         }
 
         private void UpdateScaling()
         {
             OnshoreWindTimeSeries.SetScale(_mAlpha * _mAvgLoad * _mGamma * (1-OffshoreFraction));
-            OffshoreWindTimeSeries.SetScale(_mAlpha * _mAvgLoad * _mGamma * OffshoreFraction);
+            if (OffshoreWindTimeSeries != null) OffshoreWindTimeSeries.SetScale(_mAlpha * _mAvgLoad * _mGamma * OffshoreFraction);
             SolarTimeSeries.SetScale((1 - _mAlpha)*_mAvgLoad*_mGamma);
         }
 

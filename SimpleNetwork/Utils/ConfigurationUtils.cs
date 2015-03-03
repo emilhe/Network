@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Generators;
 using BusinessLogic.Interfaces;
@@ -16,12 +17,12 @@ namespace BusinessLogic.Utils
 
         public static EdgeSet GetEuropeEdges(List<CountryNode> nodes)
         {
-            return GetEdges(nodes.Select(item => item.Name).ToList(), "NtcMatrix", 1);
+            return GetEdges(nodes.Select(item => item.Name).ToList(), "NtcMatrix", Double.MaxValue);
         }
 
         public static EdgeSet GetEuropeEdges(List<string> nodes)
         {
-           return GetEdges(nodes, "NtcMatrix", 1);
+            return GetEdges(nodes, "NtcMatrix", Double.MaxValue);
         }
 
         public static EdgeSet GetEdges(List<INode> nodes, string key, double frac)

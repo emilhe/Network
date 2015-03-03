@@ -12,7 +12,6 @@ namespace BusinessLogic
     {
 
         private IExportStrategy _mExportStrategy;
-        private BalanceResult _mBalanceResult;
         private IList<INode> _mNodes;
         private double[] _mMismatches;
 
@@ -53,13 +52,15 @@ namespace BusinessLogic
 
         public double Curtailment
         {
-            get { return _mBalanceResult.Curtailment; }
+            get { return _mNodes.Select(item => item.Curtailment).Sum(); }
         }
 
-        public bool Failure
+        public double Backup
         {
-            get { return FailureStrategy.Failure; }
+            get { return _mNodes.Select(item => item.Backup).Sum(); }
         }
+
+        public bool Failure { get; private set; }
 
         #endregion
 
@@ -96,8 +97,10 @@ namespace BusinessLogic
             Mismatch = _mMismatches.Sum();
 
             // Delegate balancing to the export strategy.
-            _mBalanceResult = ExportStrategy.BalanceSystem();
-            FailureStrategy.Record(_mBalanceResult);
+            ExportStrategy.BalanceSystem();
+
+            // TODO: What about failure strategy?
+            // FailureStrategy.Record(Failure);
         }
 
     }

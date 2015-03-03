@@ -52,9 +52,8 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Detmine the storage level at which the flow optimisation is to take place. Restore/drain all lower levels.
         /// </summary>
-        public BalanceResult BalanceGlobally(Func<Response> respFunc)
+        public void BalanceGlobally(Func<Response> respFunc)
         {
-            var result = new BalanceResult();
             _mSystemResponse = respFunc();
 
             // Restore lower levels if possible.
@@ -70,16 +69,6 @@ namespace BusinessLogic.ExportStrategies
                         .InjectMax(_mSystemResponse);
                 }
             }
-
-            // Calculate curtailment.
-            result.Curtailment = 0.0;
-            if (_mStorageMappings[_mStorageLevel] == -1)
-            {
-                result.Curtailment = _mMismatches.Sum();
-            }
-            result.Failure = (result.Curtailment < 0);
-
-            return result;
         }
 
         /// <summary>
@@ -114,10 +103,8 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Charge all nodes individually until all energy is used or the storage is full, skip nodes not fulfilling condition.
         /// </summary>
-        public BalanceResult BalanceLocally(Func<int, bool> condition, bool allowCurtailment)
+        public void BalanceLocally(Func<int, bool> condition, bool allowCurtailment)
         {
-            var result = new BalanceResult {Curtailment = 0, Failure = false};
-
             for (int i = 0; i < _mNodes.Count; i++)
             {
                 foreach (double efficiency in _mStorageMappings)
@@ -125,17 +112,9 @@ namespace BusinessLogic.ExportStrategies
                     if (!condition(i)) continue;
                     if (!allowCurtailment && efficiency == -1) continue;
                     if (!_mNodes[i].StorageCollection.Contains(efficiency)) continue;
-                    // Log curtailment and record failures on negative curtailment.
-                    if (efficiency == -1)
-                    {
-                        if (_mMismatches[i] < -Tolerance) result.Failure = true;
-                        result.Curtailment += _mMismatches[i];
-                    }
                     _mMismatches[i] = _mNodes[i].StorageCollection.Get(efficiency).Inject(_mMismatches[i]);
                 }
             }
-
-            return result;
         }
 
         #endregion

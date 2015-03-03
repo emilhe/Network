@@ -5,14 +5,15 @@ using BusinessLogic.TimeSeries;
 
 namespace BusinessLogic.Storages
 {
-    public class Curtailment : IStorage
+    public class BalancingStorage : IStorage, ITickListener
     {
 
         private double _mSample;
+        private double _mLastTick;
 
         public string Name
         {
-            get { return "Curtailment"; }
+            get { return "Balancing"; }
         }
 
         public double Efficiency
@@ -32,12 +33,13 @@ namespace BusinessLogic.Storages
 
         public double Inject(double amount)
         {
-            return _mSample = amount;
+            _mSample += amount;
+            return 0;
         }
 
         public double InjectMax(Response response)
         {
-            return 0;
+            throw new ArgumentException("Cannot inject max into curtailment");
         }
 
         public double RemainingEnergy(Response response)
@@ -81,7 +83,9 @@ namespace BusinessLogic.Storages
         public void Sample(int tick)
         {
             if (!_mMeasuring) return;
+            if (tick == _mLastTick) return;
             _mTimeSeries.AppendData(_mSample);
+            _mLastTick = tick;
         }
 
         public List<ITimeSeries> CollectTimeSeries()
@@ -90,6 +94,16 @@ namespace BusinessLogic.Storages
         }
 
         #endregion
+
+        public double CurrentValue
+        {
+            get { return _mSample; }
+        }
+
+        public void TickChanged(int tick)
+        {
+            _mSample = 0;
+        }
 
     }
 }

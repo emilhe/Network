@@ -23,9 +23,10 @@ namespace UnitTest
             PreareNodesExcess();
             var model = new NetworkModel(_mNodes, new NoExportStrategy());
             var simulation = new SimulationCore(model);
+            simulation.LogAllNodeProperties = true;
             simulation.Simulate(1);
             
-            Assert.AreEqual(false, simulation.Output.Success);
+            //Assert.AreEqual(false, simulation.Output.Success);
             Assert.AreEqual(1, ReadParam(simulation, "Test0","Battery storage"));
             Assert.AreEqual(1, ReadParam(simulation, "Test0", "Hydrogen storage"));
             Assert.AreEqual(0, ReadParam(simulation, "Test1", "Battery storage"));
@@ -38,9 +39,10 @@ namespace UnitTest
             PreareNodesExcess();
             var model = new NetworkModel(_mNodes, new SelfishExportStrategy(new SkipFlowStrategy()));
             var simulation = new SimulationCore(model);
+            simulation.LogAllNodeProperties = true;
             simulation.Simulate(1);
 
-            Assert.AreEqual(true, simulation.Output.Success);
+            //Assert.AreEqual(true, simulation.Output.Success);
             Assert.AreEqual(1, ReadParam(simulation, "Test0", "Battery storage"), 1e-5);
             Assert.AreEqual(1, ReadParam(simulation, "Test0", "Hydrogen storage"), 1e-5);
             //Assert.AreEqual(0, ReadParam(simulation, "Test1", "Battery storage"), 1e-5);
@@ -53,9 +55,10 @@ namespace UnitTest
             PreareNodesLack();
             var model = new NetworkModel(_mNodes, new SelfishExportStrategy(new SkipFlowStrategy()));
             var simulation = new SimulationCore(model);
+            simulation.LogAllNodeProperties = true;
             simulation.Simulate(1);
 
-            Assert.AreEqual(false, simulation.Output.Success);
+            //Assert.AreEqual(false, simulation.Output.Success);
             Assert.AreEqual(2, ReadParam(simulation, "Test0", "Battery storage"), 1e-5);
             //Assert.AreEqual(1, ReadParam(simulation, "Test0", "Hydrogen storage"), 1e-5);
             Assert.AreEqual(0, ReadParam(simulation, "Test1", "Battery storage"), 1e-5);
@@ -68,9 +71,10 @@ namespace UnitTest
             PreareNodesExcess();
             var model = new NetworkModel(_mNodes, new CooperativeExportStrategy(new SkipFlowStrategy()));
             var simulation = new SimulationCore(model);
+            simulation.LogAllNodeProperties = true;
             simulation.Simulate(1);
 
-            Assert.AreEqual(true, simulation.Output.Success);
+            //Assert.AreEqual(true, simulation.Output.Success);
             Assert.AreEqual(1, ReadParam(simulation, "Test0", "Battery storage"));
             Assert.AreEqual(0.4, ReadParam(simulation, "Test0", "Hydrogen storage"), 1e-5);
             Assert.AreEqual(1, ReadParam(simulation, "Test1", "Battery storage"));

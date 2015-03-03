@@ -8,9 +8,9 @@ namespace BusinessLogic.FailureStrategies
 
         public bool Failure { get; private set; }
 
-        public void Record(BalanceResult result)
+        public void Record(bool failure)
         {
-            if (result.Failure) Failure = true;
+            if (failure) Failure = true;
         }
 
         public void Reset()

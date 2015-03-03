@@ -6,6 +6,9 @@ namespace BusinessLogic.Interfaces
     public interface IMeasureable
     {
 
+        /// <summary>
+        /// Are we measureing?
+        /// </summary>
         bool Measuring { get; }
 
         /// <summary>

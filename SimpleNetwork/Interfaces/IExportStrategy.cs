@@ -8,7 +8,7 @@ namespace BusinessLogic.Interfaces
     {
 
         void Bind(IList<INode> nodes, double[] mismatches);
-        BalanceResult BalanceSystem();
+        void BalanceSystem();
 
     }
 }

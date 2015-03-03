@@ -10,6 +10,11 @@ namespace BusinessLogic.Simulation
     public class SimulationCore : ISimulation
     {
 
+        public bool LogAllNodeProperties { get; set; }
+        public bool LogSystemProperties { get; set; }
+        public bool LogNodalBalancing { get; set; }
+        public bool LogFlows { get; set; }
+
         #region Fields
 
         private Dictionary<string, DenseTimeSeries> _mSystemTimeSeries;
@@ -67,12 +72,11 @@ namespace BusinessLogic.Simulation
         /// Simulate a number of ticks.
         /// </summary>
         /// <param name="ticks"> number of ticks to simulate </param>
-        /// <param name="logLevel"> how much should be logged? </param>
-        public void Simulate(int ticks, LogLevelEnum logLevel = LogLevelEnum.Full)
+        public void Simulate(int ticks)
         {
             ResetStorages();
             SetupTickListeners();
-            SetupLoggers(logLevel);
+            SetupLoggers();
             FailureStrategy.Reset();
 
             // SimulationCore main loop.
@@ -84,15 +88,16 @@ namespace BusinessLogic.Simulation
                 if (_mDebug) _mWatch.Restart();
                 SignalTickChanged(tick);
                 _mModel.Evaluate(tick);
-                SignalLoggers(tick, logLevel);
+                if (_mModel.Backup > 1e-3) _mSuccess = false; // Succes indicates that NO backup is needed.
+                SignalLoggers(tick);
                 if (_mModel.Failure) _mSuccess = false;
                 if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
                 tick++;
-                if (logLevel == LogLevelEnum.None && _mModel.Failure) break;
+                //if (logLevel == LogLevelEnum.None && _mModel.Failure) break;
                 //if(_mTick % 10000 == 0) Console.WriteLine("Progress: {0} of {1}",_mTick, ticks);
             }
 
-            CreateOutput(logLevel);
+            CreateOutput();
         }
 
         /// <summary>
@@ -107,53 +112,46 @@ namespace BusinessLogic.Simulation
         }
 
         /// <summary>
-        /// Reset simulation parameters.
-        /// </summary>
-        private void Reset()
-        {
-            _mSystemTimeSeries = null;
-
-            // Reset node time series.
-            foreach (var node in Nodes) node.Clear();
-            // Reset edge time series.
-            ExportStrategy.Clear();
-        }
-
-        /// <summary>
         /// Setup tick listeners.
         /// </summary>
         private void SetupTickListeners()
         {
             _mTickListeners = new List<ITickListener>();
             _mTickListeners.AddRange(Nodes);
+            _mTickListeners.AddRange(Nodes.Select(item => item.Balancing));
         }
 
         /// <summary>
         /// Setup loggers.
         /// </summary>
-        private void SetupLoggers(LogLevelEnum logLevel)
+        private void SetupLoggers()
         {
-            if (logLevel == LogLevelEnum.None)
+            // System loggers.
+            if (LogSystemProperties)
             {
-                Reset();
-                return;
+                var systemTimeSeries = new List<DenseTimeSeries>
+                {
+                    new DenseTimeSeries("Curtailment", _mTicks),
+                    new DenseTimeSeries("Mismatch", _mTicks),
+                    new DenseTimeSeries("Backup", _mTicks),
+                };
+                _mSystemTimeSeries = systemTimeSeries.ToDictionary(item => item.Name, item => item);
             }
+            else _mSystemTimeSeries = null;
 
-            // System time series setup.
-            var systemTimeSeries = new List<DenseTimeSeries>
+            // Export strategy loggers.
+            if (LogFlows) ExportStrategy.Start(_mTicks);
+            else ExportStrategy.Clear();
+
+            foreach (var node in Nodes)
             {
-                new DenseTimeSeries("Mismatch", _mTicks),
-                new DenseTimeSeries("Curtailment", _mTicks)
-            };
-            _mSystemTimeSeries = systemTimeSeries.ToDictionary(item => item.Name, item => item);
-
-            if (logLevel == LogLevelEnum.System) return;
-
-            ExportStrategy.Start(_mTicks);
-
-            if (logLevel == LogLevelEnum.Flow) return;
-
-            foreach (var node in Nodes) node.Start(_mTicks);
+                // Nodal loggers.
+                if (LogAllNodeProperties) node.Start(_mTicks);
+                else node.Clear();
+                // Balancing loggers.
+                if (LogNodalBalancing) node.Balancing.Start(_mTicks);
+                else node.Balancing.Clear();
+            }
         }
 
         /// <summary>
@@ -167,32 +165,34 @@ namespace BusinessLogic.Simulation
         /// <summary>
         /// Signal to the measureable to sample.
         /// </summary>
-        private void SignalLoggers(int tick, LogLevelEnum logLevel)
+        private void SignalLoggers(int tick)
         {
-            if (logLevel == LogLevelEnum.None) return;
+            if (LogSystemProperties)
+            {
+                _mSystemTimeSeries["Curtailment"].AppendData(_mModel.Curtailment);
+                _mSystemTimeSeries["Mismatch"].AppendData(_mModel.Mismatch);
+                _mSystemTimeSeries["Backup"].AppendData(_mModel.Backup);
+            }
 
-            _mSystemTimeSeries["Mismatch"].AppendData(_mModel.Mismatch);
-            _mSystemTimeSeries["Curtailment"].AppendData(_mModel.Curtailment);
+            if (LogFlows) ExportStrategy.Sample(tick);
 
-            if (logLevel == LogLevelEnum.System) return;
-
-            ExportStrategy.Sample(tick);
-
-            if (logLevel == LogLevelEnum.Flow) return;
-
-            foreach (var node in Nodes) node.Sample(tick);
+            foreach (var node in Nodes)
+            {
+                if (LogNodalBalancing) node.Balancing.Sample(tick);
+                if (LogAllNodeProperties) node.Sample(tick);                
+            }
         }
 
         /// <summary>
         /// Wrap output data.
         /// </summary>
-        private void CreateOutput(LogLevelEnum logLevel)
+        private void CreateOutput()
         {
             var ts = new List<ITimeSeries>();
-            var level = (int) logLevel;
-            if (level > 0) ts.AddRange(_mSystemTimeSeries.Values);
-            if (level > 1) ts.AddRange(ExportStrategy.CollectTimeSeries());
-            if (level > 2) ts.AddRange(Nodes.SelectMany(item => item.CollectTimeSeries()));
+            if (LogFlows) ts.AddRange(ExportStrategy.CollectTimeSeries());
+            if (LogSystemProperties) ts.AddRange(_mSystemTimeSeries.Values);
+            if (LogAllNodeProperties) ts.AddRange(Nodes.SelectMany(item => item.CollectTimeSeries()));
+            if (!LogAllNodeProperties && LogNodalBalancing) ts.AddRange(Nodes.SelectMany(item => item.Balancing.CollectTimeSeries()));
 
             Output = new SimulationOutput
             {
@@ -235,11 +235,6 @@ namespace BusinessLogic.Simulation
         /// </summary>
         public Dictionary<string, string> Properties { get; set; } 
 
-    }
-
-    public enum LogLevelEnum
-    {
-        None = 0, System = 1, Flow = 2, Full = 3
     }
 
 }

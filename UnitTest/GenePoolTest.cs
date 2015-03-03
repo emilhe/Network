@@ -21,11 +21,12 @@ namespace UnitTest
             for (int i = 0; i < n; i++) genes[i] = GenePool.SpawnChromosome();
             var alphas = genes.SelectMany(item => item.Genes.Select(pair => pair.Value.Alpha)).ToArray();
             var gammas = genes.SelectMany(item => item.Genes.Select(pair => pair.Value.Gamma)).ToArray();
+            var delta = 1e-3;
             // Assert.
-            Assert.That(alphas.Min() >= GenePool.AlphaMin);
-            Assert.That(alphas.Max() <= GenePool.AlphaMax);
-            Assert.That(gammas.Min() >= GenePool.GammaMin);
-            Assert.That(gammas.Max() <= GenePool.GammaMax);
+            Assert.That(alphas.Min() >= GenePool.AlphaMin - delta);
+            Assert.That(alphas.Max() <= GenePool.AlphaMax + delta);
+            Assert.That(gammas.Min() >= GenePool.GammaMin - delta);
+            Assert.That(gammas.Max() <= GenePool.GammaMax + delta);
         }
 
         [Test]
@@ -49,11 +50,12 @@ namespace UnitTest
             }
             var alphas = genes.SelectMany(item => item.Genes.Select(pair => pair.Value.Alpha)).ToArray();
             var gammas = genes.SelectMany(item => item.Genes.Select(pair => pair.Value.Gamma)).ToArray();
+            var delta = 1e-3;
             // Assert.
-            Assert.That(alphas.Min() >= GenePool.AlphaMin);
-            Assert.That(alphas.Max() <= GenePool.AlphaMax);
-            Assert.That(gammas.Min() >= GenePool.GammaMin);
-            Assert.That(gammas.Max() <= GenePool.GammaMax);
+            Assert.That(alphas.Min() >= GenePool.AlphaMin - delta);
+            Assert.That(alphas.Max() <= GenePool.AlphaMax + delta);
+            Assert.That(gammas.Min() >= GenePool.GammaMin - delta);
+            Assert.That(gammas.Max() <= GenePool.GammaMax + delta);
         }
     }
 }
