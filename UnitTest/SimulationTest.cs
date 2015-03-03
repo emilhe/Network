@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Nodes;
 using BusinessLogic.Simulation;
 using NUnit.Framework;
 using BusinessLogic;
+using BusinessLogic.Cost;
+using BusinessLogic.Cost.Optimization;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.ExportStrategies.DistributionStrategies;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Utils;
 using SimpleImporter;
 
@@ -139,6 +143,33 @@ namespace UnitTest
             }
             simulation.Simulate(Stuff.HoursInYear); // One year.
             Assert.AreEqual(false, simulation.Output.Success);
+        }
+
+        [Test]
+        public void VerifyISET()
+        {
+            var core = new FullCore(1, ConfigurationUtils.CreateNodes()); //new FullCore();
+            var eval = new ParameterEvaluator(core){CacheEnabled = false};
+            var calc = new NodeCostCalculator(eval);
+            // Verify limiting case: free flow
+            var freeFlow = calc.DetailedSystemCosts(new NodeGenes(1, 1), true);
+            Assert.AreEqual(00.0000, freeFlow["Offshore wind"], 1e-3);
+            Assert.AreEqual(36.8568, freeFlow["Onshore wind"], 1e-3);
+            Assert.AreEqual(05.3806, freeFlow["Transmission"], 1e-3);
+            Assert.AreEqual(07.1614, freeFlow["Backup"], 1e-3);
+            Assert.AreEqual(00.0000, freeFlow["Solar"], 1e-3);
+            Assert.AreEqual(10.3439, freeFlow["Fuel"], 1e-3);
+            // Verify limiting case: no flow
+            core.TcController.EdgeFuncs.Clear();
+            core.TcController.EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", 0),
+                list => ConfigurationUtils.GetEdges(list.Select(item => (INode)item).ToList(), "NtcMatrix", 0));
+            var noFlow = calc.DetailedSystemCosts(new NodeGenes(1, 1), true);
+            Assert.AreEqual(00.0000, noFlow["Offshore wind"], 1e-3);
+            Assert.AreEqual(36.8568, noFlow["Onshore wind"], 1e-3);
+            Assert.AreEqual(00.0000, noFlow["Transmission"], 1e-3);
+            Assert.AreEqual(07.5396, noFlow["Backup"], 1e-3);
+            Assert.AreEqual(00.0000, noFlow["Solar"], 1e-3);
+            Assert.AreEqual(18.3313, noFlow["Fuel"], 1e-3);
         }
 
     }
