@@ -20,10 +20,14 @@ namespace BusinessLogic.Simulation
         public bool PrintDebugInfo { get; set; }
         public bool CacheEnabled { get; set; }
         public bool InvalidateCache { get; set; }
-        public LogLevelEnum LogLevel { get; set; } // Dangerous when using cache, NOT included so far.
 
         #region Input parameters
 
+        // Logging parameters.
+        public bool LogAllNodeProperties { get; set; }
+        public bool LogSystemProperties { get; set; }
+        public bool LogNodalBalancing { get; set; }
+        public bool LogFlows { get; set; }
         // Mandatory parameters.
         public List<TsSourceInput> Sources { get; set; }
         public List<ExportStrategyInput> ExportStrategies { get; set; }
@@ -48,7 +52,6 @@ namespace BusinessLogic.Simulation
         {
             CacheEnabled = true;
             InvalidateCache = false;
-            LogLevel = LogLevelEnum.Full;
 
             // Default way to construct nodes.
             NodeFuncs = new Dictionary<string, Func<TsSourceInput, List<CountryNode>>>();
@@ -224,16 +227,20 @@ namespace BusinessLogic.Simulation
         private Dictionary<string, string> DefaultProperties()
         {
             return new Dictionary<string, string>
-                    {
-                        {"DistributionStrategy", ((byte) _mExpStratIn.DistributionStrategy).ToString()},
-                        {"ExportStrategy", ((byte) _mExpStratIn.ExportStrategy).ToString()},
-                        {"TsSource", ((byte) _mSrcIn.Source).ToString()},
-                        {"Length", _mSrcIn.Length.ToString()},
-                        {"Offset", _mSrcIn.Offset.ToString()},
-                        {"NodeTag", _mNodeTag},
-                        {"EdgeTag", _mEdgeTag},
-                        {"FailureTag", _mFailTag},
-                    };
+            {
+                {"DistributionStrategy", ((byte) _mExpStratIn.DistributionStrategy).ToString()},
+                {"ExportStrategy", ((byte) _mExpStratIn.ExportStrategy).ToString()},
+                {"TsSource", ((byte) _mSrcIn.Source).ToString()},
+                {"Length", _mSrcIn.Length.ToString()},
+                {"Offset", _mSrcIn.Offset.ToString()},
+                {"NodeTag", _mNodeTag},
+                {"EdgeTag", _mEdgeTag},
+                {"FailureTag", _mFailTag},
+                {"LogAllNodeProperties", LogAllNodeProperties.ToString()},
+                {"LogSystemProperties", LogSystemProperties.ToString()},
+                {"LogNodalBalancing", LogNodalBalancing.ToString()},
+                {"LogFlows", LogFlows.ToString()}
+            };
         } 
 
         private IExportStrategy MapFromInput(ExportStrategyInput input)
@@ -269,7 +276,7 @@ namespace BusinessLogic.Simulation
         private bool[,] RunSimulation(IExportStrategy strategy, double years, GridScanParameters grid)
         {
             var model = new NetworkModel(_mNodes, strategy, _mFail);
-            var simulation = new SimulationCore(model);
+            var simulation = SpawnSimulationCore(model);
             //var mCtrl = new MixController(_mNodes);
             var watch = new Stopwatch();
 
@@ -285,7 +292,7 @@ namespace BusinessLogic.Simulation
                 }
                 // Do simulation.
                 watch.Restart();
-                simulation.Simulate((int) (Stuff.HoursInYear*years), LogLevelEnum.None);
+                simulation.Simulate((int) (Stuff.HoursInYear*years));
                 if(PrintDebugInfo) Console.WriteLine("Mix " + mix + "; Penetation " + pen + ": " +
                                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
                 return simulation.Output.Success;
@@ -295,7 +302,7 @@ namespace BusinessLogic.Simulation
         private SimulationOutput RunSimulation(IExportStrategy strategy, double years, double penetration, double mixing)
         {
             var model = new NetworkModel(_mNodes, strategy, _mFail);
-            var simulation = new SimulationCore(model);
+            var simulation = SpawnSimulationCore(model);
             var watch = new Stopwatch();
             watch.Start();
             foreach (var node in _mNodes)
@@ -303,7 +310,7 @@ namespace BusinessLogic.Simulation
                 node.Model.Gamma = penetration;
                 node.Model.Alpha = mixing;
             }
-            simulation.Simulate((int)(Stuff.HoursInYear * years), LogLevel);
+            simulation.Simulate((int)(Stuff.HoursInYear * years));
             if (PrintDebugInfo) Console.WriteLine("Mix " + mixing + "; Penetation " + penetration + ": " +
                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
 
@@ -313,7 +320,7 @@ namespace BusinessLogic.Simulation
         private SimulationOutput RunSimulation(IExportStrategy strategy, double years, NodeGenes genes)
         {
             var model = new NetworkModel(_mNodes, strategy, _mFail);
-            var simulation = new SimulationCore(model);
+            var simulation = SpawnSimulationCore(model);
             var watch = new Stopwatch();
             watch.Start();
             foreach (var node in _mNodes)
@@ -322,12 +329,23 @@ namespace BusinessLogic.Simulation
                 node.Model.Alpha = genes[node.Name].Alpha;
                 node.Model.OffshoreFraction = genes[node.Name].OffshoreFraction;
             }
-            simulation.Simulate((int) (Utils.Stuff.HoursInYear*years), LogLevel);
+            simulation.Simulate((int) (Stuff.HoursInYear*years));
             if (PrintDebugInfo)
                 Console.WriteLine("NodeGenes: " +
                                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
 
             return simulation.Output;
+        }
+
+        private SimulationCore SpawnSimulationCore(NetworkModel model)
+        {
+            return new SimulationCore(model)
+            {
+                LogAllNodeProperties = LogAllNodeProperties,
+                LogFlows = LogFlows,
+                LogNodalBalancing = LogNodalBalancing,
+                LogSystemProperties = LogSystemProperties
+            };
         }
 
     }

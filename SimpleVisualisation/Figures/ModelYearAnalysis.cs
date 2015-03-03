@@ -27,9 +27,9 @@ namespace Main.Figures
         {
 
             // Read year config.
-            var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\proto\noStorageAlpha0.5to1Gamma1to2.txt");
-            var gammaRes = 5;
-            var alphaRes = 5;
+            var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\noStorageAlpha0.5to1Gamma0.5to2.txt");
+            var gammaRes = 10;
+            var alphaRes = 10;
 
             #region Simulation setup
 
@@ -49,7 +49,9 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            ctrl.LogLevel = inclTrans ? LogLevelEnum.Flow : LogLevelEnum.System;
+            ctrl.LogSystemProperties = true;
+            ctrl.LogNodalBalancing = true;
+            ctrl.LogFlows = inclTrans;
 
             // Setup BC ESTIMATION control.
             var bcEstCtrl = new SimulationController { InvalidateCache = false };
@@ -67,7 +69,7 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            bcEstCtrl.LogLevel = LogLevelEnum.System;
+            bcEstCtrl.LogNodalBalancing = true;
 
             // Setup BE ESTIMATION control.
             var beEstCtrl = new SimulationController { InvalidateCache = false };
@@ -86,7 +88,7 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            beEstCtrl.LogLevel = LogLevelEnum.System;
+            beEstCtrl.LogSystemProperties = true;
 
             // Setup TC ESTIMATION control.
             var tcEstCtrl = new SimulationController { InvalidateCache = false };
@@ -111,7 +113,7 @@ namespace Main.Figures
                     //ConfigurationUtils.SetupMegaStorage(nodes);
                     return nodes;
                 });
-                tcEstCtrl.LogLevel = LogLevelEnum.Flow;
+                tcEstCtrl.LogFlows = true;
             }
 
             #endregion
@@ -163,6 +165,17 @@ namespace Main.Figures
             tcMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\tcMatrixIIHD.txt");
             gammaMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\gammaMatrixIIHD.txt");
             alphaMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\alphaMatrixIIHD.txt");
+
+            // Save in dict too.
+            var dict = new Dictionary<string, double[,]>
+            {
+                {"BE", beMatrix},
+                {"BC", bcMatrix},
+                {"TC", tcMatrix},
+                {"Alpha", alphaMatrix},
+                {"Gamma", gammaMatrix},
+            };
+            dict.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\modelYear\errorAnalysis.txt");
         }
 
         private static double CalculateFlowCapacity(SimulationOutput sim)
@@ -199,11 +212,49 @@ namespace Main.Figures
 
         #region Locating the model year
 
+        public static void PrintModelYearStuff(MainForm main, bool inclTrans = false)
+        {
+            var aMin = 0.5;
+            var aMax = 1;
+            var gMin = 0.5;
+            var gMax = 1;
+            ModelYearStuff(aMin, aMax, gMin, gMax, inclTrans, data =>
+            {
+                PrintData(CalculateBackupEnergy, data, "be.txt");
+                PrintData(CalculateBackupCapacity, data, "bc.txt");
+                PrintData(CalculateTransmissionCapacity, data, "tc.txt");
+            });
+        }
+
         public static void DetermineModelYears(MainForm main, bool inclTrans = false)
         {
+            var aMin = 0.5;
+            var aMax = 1;
+            var gMin = 0.5;
+            var gMax = 2;
+            ModelYearStuff(aMin, aMax, gMin, gMax, inclTrans, data =>
+            {
+                var result = new ModelYearConfig
+                {
+                    AlphaMin = aMin,
+                    AlphaMax = aMax,
+                    GammaMin = gMin,
+                    GammaMax = gMax,
+                    Parameters = new Dictionary<string, KeyValuePair<int, double>>()
+                };
+                result.Parameters.Add("be", FindBcYear(CalculateBackupEnergy, data));
+                result.Parameters.Add("bc", FindBcYear(CalculateBackupCapacity, data));
+                if (inclTrans) result.Parameters.Add("tc", FindBcYear(CalculateTransmissionCapacity, data));
+
+                result.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\noStorageAlpha0.5to1Gamma0.5to2.txt");
+            });
+        }
+
+        private static void ModelYearStuff(double aMin, double aMax, double gMin, double gMax, bool inclTrans, Action<List<SimulationOutput>> action)
+        {
             // Prepare simulation.
-            var ctrl = new SimulationController {InvalidateCache = false};
-            ctrl.Sources.Add(new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 32});
+            var ctrl = new SimulationController { InvalidateCache = false };
+            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
                 new ExportStrategyInput
                 {
@@ -218,12 +269,21 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            ctrl.LogLevel = inclTrans ? LogLevelEnum.Flow : LogLevelEnum.System;
+            ctrl.LogSystemProperties = true;
+            ctrl.LogNodalBalancing = true;
+            ctrl.LogFlows = inclTrans;
 
-            //FindConfig(ctrl, 0.5, 1, 1, 1.1).ToFile(@"C:\proto\noStorageAlpha0.5to1Gamma1to1.1.txt");
-            //FindConfig(ctrl, 0.5, 1, 1, 2, inclTrans).ToJsonFile(@"C:\proto\noStorageAlpha0.5to1Gamma1to2.txt");
-            //FindConfig(ctrl, 0.6, 0.8, 1, 1.1, inclTrans).ToJsonFile(@"C:\proto\noStorageAlpha0.6to0.8Gamma1to1.1.txt");
-            FindConfig(ctrl, 0.5, 1, 1, 1, inclTrans).ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\ModelYear\noStorageAlpha0.5to1Gamma1t.txt");
+            var alpha = (aMax + aMin) / 2;
+            var gamma = (gMax + gMin) / 2;
+            // Create data.
+            var centerData = ctrl.EvaluateTs(gamma, alpha);
+            var aMinData = ctrl.EvaluateTs(gamma, aMin);
+            var aMaxData = ctrl.EvaluateTs(gamma, aMax);
+            var gMinData = ctrl.EvaluateTs(gMin, alpha);
+            var gMaxData = ctrl.EvaluateTs(gMax, alpha);
+            var data = new List<SimulationOutput> { centerData[0], aMinData[0], aMaxData[0], gMinData[0], gMaxData[0], };
+
+            action(data);
         }
 
         private static KeyValuePair<int, double> FindBcYear(Action<SimulationOutput, Dictionary<int, double>> fill, List<SimulationOutput> data)
@@ -242,32 +302,24 @@ namespace Main.Figures
             return new KeyValuePair<int, double>(year, 1 / cenYears[year]);
         }
 
-        private static ModelYearConfig FindConfig(SimulationController ctrl, double aMin, double aMax, double gMin,
-            double gMax, bool inclTrans)
+        private static void PrintData(Action<SimulationOutput, Dictionary<int, double>> fill, List<SimulationOutput> data, string name)
         {
-            var result = new ModelYearConfig
+            var cenYears = new Dictionary<int, double>();
+            var aMinYears = new Dictionary<int, double>();
+            var aMaxYears = new Dictionary<int, double>();
+            var gMinYears = new Dictionary<int, double>();
+            var gMaxYears = new Dictionary<int, double>();
+            var dicts = new List<Dictionary<int, double>> { cenYears, aMinYears, aMaxYears, gMinYears, gMaxYears };
+            for (int i = 0; i < 5; i++) fill(data[i], dicts[i]);
+            var all = new Dictionary<string, Dictionary<int, double>>
             {
-                AlphaMin = aMin,
-                AlphaMax = aMax,
-                GammaMin = gMin,
-                GammaMax = gMax,
-                Parameters = new Dictionary<string, KeyValuePair<int, double>>()
+                {"centre", cenYears},
+                {"aMin", aMinYears},
+                {"aMax", aMaxYears},
+                {"gMin", gMinYears},
+                {"gMax", gMaxYears},
             };
-            var alpha = (aMax + aMin)/2;
-            var gamma = (gMax + gMin)/2;
-            // Create data.
-            var centerData = ctrl.EvaluateTs(gamma, alpha);
-            var aMinData = ctrl.EvaluateTs(gamma, aMin);
-            var aMaxData = ctrl.EvaluateTs(gamma, aMax);
-            var gMinData = ctrl.EvaluateTs(gMin, alpha);
-            var gMaxData = ctrl.EvaluateTs(gMax, alpha);
-            var data = new List<SimulationOutput> {centerData[0], aMinData[0], aMaxData[0], gMinData[0], gMaxData[0],};
-            // Derive stuff.
-            result.Parameters.Add("be", FindBcYear(CalculateBackupEnergy, data));
-            result.Parameters.Add("bc", FindBcYear(CalculateBackupCapacity, data));
-            if(inclTrans) result.Parameters.Add("tc", FindBcYear(CalculateTransmissionCapacity, data));
-
-            return result;
+            all.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\modelYear\" + name);
         }
 
         #endregion
@@ -375,7 +427,9 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            ctrl.LogLevel = LogLevelEnum.Flow;
+            ctrl.LogSystemProperties = true;
+            ctrl.LogNodalBalancing = true;
+            ctrl.LogFlows = true;
 
             // Try different alphas.
             var alphas = new[] { 0.0, 0.25, 0.5, 0.75, 1.0 };

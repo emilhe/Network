@@ -34,7 +34,7 @@ namespace BusinessLogic.Cost
         /// </summary>
         public Dictionary<string, double> DetailedSystemCosts(NodeGenes nodeGenes, bool includeTransmission = false)
         {
-            // Calculate    cost elements.
+            // Calculate cost elements.
             var costs = new Dictionary<string, double>();
             if (includeTransmission) costs.Add("Transmission", TransmissionCapacityCost(nodeGenes));
             foreach (var cost in BaseCosts(nodeGenes)) costs.Add(cost.Key, cost.Value);

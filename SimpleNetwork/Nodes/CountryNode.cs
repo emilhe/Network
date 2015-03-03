@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using BusinessLogic.Generators;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Storages;
 using Utils;
@@ -15,17 +15,19 @@ namespace BusinessLogic.Nodes
         public string Abbreviation { get { return CountryInfo.GetAbbrev(Name); } }
 
         public ReModel Model { get; set; }
+        public BalancingStorage Balancing { get; set; }
         public List<IGenerator> Generators { get; set; }
         public StorageCollection StorageCollection { get; set; }
 
         private double _mLoad { get; set; }
-    
+
         public CountryNode(ReModel model)
         {
             Model = model;
 
+            Balancing = new BalancingStorage();
             Generators = Model.GetGenerators();
-            StorageCollection = new StorageCollection {new Curtailment()};
+            StorageCollection = new StorageCollection { Balancing };
         }
 
         public double GetDelta()
@@ -51,6 +53,21 @@ namespace BusinessLogic.Nodes
             // Bind country dependence.
             foreach (var ts in result) ts.Properties.Add("Country", Name);
             return result;
+        }
+
+        public double CurrentValue
+        {
+            get { return Balancing.CurrentValue; }
+        }
+
+        public double Curtailment
+        {
+            get { return Math.Max(0, Balancing.CurrentValue); }
+        }
+
+        public double Backup
+        {
+            get { return Math.Max(0, -Balancing.CurrentValue); }
         }
 
         public void Start(int ticks)
@@ -80,6 +97,7 @@ namespace BusinessLogic.Nodes
             _mLoad = Model.LoadTimeSeries.GetValue(tick);
             foreach (var generator in Generators) generator.TickChanged(tick);
             //foreach (var item in StorageCollection) item.Value.TickChanged(tick);
+            Balancing.TickChanged(tick);
         }
 
     }

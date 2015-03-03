@@ -10,7 +10,7 @@ namespace BusinessLogic.Simulation
         IFailureStrategy FailureStrategy { get; set; }
         IExportStrategy ExportStrategy { get; set; }
 
-        void Simulate(int ticks, LogLevelEnum logLevel = LogLevelEnum.Full);
+        void Simulate(int ticks);
 
         SimulationOutput Output { get; }
 

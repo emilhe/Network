@@ -6,7 +6,7 @@ namespace BusinessLogic.Interfaces
     {
 
         bool Failure { get; }
-        void Record(BalanceResult result);
+        void Record(bool failure);
         void Reset();
 
     }

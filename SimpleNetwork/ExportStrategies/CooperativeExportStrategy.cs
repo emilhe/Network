@@ -25,14 +25,12 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Balance the system utilizing the storages of all nodes.
         /// </summary>
-        public BalanceResult BalanceSystem()
+        public void BalanceSystem()
         {
             // Find relevant storage layer, charge all below.
-            var balanceResult = _mHelper.BalanceGlobally((() => (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge));
+            _mHelper.BalanceGlobally((() => (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge));
             // Distribute power.
             _mHelper.DistributePower();
-
-            return balanceResult;
         }
 
         #region Measurement

@@ -13,9 +13,9 @@ namespace BusinessLogic.FailureStrategies
 
         public bool Failure { get { return _mBlackouts > _mBlackoutsAllowed; } }
 
-        public void Record(BalanceResult result)
+        public void Record(bool failure)
         {
-            if (result.Failure) _mBlackouts++;
+            if (failure) _mBlackouts++;
         }
 
         public void Reset()

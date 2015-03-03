@@ -63,9 +63,8 @@ namespace BusinessLogic.ExportStrategies
                     .ToArray();
         }
 
-        public BalanceResult BalanceSystem()
+        public void BalanceSystem()
         {
-            var result = new BalanceResult {Curtailment = 0.0};
             _mSystemResponse = (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge;
             _mFlows.MultiLoop(indices => _mFlows[indices[0], indices[1]] = 0);
 
@@ -82,14 +81,8 @@ namespace BusinessLogic.ExportStrategies
                         .Sum();
                 if (Math.Abs(storage) < Tolerance) continue;
 
-                // Record curtailment, if any.
-                if (_mStorageMap[_mStorageLevel] == -1) result.Curtailment = _mMismatches.Sum();
-
                 DoFlowStuff(_mStorageMap[_mStorageLevel]);
             }
-
-            result.Failure = (result.Curtailment < -_mNodes.Count*Tolerance);
-            return result;
         }
 
         private void DoFlowStuff(double efficiency)

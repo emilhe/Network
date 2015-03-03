@@ -16,9 +16,9 @@ namespace BusinessLogic.ExportStrategies
         /// <summary>
         /// Charge all nodes individually until all energy is used or the storage is full.
         /// </summary>
-        public BalanceResult BalanceSystem()
+        public void BalanceSystem()
         {
-            return _mHelper.BalanceLocally(i => true, true);
+            _mHelper.BalanceLocally(i => true, true);
         }
 
         #region Measurement

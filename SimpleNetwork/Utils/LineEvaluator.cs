@@ -23,7 +23,7 @@ namespace BusinessLogic.Utils
                 }
                 // Do simulation.
                 watch.Restart();
-                simulation.Simulate(8765 * years, LogLevelEnum.None);
+                simulation.Simulate(8765 * years);
                 Console.WriteLine("Penetation " + pen + ": " +
                                   watch.ElapsedMilliseconds + ", " + (simulation.Output.Success ? "SUCCESS" : "FAIL"));
                 return simulation.Output.Success;

@@ -9,9 +9,12 @@ namespace BusinessLogic.Interfaces
         string Abbreviation { get; }
 
         double GetDelta();
+        double Curtailment { get; }
+        double Backup { get; }
 
         StorageCollection StorageCollection { get; }
         List<IGenerator> Generators { get; }
+        BalancingStorage Balancing { get; }
         //ITimeSeries LoadTimeSeries { get; }
     }
 }
