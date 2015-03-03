@@ -117,6 +117,7 @@ namespace BusinessLogic.Simulation
         {
             _mTickListeners = new List<ITickListener>();
             _mTickListeners.AddRange(Nodes);
+            _mTickListeners.AddRange(Nodes.Select(item => item.Balancing));
         }
 
         /// <summary>

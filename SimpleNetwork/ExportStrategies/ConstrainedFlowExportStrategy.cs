@@ -65,10 +65,14 @@ namespace BusinessLogic.ExportStrategies
 
         public void BalanceSystem()
         {
-            _mSystemResponse = (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge;
+            // Reset flow vectors.
             _mFlows.MultiLoop(indices => _mFlows[indices[0], indices[1]] = 0);
 
-            // Loop through levels.
+            // Transmission.
+            DoFlowStuff(-1);
+
+            // Storage interaction.
+            _mSystemResponse = (_mMismatches.Sum() > 0) ? Response.Charge : Response.Discharge;
             for (_mStorageLevel = 0; _mStorageLevel < _mStorageMap.Length; _mStorageLevel++)
             {
                 // Is the system balanced?
@@ -79,28 +83,22 @@ namespace BusinessLogic.ExportStrategies
                         .Where(item => item.Contains(_mStorageMap[_mStorageLevel]))
                         .Select(item => item.Get(_mStorageMap[_mStorageLevel]).AvailableEnergy(_mSystemResponse))
                         .Sum();
-                if (Math.Abs(storage) < Tolerance) continue;
+                 if (Math.Abs(storage) < Tolerance) continue;
 
                 DoFlowStuff(_mStorageMap[_mStorageLevel]);
+            }
+
+            // Dump the rest in the balancing vector.
+            for (int index = 0; index < _mNodes.Count; index++)
+            {
+                _mNodes[index].Balancing.Inject(_mMismatches[index]);
+                _mMismatches[index] = 0;
             }
         }
 
         private void DoFlowStuff(double efficiency)
         {
-            // Setup limits.
-            for (int idx = 0; idx < _mNodes.Count; idx++)
-            {
-                if (!_mNodes[idx].StorageCollection.Contains(efficiency))
-                {
-                    _mLoLims[idx] = 0;
-                    _mHiLims[idx] = 0;
-                    continue;
-                }
-                var storage = _mNodes[idx].StorageCollection.Get(efficiency);
-                // IMPORTANT: Since storages might be losse, it is only legal to charge OR discharge, otherwise energy dissipates.
-                _mLoLims[idx] = (_mMismatches.Sum() > 0) ? -storage.AvailableEnergy(Response.Charge) : 0;
-                _mHiLims[idx] = (_mMismatches.Sum() > 0) ? 0 : -storage.AvailableEnergy(Response.Discharge);
-            }
+            SetupLimits(efficiency);
 
             // TODO: Pass capacity used in prios steps to solver (recorded in _mFlow).
             // Determine FLOWS using Gurobi optimization.
@@ -119,6 +117,33 @@ namespace BusinessLogic.ExportStrategies
             // Save flow result temporarily.
             _mFlows.MultiLoop(indices => _mFlows[indices[0], indices[1]] +=
                 _mConstrainedFlowOptimizer.Flows[indices[0], indices[1]]);
+        }
+
+        private void SetupLimits(double efficiency)
+        {
+            // Setup limits.
+            for (int idx = 0; idx < _mNodes.Count; idx++)
+            {
+                // Transmission.
+                if (efficiency == -1)
+                {
+                    _mLoLims[idx] = 0;
+                    _mHiLims[idx] = 0;
+                    continue;
+                }
+                // No storage available.
+                if (!_mNodes[idx].StorageCollection.Contains(efficiency))
+                {
+                    _mLoLims[idx] = 0;
+                    _mHiLims[idx] = 0;
+                    continue;
+                }
+                // Storage found.
+                var storage = _mNodes[idx].StorageCollection.Get(efficiency);
+                // IMPORTANT: Since storages might be losse, it is only legal to charge OR discharge, otherwise energy dissipates (HACK!!).
+                _mLoLims[idx] = (_mMismatches.Sum() > 0) ? -storage.AvailableEnergy(Response.Charge) : 0;
+                _mHiLims[idx] = (_mMismatches.Sum() > 0) ? 0 : -storage.AvailableEnergy(Response.Discharge);
+            }
         }
 
         #region Measurement

@@ -183,6 +183,57 @@ namespace BusinessLogic.Utils
         }
     }
 
+    public class NoFlowCore : IParameterEvaluatorCore
+    {
+        public List<CountryNode> Nodes { get; private set; }
+
+        public ModelYearConfig Config
+        {
+            get { return _mConfig; }
+        }
+
+        public SimulationController BeController { get { return _mCtrl; } }
+        public SimulationController BcController { get { return _mCtrl; } }
+        public SimulationController TcController { get { return _mCtrl; } }
+
+        private readonly ModelYearConfig _mConfig;
+        private readonly SimulationController _mCtrl;
+
+        public NoFlowCore(int length = 32, List<CountryNode> nodes = null)
+        {
+            // Controller.
+            _mCtrl = new SimulationController();
+            _mCtrl.ExportStrategies.Add(new ExportStrategyInput
+            {
+                ExportStrategy = ExportStrategy.None
+            });
+            _mCtrl.LogNodalBalancing = true;
+            _mCtrl.LogSystemProperties = true;
+            _mCtrl.Sources.Add(new TsSourceInput { Length = length, Offset = 0 });
+            _mCtrl.NodeFuncs.Clear();
+            _mCtrl.NodeFuncs.Add("No storage", input =>
+            {
+                foreach (var node in Nodes)
+                    node.Model.SetOffset((int)input.Offset * Stuff.HoursInYear);
+                return Nodes;
+            });
+            // The config (fake). 
+            _mConfig = new ModelYearConfig
+            {
+                Parameters = new Dictionary<string, KeyValuePair<int, double>>
+                {
+                    {"be", new KeyValuePair<int, double>(0, 1.0/length)},
+                    {"bc", new KeyValuePair<int, double>(0, 1)},
+                    {"tc", new KeyValuePair<int, double>(0, 1)}
+
+                }
+            };
+            // TODO: Make source configurable
+            Nodes = nodes;
+        }
+    }
+
+
     #endregion
 
     public class ParameterEvaluator

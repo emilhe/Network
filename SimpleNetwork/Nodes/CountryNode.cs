@@ -27,7 +27,7 @@ namespace BusinessLogic.Nodes
 
             Balancing = new BalancingStorage();
             Generators = Model.GetGenerators();
-            StorageCollection = new StorageCollection { Balancing };
+            StorageCollection = new StorageCollection();
         }
 
         public double GetDelta()
@@ -97,7 +97,6 @@ namespace BusinessLogic.Nodes
             _mLoad = Model.LoadTimeSeries.GetValue(tick);
             foreach (var generator in Generators) generator.TickChanged(tick);
             //foreach (var item in StorageCollection) item.Value.TickChanged(tick);
-            Balancing.TickChanged(tick);
         }
 
     }
