@@ -1,0 +1,42 @@
+﻿using System.Drawing;
+using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
+using BusinessLogic.Cost;
+using Utils;
+
+namespace Controls.Charting
+{
+    public partial class NodeGeneChart : UserControl
+    {
+
+        public NodeGeneChart()
+        {
+            InitializeComponent();
+            ChartUtils.StyleChart(chart1);
+        }
+
+        public void SetData(NodeGenes[] geneCollection)
+        { 
+            chart1.Series.Clear();
+            var wind = new Series {Color = Color.DeepSkyBlue, ChartType = SeriesChartType.StackedColumn};
+            var solar = new Series { Color = Color.Orange, ChartType = SeriesChartType.StackedColumn };
+            int i = 0;
+            foreach (var genes in geneCollection)
+            {
+                int j = 0;
+                foreach (var gene in genes)
+                {
+                    if(i == 0) chart1.ChartAreas[0].AxisX.CustomLabels.Add(j, j + 1, CountryInfo.GetShortAbbrev(gene.Key));
+                    wind.Points.AddXY(j + 0.25 + 0.5/geneCollection.Length*i, gene.Value.Gamma * gene.Value.Alpha);
+                    solar.Points.AddXY(j + 0.25 + 0.5/geneCollection.Length*i, gene.Value.Gamma * (1 - gene.Value.Alpha));
+                    j++;
+                }
+                i++;
+            }
+            chart1.Series.Add(wind);
+            chart1.Series.Add(solar);
+            // Remove legends.
+            chart1.Legends.Clear();
+        }
+    }
+}

@@ -7,7 +7,6 @@ using BusinessLogic.Simulation;
 using BusinessLogic.Utils;
 using Controls.Charting;
 using SimpleImporter;
-using ExportStrategyInput = BusinessLogic.Simulation.ExportStrategyInput;
 using TsSourceInput = BusinessLogic.Simulation.TsSourceInput;
 
 namespace Main.Figures
@@ -29,12 +28,11 @@ namespace Main.Figures
             };
             var ctrl = new SimulationController
             {
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput
+                    new ExportSchemeInput
                     {
-                        DistributionStrategy = DistributionStrategy.SkipFlow,
-                        ExportStrategy = ExportStrategy.Cooperative
+                        Scheme = ExportScheme.UnconstrainedSynchronized
                     }
                 },
                 Sources = new List<TsSourceInput>
@@ -56,55 +54,54 @@ namespace Main.Figures
             ChartUtils.SaveChart(view.MainChart, 1000, 500, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\CompareSources.png");
         }
 
-        public static void CompareExportSchemes(MainForm main)
-        {
-            var view = main.DisplayContour();
-            var grid = new GridScanParameters
-            {
-                MixingFrom = 0.45,
-                MixingTo = 0.85,
-                MixingSteps = 40,
-                PenetrationFrom = 1.00,
-                PenetrationTo = 1.70,
-                PenetrationSteps = 100
-            };
-            var ctrl = new SimulationController
-            {
-                ExportStrategies = new List<ExportStrategyInput>
-                {
-                    new ExportStrategyInput
-                    {
-                        DistributionStrategy = DistributionStrategy.SkipFlow,
-                        ExportStrategy = ExportStrategy.Cooperative
-                    },
-                    new ExportStrategyInput
-                    {
-                        DistributionStrategy = DistributionStrategy.SkipFlow,
-                        ExportStrategy = ExportStrategy.Selfish
-                    },
-                    new ExportStrategyInput
-                    {
-                        DistributionStrategy = DistributionStrategy.SkipFlow,
-                        ExportStrategy = ExportStrategy.None
-                    }
-                },
-                Sources = new List<TsSourceInput>
-                {
-                    new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 32},
-                }
-            };
+        //public static void CompareExportSchemes(MainForm main)
+        //{
+        //    var view = main.DisplayContour();
+        //    var grid = new GridScanParameters
+        //    {
+        //        MixingFrom = 0.45,
+        //        MixingTo = 0.85,
+        //        MixingSteps = 40,
+        //        PenetrationFrom = 1.00,
+        //        PenetrationTo = 1.70,
+        //        PenetrationSteps = 100
+        //    };
+        //    var ctrl = new SimulationController
+        //    {
+        //        ExportStrategies = new List<ExportStrategyInput>
+        //        {
+        //            new ExportStrategyInput
+        //            {
+        //                DistributionStrategy = DistributionStrategy.SkipFlow,
+        //                ExportScheme = ExportScheme.Cooperative
+        //            },
+        //            new ExportStrategyInput
+        //            {
+        //                DistributionStrategy = DistributionStrategy.SkipFlow,
+        //                ExportScheme = ExportScheme.Selfish
+        //            },
+        //            new ExportStrategyInput
+        //            {
+        //                DistributionStrategy = DistributionStrategy.SkipFlow,
+        //                ExportScheme = ExportScheme.None
+        //            }
+        //        },
+        //        Sources = new List<TsSourceInput>
+        //        {
+        //            new TsSourceInput {Source = TsSource.VE, Offset = 0, Length = 32},
+        //        }
+        //    };
 
-            var data = ctrl.EvaluateGrid(grid);
-            view.AddData(grid.Rows, grid.Cols, data[0].Grid, "Cooperative");
-            view.AddData(grid.Rows, grid.Cols, data[1].Grid, "Selfish");
-            view.AddData(grid.Rows, grid.Cols, data[2].Grid, "None");
+        //    var data = ctrl.EvaluateGrid(grid);
+        //    view.AddData(grid.Rows, grid.Cols, data[0].Grid, "Cooperative");
+        //    view.AddData(grid.Rows, grid.Cols, data[1].Grid, "Selfish");
+        //    view.AddData(grid.Rows, grid.Cols, data[2].Grid, "None");
 
-            // Prepare chart printing.
-            view.MainChart.ChartAreas[0].AxisX.Title = "Penetration, γ";
-            view.MainChart.ChartAreas[0].AxisY.Title = "Mixing, α";
-            ChartUtils.SaveChart(view.MainChart, 1000, 500, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\ExportSchemes.png");
-        }
-
+        //    // Prepare chart printing.
+        //    view.MainChart.ChartAreas[0].AxisX.Title = "Penetration, γ";
+        //    view.MainChart.ChartAreas[0].AxisY.Title = "Mixing, α";
+        //    ChartUtils.SaveChart(view.MainChart, 1000, 500, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\ExportSchemes.png");
+        //}
 
     }
 }

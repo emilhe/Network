@@ -11,7 +11,7 @@ namespace BusinessLogic
     public class NetworkModel
     {
 
-        private IExportStrategy _mExportStrategy;
+        private IExportScheme _mExportScheme;
         private IList<INode> _mNodes;
         private double[] _mMismatches;
 
@@ -24,21 +24,21 @@ namespace BusinessLogic
             {
                 _mNodes = value;
                 _mMismatches = new double[_mNodes.Count];
-                if(ExportStrategy != null) ExportStrategy.Bind(_mNodes, _mMismatches);
+                if(ExportScheme != null) ExportScheme.Bind(_mNodes, _mMismatches);
             }
         }
 
-        public IExportStrategy ExportStrategy
+        public IExportScheme ExportScheme
         {
             get
             {
-                return _mExportStrategy;
+                return _mExportScheme;
             }
             set
             {
-                _mExportStrategy = value;
+                _mExportScheme = value;
                 _mMismatches = new double[_mNodes.Count];
-                if(_mNodes != null) _mExportStrategy.Bind(_mNodes, _mMismatches);
+                if(_mNodes != null) _mExportScheme.Bind(_mNodes, _mMismatches);
             }
         }
 
@@ -67,21 +67,21 @@ namespace BusinessLogic
         #region Construction
 
         // TODO: Remove HACK
-        public NetworkModel(List<CountryNode> nodes, IExportStrategy exportStrategy,
+        public NetworkModel(List<CountryNode> nodes, IExportScheme exportScheme,
             IFailureStrategy failureStrategy = null)
-            : this(nodes.Select(item => (INode) item).ToList(), exportStrategy, failureStrategy)
+            : this(nodes.Select(item => (INode) item).ToList(), exportScheme, failureStrategy)
         {
         }
 
-        public NetworkModel(List<INode> nodes, IExportStrategy exportStrategy, IFailureStrategy failureStrategy = null)
+        public NetworkModel(List<INode> nodes, IExportScheme exportScheme, IFailureStrategy failureStrategy = null)
         {
             if (failureStrategy == null) failureStrategy = new NoBlackoutStrategy();
             _mMismatches = new double[nodes.Count];
 
             Nodes = nodes;
-            ExportStrategy = exportStrategy;
+            ExportScheme = exportScheme;
             FailureStrategy = failureStrategy;
-            ExportStrategy.Bind(Nodes, _mMismatches);
+            ExportScheme.Bind(Nodes, _mMismatches);
 
         }
 
@@ -96,10 +96,10 @@ namespace BusinessLogic
             }
             Mismatch = _mMismatches.Sum();
 
-            // Delegate balancing to the export strategy.
-            ExportStrategy.BalanceSystem();
+            // Delegate balancing to the export scheme.
+            ExportScheme.BalanceSystem();
 
-            // TODO: What about failure strategy?
+            // TODO: What about failure scheme?
             // FailureStrategy.Record(Failure);
         }
 

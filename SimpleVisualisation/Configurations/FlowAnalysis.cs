@@ -9,7 +9,6 @@ using BusinessLogic.Utils;
 using SimpleImporter;
 using Utils;
 using Utils.Statistics;
-using ExportStrategyInput = BusinessLogic.Simulation.ExportStrategyInput;
 using TsSourceInput = BusinessLogic.Simulation.TsSourceInput;
 
 namespace Main.Configurations
@@ -34,9 +33,9 @@ namespace Main.Configurations
             var ctrl = new SimulationController
             {
                 InvalidateCache = true,
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput{ExportStrategy = ExportStrategy.None}
+                    new ExportSchemeInput{Scheme = ExportScheme.None}
                 },
                 Sources = new List<TsSourceInput>
                 {
@@ -62,10 +61,9 @@ namespace Main.Configurations
         {
             var ctrl = new SimulationController();
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.ISET, Offset = 0, Length = 1 });
-            ctrl.ExportStrategies.Add(new ExportStrategyInput
+            ctrl.ExportStrategies.Add(new ExportSchemeInput()
             {
-                ExportStrategy = ExportStrategy.Cooperative,
-                DistributionStrategy = DistributionStrategy.MinimalFlow
+                Scheme = ExportScheme.ConstrainedLocalized
             });
             ctrl.NodeFuncs.Add("6h batt (homogeneous), 25TWh hydrogen (homogeneous), 150 TWh hydro-bio (heterogeneous)", s =>
             {
@@ -107,13 +105,13 @@ namespace Main.Configurations
             //ctrl.ExportStrategies.Add(
             //    new ExportStrategyInput
             //    {
-            //        ExportStrategy = ExportStrategy.Cooperative,
+            //        ExportScheme = ExportScheme.Cooperative,
             //        DistributionStrategy = DistributionStrategy.MinimalFlow
             //    });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput()
                 {
-                    ExportStrategy = ExportStrategy.ConstrainedFlow
+                    Scheme = ExportScheme.ConstrainedLocalized
                 });
             ctrl.NodeFuncs.Add("6h batt (homo), 25TWh hydrogen (homo), 150 TWh hydro (hetero)", s =>
             {
@@ -156,7 +154,7 @@ namespace Main.Configurations
                 if (idx == 0) view.Setup(capacities.Keys.ToList());
 
                 var key = output.Properties["NodeTag"];
-                var exp = ((ExportStrategy)byte.Parse(output.Properties["ExportStrategy"])).GetDescription();
+                var exp = ((ExportScheme)byte.Parse(output.Properties["ExportScheme"])).GetDescription();
                 view.AddData(capacities.Values.ToArray(), key + " : " + exp);
                 //view.AddData(maxVals,key + " : " + exp + "@MAX");
 

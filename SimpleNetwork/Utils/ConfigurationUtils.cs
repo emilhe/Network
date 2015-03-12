@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BusinessLogic.ExportStrategies;
 using BusinessLogic.Generators;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
@@ -15,38 +16,71 @@ namespace BusinessLogic.Utils
 
         private const int Year = 2010;
 
-        public static EdgeSet GetEuropeEdges(List<CountryNode> nodes)
+        //public static EdgeSet GetEuropeEdges(List<CountryNode> nodes)
+        //{
+        //    return GetEdges(nodes.Select(item => item.Name).ToList(), "NtcMatrix", Double.MaxValue);
+        //}
+
+        //public static EdgeSet GetEuropeEdges(List<string> nodes)
+        //{
+        //    return GetEdges(nodes, "NtcMatrix", Double.MaxValue);
+        //}
+
+        //public static EdgeSet GetEdges(List<INode> nodes, string key, double frac)
+        //{
+        //    return GetEdges(nodes.Select(item => item.Name).ToList(), key, frac);
+        //}
+
+        //public static EdgeSet GetEdges(List<string> nodes, string key, double frac)
+        //{
+        //    var result = new EdgeSet(nodes.Count);
+        //    // Create mapping between countryname and index.
+        //    var idxMap = new Dictionary<string, int>();
+        //    for (int i = 0; i < nodes.Count; i++) idxMap.Add(nodes[i], i);
+        //    // Connect the countries.
+        //    var ntcData = ProtoStore.LoadLinkData(key);
+        //    foreach (var row in ntcData)
+        //    {
+        //        if (row.From.Equals(row.To)) continue;
+        //        // Skip non existing links.
+        //        if (row.LinkCapacity < 1) continue;
+        //        result.Connect(idxMap[row.From], idxMap[row.To], 1, row.LinkCapacity * frac); // For now, don't add the capacity.
+        //    }
+
+        //    return result;
+        //}
+
+        public static EdgeCollection GetEdgeObject(List<INode> nodes, string key, double frac)
         {
-            return GetEdges(nodes.Select(item => item.Name).ToList(), "NtcMatrix", Double.MaxValue);
+            return GetEdgeObject(nodes.Select(item => item.Name).ToList(), key, frac);
         }
 
-        public static EdgeSet GetEuropeEdges(List<string> nodes)
+        public static EdgeCollection GetEuropeEdgeObject(List<CountryNode> nodes)
         {
-            return GetEdges(nodes, "NtcMatrix", Double.MaxValue);
+            return GetEdgeObject(nodes.Select(item => item.Name).ToList(), "NtcMatrix", Double.MaxValue);
         }
 
-        public static EdgeSet GetEdges(List<INode> nodes, string key, double frac)
+        public static EdgeCollection GetEuropeEdgeObject(List<string> nodes)
         {
-            return GetEdges(nodes.Select(item => item.Name).ToList(), key, frac);
+            return GetEdgeObject(nodes, "NtcMatrix", Double.MaxValue);
         }
 
-        public static EdgeSet GetEdges(List<string> nodes, string key, double frac)
+        public static EdgeCollection GetEdgeObject(List<string> nodes, string key, double frac)
         {
-            var result = new EdgeSet(nodes.Count);
-            // Create mapping between countryname and index.
-            var idxMap = new Dictionary<string, int>();
-            for (int i = 0; i < nodes.Count; i++) idxMap.Add(nodes[i], i);
-            // Connect the countries.
-            var ntcData = ProtoStore.LoadLinkData(key);
-            foreach (var row in ntcData)
+            // TODO: INCLUDE CONSTRAINT (e.g. use FRAC variable)
+            var keys = new List<string>();
+            var links = new List<LinkDataRow>();
+            foreach (var link in ProtoStore.LoadLinkData(key))
             {
-                if (row.CountryFrom.Equals(row.CountryTo)) continue;
-                // Skip non existing links.
-                if (row.LinkCapacity < 1) continue;
-                result.Connect(idxMap[row.CountryFrom], idxMap[row.CountryTo], 1, row.LinkCapacity * frac); // For now, don't add the capacity.
+                if (link.LinkCapacity < 1e-3) continue;
+                if (link.From.Equals(link.To)) continue;
+                if (keys.Contains(link.From + "-" + link.To)) continue;
+                if (keys.Contains(link.To + "-" + link.From)) continue;
+                links.Add(link);
+                keys.Add(link.From + "-" + link.To);
             }
 
-            return result;
+            return new EdgeCollection(nodes.ToArray(),links);
         }
 
         #region Basic CountryNode setup

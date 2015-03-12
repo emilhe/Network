@@ -69,6 +69,7 @@
     <Compile Include="SimulationTest.cs" />
     <Compile Include="StorageTest.cs" />
     <Compile Include="ProtoTest.cs" />
+    <Compile Include="SynchronizedFlowTest.cs" />
     <Compile Include="UtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>

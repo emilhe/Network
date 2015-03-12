@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using SimpleImporter;
 using BusinessLogic.ExportStrategies;
-using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.Interfaces;
 using Utils;
 
@@ -26,7 +25,7 @@ namespace Controls
                 cbSource.Items.Add(value.GetDescription());
             // Bind strategies.
             cbExport.Items.Clear();
-            foreach (ExportStrategy value in Enum.GetValues(typeof(ExportStrategy)))
+            foreach (ExportScheme value in Enum.GetValues(typeof(ExportScheme)))
                 cbExport.Items.Add(value.GetDescription());
         }
 
@@ -36,25 +35,25 @@ namespace Controls
             {
                 Years = (int)numYears.Value,
                 Source = (TsSource)cbSource.SelectedIndex,
-                ExportStrategy = MapExport(cbExport.SelectedItem)
+                ExportScheme = MapExport(cbExport.SelectedItem)
             };
         }
 
-        private IExportStrategy MapExport(object selectedItem)
+        private IExportScheme MapExport(object selectedItem)
         {
-            if (selectedItem.Equals(ExportStrategy.None.GetDescription())) 
-                return new NoExportStrategy();
-            if (selectedItem.Equals(ExportStrategy.Selfish.GetDescription()))
-                return new SelfishExportStrategy(MapDistribution());
-            if (selectedItem.Equals(ExportStrategy.Cooperative.GetDescription()))
-                return new CooperativeExportStrategy(MapDistribution());
-            throw new ArgumentException("Unable to map export strategy.");
+            if (selectedItem.Equals(ExportScheme.None.GetDescription())) 
+                return new NoExportScheme();
+            //if (selectedItem.Equals(ExportScheme.Selfish.GetDescription()))
+            //    return new SelfishExportStrategy(MapDistribution());
+            //if (selectedItem.Equals(ExportScheme.Cooperative.GetDescription()))
+            //    return new CooperativeExportStrategy(MapDistribution());
+            throw new ArgumentException("Unable to map export scheme.");
         }
 
-        private IDistributionStrategy MapDistribution()
-        {
-            return cbFlow.Checked ? (IDistributionStrategy) new MinimalFlowStrategy(new List<INode>(), null) : new SkipFlowStrategy();
-        }
+        //private IDistributionStrategy MapDistribution()
+        //{
+        //    return cbFlow.Checked ? (IDistributionStrategy) new MinimalFlowStrategy(new List<INode>(), null) : new SkipFlowStrategy();
+        //}
 
         private void btnRun_Click(object sender, EventArgs e)
         {
@@ -64,7 +63,7 @@ namespace Controls
 
     public class ModelParameters
     {
-        public IExportStrategy ExportStrategy { get; set; }
+        public IExportScheme ExportScheme { get; set; }
         public TsSource Source { get; set; }
         public int Years { get; set; }
     }

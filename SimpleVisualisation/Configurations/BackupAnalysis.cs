@@ -27,10 +27,9 @@ namespace Main.Configurations
             var ctrl = new SimulationController
             {
                 InvalidateCache = false,
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    //new ExportStrategyInput{ExportStrategy = ExportStrategy.None},
-                    new ExportStrategyInput{ExportStrategy = ExportStrategy.Cooperative, DistributionStrategy = DistributionStrategy.SkipFlow}
+                    new ExportSchemeInput{Scheme = ExportScheme.UnconstrainedSynchronized}
                 },
                 Sources = new List<TsSourceInput>
                 {
@@ -67,9 +66,9 @@ namespace Main.Configurations
             var ctrlFlow = new SimulationController
             {
                 InvalidateCache = false,
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput{ExportStrategy = ExportStrategy.Cooperative, DistributionStrategy = DistributionStrategy.SkipFlow}
+                    new ExportSchemeInput(){Scheme = ExportScheme.UnconstrainedSynchronized}
                 },
                 Sources = new List<TsSourceInput> { new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 }, }
             };
@@ -83,7 +82,7 @@ namespace Main.Configurations
             var ctrlNoFlow = new SimulationController
             {
                 InvalidateCache = false,
-                ExportStrategies = new List<ExportStrategyInput> { new ExportStrategyInput { ExportStrategy = ExportStrategy.None }, },
+                ExportStrategies = new List<ExportSchemeInput> { new ExportSchemeInput() { Scheme = ExportScheme.None }, },
                 Sources = new List<TsSourceInput> { new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 }, }
             };
             ctrlNoFlow.NodeFuncs.Clear();
@@ -120,9 +119,9 @@ namespace Main.Configurations
             var ctrlFlow = new SimulationController
             {
                 InvalidateCache = false,
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput{ExportStrategy = ExportStrategy.ConstrainedFlow}
+                    new ExportSchemeInput(){Scheme = ExportScheme.ConstrainedLocalized}
                 },
                 Sources = new List<TsSourceInput> { new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 }, }
             };
@@ -137,7 +136,7 @@ namespace Main.Configurations
             //var ctrlNoFlow = new SimulationController
             //{
             //    InvalidateCache = false,
-            //    ExportStrategies = new List<ExportStrategyInput> { new ExportStrategyInput { ExportStrategy = ExportStrategy.None }, },
+            //    ExportStrategies = new List<ExportStrategyInput> { new ExportStrategyInput { ExportScheme = ExportScheme.None }, },
             //    Sources = new List<TsSourceInput> { new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 }, }
             //};
             //ctrlNoFlow.NodeFuncs.Clear();
@@ -176,9 +175,9 @@ namespace Main.Configurations
             var ctrlFlow = new SimulationController
             {
                 InvalidateCache = true,
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput{ExportStrategy = ExportStrategy.None}
+                    new ExportSchemeInput{Scheme = ExportScheme.None}
                 },
                 Sources = new List<TsSourceInput> { new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 }, }
             };
@@ -240,9 +239,9 @@ namespace Main.Configurations
             var ctrlFlow = new SimulationController
             {
                 InvalidateCache = true,
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput{ExportStrategy = ExportStrategy.ConstrainedFlow}
+                    new ExportSchemeInput{Scheme = ExportScheme.ConstrainedLocalized}
                 },
                 Sources = new List<TsSourceInput> { new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 }, }
             };
@@ -304,9 +303,9 @@ namespace Main.Configurations
             var ctrlFlow = new SimulationController
             {
                 InvalidateCache = true,
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput{ExportStrategy = ExportStrategy.ConstrainedFlow}
+                    new ExportSchemeInput{Scheme = ExportScheme.ConstrainedLocalized}
                 },
                 Sources = new List<TsSourceInput> { new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 }, }
             };
@@ -352,7 +351,7 @@ namespace Main.Configurations
                     var backups = sim.TimeSeries.Where(item => item.Name.Contains("Backup")).ToArray();
                     var deltaFraction = OptimalDistribution(backups);
                     var key = ((TsSource)int.Parse(sim.Properties["TsSource"]) + ", " +
-                               ((ExportStrategy)int.Parse(sim.Properties["ExportStrategy"])).GetDescription());
+                               ((ExportScheme)int.Parse(sim.Properties["ExportScheme"])).GetDescription());
                     if (includeHomo)
                     {
                         var homoKey = key + ", homo";
@@ -449,10 +448,9 @@ namespace Main.Configurations
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.ISET, Offset = 0, Length = 8 });
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput
                 {
-                    ExportStrategy = ExportStrategy.Cooperative,
-                    DistributionStrategy = DistributionStrategy.SkipFlow
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("Infinite Backup WITH battery + hydrogen", s =>
@@ -570,12 +568,11 @@ namespace Main.Configurations
             };
             var ctrl = new SimulationController
             {
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput
+                    new ExportSchemeInput()
                     {
-                        DistributionStrategy = DistributionStrategy.SkipFlow,
-                        ExportStrategy = ExportStrategy.Cooperative
+                        Scheme = ExportScheme.UnconstrainedSynchronized
                     }
                 },
                 Sources = new List<TsSourceInput>
@@ -612,12 +609,11 @@ namespace Main.Configurations
             };
             var ctrl = new SimulationController
             {
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput
+                    new ExportSchemeInput()
                     {
-                        DistributionStrategy = DistributionStrategy.SkipFlow,
-                        ExportStrategy = ExportStrategy.Cooperative
+                        Scheme = ExportScheme.UnconstrainedSynchronized
                     }
                 },
                 Sources = new List<TsSourceInput>

@@ -79,6 +79,12 @@
     <Reference Include="Gurobi60.NET">
       <HintPath>..\..\..\..\..\..\gurobi600\win64\bin\Gurobi60.NET.dll</HintPath>
     </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>..\packages\MathNet.Numerics.2.4.0\lib\net40\MathNet.Numerics.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics.IO">
+      <HintPath>..\packages\MathNet.Numerics.2.4.0\lib\net40\MathNet.Numerics.IO.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -91,6 +97,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -113,19 +120,19 @@
     <Compile Include="Cost\CostModels\ITransmissionCostModel.cs" />
     <Compile Include="Cost\CostModels\IWindCostModel.cs" />
     <Compile Include="Cost\CostModels\VariableLengthModel.cs" />
-    <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
-    <Compile Include="ExportStrategies\ExportHelper.cs" />
-    <Compile Include="ExportStrategies\ConstrainedFlowExportStrategy.cs" />
-    <Compile Include="ExportStrategies\SelfishExportStrategy.cs" />
+    <Compile Include="ExportStrategies\ConSyncScheme.cs" />
+    <Compile Include="ExportStrategies\EdgeCollection.cs" />
+    <Compile Include="ExportStrategies\ConLocalScheme.cs" />
+    <Compile Include="ExportStrategies\PhaseAngleFlow.cs" />
+    <Compile Include="ExportStrategies\UncLocalScheme.cs" />
+    <Compile Include="ExportStrategies\UncSyncScheme.cs" />
     <Compile Include="FailureStrategies\AllowBlackoutsStrategy.cs" />
     <Compile Include="FailureStrategies\NoBlackoutStrategy.cs" />
     <Compile Include="Interfaces\INode.cs" />
     <Compile Include="Interfaces\IMeasureable.cs" />
-    <Compile Include="Interfaces\IDistributionStrategy.cs" />
-    <Compile Include="ExportStrategies\DistributionStrategies\MinimalFlowStrategy.cs" />
-    <Compile Include="ExportStrategies\NoExportStrategy.cs" />
-    <Compile Include="ExportStrategies\DistributionStrategies\SkipFlowStrategy.cs" />
+    <Compile Include="ExportStrategies\NoExportScheme.cs" />
     <Compile Include="Interfaces\IFailureStrategy.cs" />
+    <Compile Include="Interfaces\IOptimizer.cs" />
     <Compile Include="Interfaces\ITickListener.cs" />
     <Compile Include="Cost\NodeCostCalculator.cs" />
     <Compile Include="Cost\Optimization\NodeChromosome.cs" />
@@ -133,9 +140,9 @@
     <Compile Include="Simulation\ISimulation.cs" />
     <Compile Include="Nodes\ReModel.cs" />
     <Compile Include="Nodes\SuperNode.cs" />
+    <Compile Include="Simulation\ISimulationController.cs" />
     <Compile Include="Simulation\SimulationController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />
-    <Compile Include="Storages\BalancingStorage.cs" />
     <Compile Include="Generators\HydroReservoirGenerator.cs" />
     <Compile Include="Storages\HydroReservoirStorage.cs" />
     <Compile Include="Storages\StorageCollection.cs" />
@@ -145,13 +152,15 @@
     <Compile Include="Interfaces\ITimeSeries.cs" />
     <Compile Include="Interfaces\ITimeSeriesItem.cs" />
     <Compile Include="NetworkModel.cs" />
-    <Compile Include="Interfaces\IExportStrategy.cs" />
+    <Compile Include="Interfaces\IExportScheme.cs" />
     <Compile Include="Nodes\CountryNode.cs" />
     <Compile Include="Generators\SuperGenerator.cs" />
-    <Compile Include="TimeSeries\BasicTimeSeries.cs" />
+    <Compile Include="TimeSeries\Measureable.cs" />
+    <Compile Include="TimeSeries\TimeSeriesMetaData.cs" />
     <Compile Include="TimeSeries\IndexedTimeSeries.cs" />
     <Compile Include="TimeSeries\Mapping.cs" />
     <Compile Include="TimeSeries\ImmutableTimeSeries.cs" />
+    <Compile Include="Utils\CoreOptimizer.cs" />
     <Compile Include="Utils\FlowOptimizer.cs" />
     <Compile Include="Interfaces\IGenerator.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
@@ -169,7 +178,11 @@
     <Compile Include="TimeSeries\TickTimeSeriesItem.cs" />
     <Compile Include="Utils\ConfigurationUtils.cs" />
     <Compile Include="Utils\ConstrainedFlowOptimizer.cs" />
+    <Compile Include="Utils\LinearOptimizer.cs" />
     <Compile Include="Utils\GridEvaluator.cs" />
+    <Compile Include="Utils\LinearOptimizer2.cs" />
+    <Compile Include="Utils\QuadraticOptimizer.cs" />
+    <Compile Include="Utils\SystemOptimizer.cs" />
     <Compile Include="Utils\LineEvaluator.cs" />
     <Compile Include="Utils\MismatchOptimizer.cs" />
     <Compile Include="Utils\ParameterEvaluator.cs" />
@@ -193,7 +206,13 @@
       <Name>Utils</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="App_Readme\MathNet.Numerics.authors.txt" />
+    <Content Include="App_Readme\MathNet.Numerics.copyright.txt" />
+    <Content Include="App_Readme\MathNet.Numerics.readme.txt" />
+    <Content Include="libiomp5md.dll" />
+    <Content Include="MathNet.Numerics.MKL.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

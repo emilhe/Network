@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Storages;
+using BusinessLogic.TimeSeries;
 using Utils;
 
 namespace BusinessLogic.Nodes
@@ -15,7 +16,7 @@ namespace BusinessLogic.Nodes
         public string Abbreviation { get { return CountryInfo.GetAbbrev(Name); } }
 
         public ReModel Model { get; set; }
-        public BalancingStorage Balancing { get; set; }
+        public Measureable Balancing { get; set; }
         public List<IGenerator> Generators { get; set; }
         public StorageCollection StorageCollection { get; set; }
 
@@ -25,7 +26,7 @@ namespace BusinessLogic.Nodes
         {
             Model = model;
 
-            Balancing = new BalancingStorage();
+            Balancing = new Measureable("Balancing");
             Generators = Model.GetGenerators();
             StorageCollection = new StorageCollection();
         }

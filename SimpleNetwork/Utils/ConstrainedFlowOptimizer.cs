@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessLogic.ExportStrategies;
 using Gurobi;
 
 namespace BusinessLogic.Utils
@@ -30,7 +31,7 @@ namespace BusinessLogic.Utils
 
         private readonly GRBEnv _mEnv;
         private readonly int _mN;
-        private EdgeSet _mEdges;
+        private EdgeCollection _mEdges;
 
         private readonly ModelWrapper _mFlow;
         private readonly ModelWrapper _mBalance;
@@ -64,7 +65,7 @@ namespace BusinessLogic.Utils
         /// Set the network edges.
         /// </summary>
         /// <param name="edges"> edges </param>
-        public void SetEdges(EdgeSet edges)
+        public void SetEdges(EdgeCollection edges)
         {
             if (edges.NodeCount != _mN)
             {
@@ -242,7 +243,7 @@ namespace BusinessLogic.Utils
                 for (int j = 0; j < _mN; j++)
                 {
                     if (!_mEdges.EdgeExists(i, j)) continue;
-                    //wrapper.EdgeVariables[i, j] = wrapper.Model.AddVar(0, _mEdges.GetEdgeCapacity(i, j), 0, Precision, "edge" + i + j);
+                    //wrapper.Edges[i, j] = wrapper.Model.AddVar(0, _mEdges.GetEdgeCapacity(i, j), 0, Precision, "edge" + i + j);
                     wrapper.EdgeVariables[i, j] = wrapper.Model.AddVar(-_mEdges.GetEdgeCapacity(i, j), _mEdges.GetEdgeCapacity(i, j), 0, Precision, "edge" + i + j);
                 }
             }

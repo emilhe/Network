@@ -26,20 +26,13 @@ namespace SimpleImporter
         [Description("Offshore Wind Generation")] OffshoreWind = 5
     }
 
-    public enum ExportStrategy : byte
+    public enum ExportScheme : byte
     {
         [Description("No Export")] None = 0,
-        [Description("Selfish")] Selfish = 1,
-        [Description("Cooperative")] Cooperative = 2,
-        [Description("Constrained")] ConstrainedFlow = 3,
-    }
-
-    public enum DistributionStrategy : byte
-    {
-        [Description("Skip Flow")]
-        SkipFlow = 0,
-        [Description("Minimal Flow")]
-        MinimalFlow = 1,
+        [Description("Unconstrained synchronized")] UnconstrainedSynchronized = 1,
+        [Description("Unconstrained localized")] UnconstrainedLocalized = 2,
+        [Description("Constrained synchronized")] ConstrainedSynchronized = 3,
+        [Description("Constrained localized")] ConstrainedLocalized = 4,
     }
 
 }

@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using BusinessLogic;
 using BusinessLogic.Cost;
+using BusinessLogic.Cost.Optimization;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Simulation;
 using BusinessLogic.Utils;
 using Controls;
 using Controls.Charting;
 using Main.Configurations;
 using Main.Documentation;
 using Main.Figures;
+using NUnit.Framework.Constraints;
 using SimpleImporter;
 using Utils;
 
@@ -60,9 +64,9 @@ namespace Main
 
             //var oldOpt = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK=1.txt");
             //Optimization.Genetic(1,25);
-            Optimization.Cukoo(1, 25);
-            Optimization.Cukoo(2, 25);
-            Optimization.Cukoo(3, 25);
+            //Optimization.Cukoo(1, 25);
+            //Optimization.Cukoo(2, 25);
+            //Optimization.Cukoo(3, 25);
             //ModelYearAnalysis.DetermineModelYears(this, true);
 
             //var oldOpt = FileUtils.FromJsonFile < NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\onshoreVEgeneticConstraintTransK=1.txt");
@@ -72,16 +76,109 @@ namespace Main
             //var oldCost = calc.SystemCost(oldOpt, true);
             //var newCost = calc.SystemCost(newOpt, true);
 
-            Figures.PlayGround.ExportChromosomeData();
-            Console.WriteLine("Chromosomes done...");
-            Figures.PlayGround.ExportMismatchData(new List<double> { 1, 2, 3 }, true);
-            Console.WriteLine("Mismatch done...");
-            Figures.PlayGround.ExportCostDetailsData(new List<double> { 1, 2, 3 }, true);
-            Console.WriteLine("Cost details done...");
-            Figures.PlayGround.ExportParameterOverviewData(new List<double> { 1, 2, 3 }, true);
-            Console.WriteLine("Parameter overview done...");
+            //var calc = new NodeCostCalculator(new ParameterEvaluator(false));
+            //for (var k = 1; k < 4; k++)
+            //{
+            //    var betaCost = calc.SystemCost(NodeGenesFactory.SpawnBeta(1, 1, Stuff.FindBeta(k, 1e-3, 1)));
+            //    Console.WriteLine("Beta cost at k = {0} is {1}", k, betaCost);
+            //    var cfCost = calc.SystemCost(NodeGenesFactory.SpawnCfMax(1, 1, k));
+            //    Console.WriteLine("CF cost at k = {0} is {1}", k, cfCost);
+            //}
 
-            Console.WriteLine("All done...");
+            // CHECK THAT RESULTS ARE CONSISTENT
+            var calc = new NodeCostCalculator(new ParameterEvaluator(false));
+            var opt = FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\VE50cukooK=3@default.txt");
+            var mCf = NodeGenesFactory.SpawnCfMax(1, 1, 1);
+            Console.WriteLine("Optimization = " + calc.DetailedSystemCosts(opt, true).ToDebugString());
+            Console.WriteLine("Kapacitetsfaktor = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
+
+            //////var files = Directory.GetFiles(@"C:\Users\Emil\Desktop\TestSolutions");
+            //////var data = new Dictionary<string, List<List<double>>>();
+            //////var meta = new Dictionary<string, int>();
+            //////// Read data.
+            //////foreach (var file in files)
+            //////{
+            //////    if (!file.Contains("steps")) continue;
+            //////    var key = file.Split('@')[1].Split('-')[2];
+            //////    if (!data.ContainsKey(key)) data.Add(key, new List<List<double>>());
+            //////    if (!meta.ContainsKey(key))
+            //////    {
+            //////        var multi = key.Equals("cs") ? 2 : 1;
+            //////        meta.Add(key, int.Parse(file.Split('@')[2])*multi);
+            //////    }
+            //////    data[key].Add(FileUtils.FromJsonFile<List<double>>(file));
+            //////}
+
+            //////data.ToJsonFile(@"C:\Users\Emil\IdeaProjects\Python\optimization\data.txt");
+            //////meta.ToJsonFile(@"C:\Users\Emil\IdeaProjects\Python\optimization\meta.txt");
+
+            //int n = 1000000;
+            //var rnd = new Random();
+            //var symLevy = new double[n];
+            //var asymLevy = new double[n];
+            //for (int i = 0; i < n; i++)
+            //{
+            //    symLevy[i] = rnd.NextLevy(1.5, 0);
+            //    asymLevy[i] = rnd.NextLevy(0.5, 1);
+            //}
+            //symLevy.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\levy\sym1mio.txt");
+            //asymLevy.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\levy\asym1mio.txt");
+
+            //for (int k = 1; k < 4; k++)
+            //{
+            //    Optimization.Cukoo(2, 25, "TEST-NEXT" + k);
+            //}
+
+            ////for (int k = 1; k < 4; k++)
+            ////{
+            ////    var key = string.Format(@"VE50cukooK={0}@TRANS10k.txt", k);
+            ////    var opt = FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\{0}", key));
+            ////    opt.Export().ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Python\chromosomes\{0}", key));
+            ////}
+
+            //var files = Directory.GetFiles(@"C:\Users\Emil\Desktop\TestSolutions");
+            //var calc = new NodeCostCalculator(new ParameterEvaluator(false));
+            //foreach (var file in files)
+            //{
+            //    var genes = FileUtils.FromJsonFile<NodeGenes>(file);
+            //    var cost = calc.SystemCost(genes);
+            //    Console.WriteLine("{0} has cost {1}", file, cost);
+            //}
+
+            //Console.WriteLine("Ratio = " + CountryInfo.SolarCf.Select(item => item.Value).Average()/CountryInfo.WindOnshoreCf.Select(item => item.Value).Average());
+            //var opt =
+            //    FileUtils.FromJsonFile<NodeGenes>(
+            //        @"C:\Users\Emil\Dropbox\Master Thesis\Python\chromosomesTest\VE50cukooWithTransK=3TEST.txt");
+            //opt.Export().ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\chromosomesTest\VE50cukooWithTransK=3TESTexport.txt");
+
+            //var keyTemplate = @"C:\Users\Emil\Dropbox\Master Thesis\Results\Statistics\VE50cukooWithTransK={0}cukoo{1}-500.txt";
+            //var results = new NodeChromosome[50];
+
+            //var k = 3;
+            //for (int i = 0; i < 50; i++)
+            //{
+            //    results[i] = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(string.Format(keyTemplate, k, i)));
+            //}
+
+            //var calc = new ParallelNodeCostCalculator { CacheEnabled = false, Full = false, Transmission = false };
+            //calc.UpdateCost(results);
+            //results = results.OrderBy(item => item.Cost).ToArray();
+
+            //Console.WriteLine("Cost of best = {0}", results[0].Cost);
+            //Console.WriteLine("Cost of 10 best avg. = {0}", results.Take(10).Select(item => item.Cost).Average());
+            //Console.WriteLine("Cost of 25 best avg. = {0}", results.Take(25).Select(item => item.Cost).Average());
+            //Console.WriteLine("Cost of 50 (all) avg. = {0}", results.Select(item => item.Cost).Average());
+
+            //Figures.PlayGround.ExportChromosomeData();
+            //Console.WriteLine("Chromosomes done...");
+            //Figures.PlayGround.ExportMismatchData(new List<double> { 1, 2, 3 }, true);
+            //Console.WriteLine("Mismatch done...");
+            //Figures.PlayGround.ExportCostDetailsData(new List<double> { 1, 2, 3 }, true);
+            //Console.WriteLine("Cost details done...");
+            //Figures.PlayGround.ExportParameterOverviewData(new List<double> { 1, 2, 3 }, true);
+            //Console.WriteLine("Parameter overview done...");
+
+            //Console.WriteLine("All done...");
 
             //var avg = data.Last().Model.WindTimeSeries.Values.Average();
             //var hest = 2;
@@ -180,7 +277,7 @@ namespace Main
             //    var parameters = test.ModelParameters;
 
             //    var nodes = ConfigurationUtils.CreateNodesWithBackup(parameters.Source, parameters.Years);
-            //    var model = new NetworkModel(nodes, parameters.ExportStrategy);
+            //    var model = new NetworkModel(nodes, parameters.ExportScheme);
             //    var simulation = new Simulation(model);
             //    var mCtrl = new MixController(nodes);
             //    var watch = new Stopwatch();

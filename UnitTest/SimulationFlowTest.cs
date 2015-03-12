@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic;
 using BusinessLogic.ExportStrategies;
-using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.Generators;
 using BusinessLogic.Nodes;
 using BusinessLogic.Simulation;
-using BusinessLogic.Storages;
 using BusinessLogic.TimeSeries;
+using BusinessLogic.Utils;
 using NUnit.Framework;
 using Utils.Statistics;
 
@@ -51,7 +50,7 @@ namespace UnitTest
             node1.Generators.Add(genOne);
             node2.Generators.Add(genTwo);
             var nodes = new List<CountryNode> { node1, node2 };
-            var edges = BusinessLogic.Utils.Stuff.StraightLine(nodes);
+            var edges = Stuff.StraightLine(nodes);
 
             // Run model.
             RunModel(nodes, edges, 0, 2);
@@ -97,9 +96,9 @@ namespace UnitTest
             RunNewModel(nodes, edges, 10, 8);
         }
 
-        private void RunModel(List<CountryNode> nodes, EdgeSet edges, double expected, int steps)
+        private void RunModel(List<CountryNode> nodes, EdgeCollection edges, double expected, int steps)
         {
-            var model = new NetworkModel(nodes, new CooperativeExportStrategy(new MinimalFlowStrategy(nodes, edges)));
+            var model = new NetworkModel(nodes, new ConLocalScheme(nodes, edges));
             var simulation = new SimulationCore(model);
             simulation.LogFlows = true;
             simulation.Simulate(steps);
@@ -108,9 +107,9 @@ namespace UnitTest
             Assert.AreEqual(expected, capacity, 1e-6);
         }
 
-        private void RunNewModel(List<CountryNode> nodes, EdgeSet edges, double expected, int steps)
+        private void RunNewModel(List<CountryNode> nodes, EdgeCollection edges, double expected, int steps)
         {
-            var model = new NetworkModel(nodes, new ConstrainedFlowExportStrategy(nodes, edges));
+            var model = new NetworkModel(nodes, new ConLocalScheme(nodes, edges));
             var simulation = new SimulationCore(model);
             simulation.LogFlows = true;
             simulation.Simulate(steps);       

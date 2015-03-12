@@ -1,8 +1,12 @@
-﻿using NUnit.Framework;
-using BusinessLogic;
+﻿using System;
+using System.Collections.Generic;
+using BusinessLogic.ExportStrategies;
+using BusinessLogic.Utils;
+using NUnit.Framework;
 
 namespace UnitTest
 {
+
     [TestFixture]
     public class FlowOptimizerTest
     {
@@ -12,100 +16,108 @@ namespace UnitTest
         [Test]
         public void TwoNodeTest()
         {
-            var opt = new FlowOptimizer(2);
+            var opt = new LinearOptimizer2(2, 0);
             var nodes = new double[] {2, -1};
-            var edges = new EdgeSet(2);
-            edges.Connect(0, 1);
+            var nodeNames = new[] {"Node1", "Node2"};
+            var builder = new EdgeBuilder(nodeNames);
+            builder.Connect(0, 1);
+            var edges = builder.ToEdges();
             // Test the most basic test case.
             opt.SetEdges(edges);
-            opt.SetNodes(nodes, new[]{0.0,0.0}, new[] { double.MaxValue, double.MaxValue });
+            opt.SetNodes(nodes, new List<double[]>(), new List<double[]>());
             opt.Solve();
-            AreAlmostEqual(new double[,]{{0,1},{0,0}}, opt.Flows, FlowDelta);
-            AreAlmostEqual(new double[] { 1, 0 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);
-            // Test that changing nodes changes solution.
-            nodes = new double[] { 2, -2 };
-            opt.SetNodes(nodes, new[] { 0.0, 0.0 }, new[] { double.MaxValue, double.MaxValue });
+            AreAlmostEqual(new double[] {1, 0}, opt.NodeOptima, FlowDelta*edges.NodeCount);
+            // Test that changing nodes changes solut<ion.
+            nodes = new double[] {2, -2};
+            opt.SetNodes(nodes, null, null);
             opt.Solve();
-            AreAlmostEqual(new double[,] { { 0, 2 }, { 0, 0 } }, opt.Flows, FlowDelta);
-            AreAlmostEqual(new double[] { 0, 0 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);
+            AreAlmostEqual(new double[] { 0, 0 }, opt.NodeOptima, FlowDelta * edges.NodeCount);
             // Test that charging capacity limits are respected
-            nodes = new double[] { 2, -1 };
-            opt.SetNodes(nodes, new double[] { 0, 0 }, new double[] { 0, 1 });
+            nodes = new double[] {-1, 2};
+            opt.SetNodes(nodes, null, null);
             opt.Solve();
-            AreAlmostEqual(new double[,] { { 0, 2 }, { 0, 0 } }, opt.Flows, FlowDelta);
-            AreAlmostEqual(new double[] { 0, 1 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);
+            AreAlmostEqual(new double[] { 0, 1 }, opt.NodeOptima, FlowDelta * edges.NodeCount);
         }
 
         [Test]
         public void FourNodeAllEdgeTest()
         {
-            var opt = new FlowOptimizer(4);
-            var nodes = new double[] { 2, -1, 4, -3 };
-            var edges = new EdgeSet(4);
-            edges.Connect(0, 1);
-            edges.Connect(0, 2);
-            edges.Connect(0, 3);
-            edges.Connect(1, 2);
-            edges.Connect(1, 3);
-            edges.Connect(2, 3);
+            var opt = new LinearOptimizer2(4, 0);
+            var nodes = new double[] {2, -1, 4, -3};
+            var nodeNames = new[] {"Node1", "Node2", "Node3", "Node4"};
+            var builder = new EdgeBuilder(nodeNames);
+            builder.Connect(0, 1);
+            builder.Connect(0, 2);
+            builder.Connect(0, 3);
+            builder.Connect(1, 2);
+            builder.Connect(1, 3);
+            builder.Connect(2, 3);
+            var edges = builder.ToEdges();
             // Test that the minimum flow is realised.
             opt.SetEdges(edges);
-            opt.SetNodes(nodes, new double[] { 0, 0, 0, 0 }, new[] { double.MaxValue, double.MaxValue, double.MaxValue, double.MaxValue });
+            opt.SetNodes(nodes, null, null);
             opt.Solve();
             var flowSum = 0.0;
-            foreach (var flow in opt.Flows) flowSum += flow*flow;
-            AreAlmostEqual(4.5, flowSum, FlowDelta * edges.NodeCount);
-            AreAlmostEqual(new double[] { 0, 0, 2, 0 }, opt.NodeOptimum, FlowDelta);
+            foreach (var flow in opt.Flows) flowSum += Math.Abs(flow);
+            AreAlmostEqual(4, flowSum, FlowDelta*edges.NodeCount);
+            AreAlmostEqual(new double[] {2, 0, 0, 0}, opt.NodeOptima, FlowDelta);
         }
 
         [Test]
         public void FourNodeFewEdgeTest()
         {
-            var opt = new FlowOptimizer(4);
-            var nodes = new double[] { 2, -1, 4, -3 };
-            var edges = new EdgeSet(4);
-            edges.Connect(0, 1);
-            edges.Connect(0, 2);
-            edges.Connect(2, 3);
+            var opt = new LinearOptimizer2(4, 0);
+            var nodes = new double[] {2, -1, 4, -3};
+            var nodeNames = new[] {"Node1", "Node2", "Node3", "Node4"};
+            var builder = new EdgeBuilder(nodeNames);
+            builder.Connect(0, 1);
+            builder.Connect(0, 2);
+            builder.Connect(2, 3);
+            var edges = builder.ToEdges();
             // Test that the minimum flow is realised.
             opt.SetEdges(edges);
-            opt.SetNodes(nodes, new double[] { 0, 0, 0, 0 }, new[] { double.MaxValue, double.MaxValue, double.MaxValue, double.MaxValue });
+            opt.SetNodes(nodes, null, null);
             opt.Solve();
             var flowSum = 0.0;
-            foreach (var flow in opt.Flows) flowSum += flow;
-            AreAlmostEqual(4, flowSum, FlowDelta * edges.NodeCount);
-            AreAlmostEqual(new double[] { 1, 0, 1, 0 }, opt.NodeOptimum, FlowDelta);
+            foreach (var flow in opt.Flows) flowSum += Math.Abs(flow);
+            AreAlmostEqual(4, flowSum, FlowDelta*edges.NodeCount);
+            AreAlmostEqual(new double[] {1, 0, 1, 0}, opt.NodeOptima, FlowDelta);
         }
-            
+
         [Test]
         public void ChargeLimitTest()
         {
-            var opt = new FlowOptimizer(2);
-            var nodes = new double[] { 2, -1 };
-            var edges = new EdgeSet(2);
-            edges.Connect(0, 1);
+            var opt = new LinearOptimizer2(2, 1);
+            var nodes = new double[] {2, -1};
+            var nodeNames = new[] {"Node1", "Node2"};
+            var builder = new EdgeBuilder(nodeNames);
+            builder.Connect(0, 1);
+            var edges = builder.ToEdges();
             // Test that charging capacity limits are respected
             opt.SetEdges(edges);
-            opt.SetNodes(nodes, new double[] { 0, 0}, new double[] { 0, 1 });
+            opt.SetNodes(nodes, new List<double[]> {new double[] {0, -1}}, new List<double[]> {new double[] {0, 0}});
             opt.Solve();
-            AreAlmostEqual(new double[,] { { 0, 2 }, { 0, 0 } }, opt.Flows, FlowDelta);
-            AreAlmostEqual(new double[] { 0, 1 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);
+            AreAlmostEqual(new double[,] {{0, -2}, {0, 0}}, opt.Flows, FlowDelta);
+            AreAlmostEqual(new double[] {0, 0}, opt.NodeOptima, FlowDelta*edges.NodeCount);
+            AreAlmostEqual(new double[] {0, -1}, opt.StorageOptima[0], FlowDelta*edges.NodeCount);
         }
 
         [Test]
         public void DischargeTest()
         {
-            var opt = new FlowOptimizer(2);
-            var nodes = new double[] { 2, -3 };
-            var edges = new EdgeSet(2);
-            edges.Connect(0, 1);
+            var opt = new LinearOptimizer2(2, 1);
+            var nodes = new double[] {2, -3};
+            var nodeNames = new[] {"Node1", "Node2"};
+            var builder = new EdgeBuilder(nodeNames);
+            builder.Connect(0, 1);
+            var edges = builder.ToEdges();
             // Test the most basic test case.
             opt.SetEdges(edges);
-            opt.SetNodes(nodes, new[] { -1 - FlowDelta, 0.0 },
-                new[] { 0.0, 0.0 });
+            opt.SetNodes(nodes, new List<double[]> {new[] {0.0, 0}}, new List<double[]> {new[] {0.0, 1}});
             opt.Solve();
-            AreAlmostEqual(new double[,] { { 0, 3 }, { 0, 0 } }, opt.Flows, FlowDelta);
-            AreAlmostEqual(new double[] { -1, 0 }, opt.NodeOptimum, FlowDelta * edges.NodeCount);
+            AreAlmostEqual(new double[,] {{0, -2}, {0, 0}}, opt.Flows, FlowDelta);
+            AreAlmostEqual(new double[] {0, 0}, opt.NodeOptima, FlowDelta*edges.NodeCount);
+            AreAlmostEqual(new double[] {0, 1}, opt.StorageOptima[0], FlowDelta*edges.NodeCount);
         }
 
         private static void AreAlmostEqual<T>(T expected, T result, double delta)
@@ -114,5 +126,4 @@ namespace UnitTest
         }
 
     }
-
 }

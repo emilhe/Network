@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using BusinessLogic.Storages;
+using BusinessLogic.TimeSeries;
 
 namespace BusinessLogic.Interfaces
 {
@@ -12,9 +13,9 @@ namespace BusinessLogic.Interfaces
         double Curtailment { get; }
         double Backup { get; }
 
-        StorageCollection StorageCollection { get; }
         List<IGenerator> Generators { get; }
-        BalancingStorage Balancing { get; }
+        StorageCollection StorageCollection { get; }
+        Measureable Balancing { get; }
         //ITimeSeries LoadTimeSeries { get; }
     }
 }

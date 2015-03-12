@@ -8,7 +8,7 @@ namespace BusinessLogic.Simulation
 
         IList<INode> Nodes { get; set; }
         IFailureStrategy FailureStrategy { get; set; }
-        IExportStrategy ExportStrategy { get; set; }
+        IExportScheme ExportScheme { get; set; }
 
         void Simulate(int ticks);
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using BusinessLogic.Cost;
 using BusinessLogic.ExportStrategies;
-using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.FailureStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
@@ -14,7 +13,7 @@ using Utils;
 
 namespace BusinessLogic.Simulation
 {
-    public class SimulationController
+    public class SimulationController : ISimulationController
     {
 
         public bool PrintDebugInfo { get; set; }
@@ -25,26 +24,24 @@ namespace BusinessLogic.Simulation
 
         // Logging parameters.
         public bool LogAllNodeProperties { get; set; }
-        public bool LogSystemProperties { get; set; }
-        public bool LogNodalBalancing { get; set; }
         public bool LogFlows { get; set; }
         // Mandatory parameters.
         public List<TsSourceInput> Sources { get; set; }
-        public List<ExportStrategyInput> ExportStrategies { get; set; }
+        public List<ExportSchemeInput> ExportStrategies { get; set; }
         // Optional parameters.
         public Dictionary<string, Func<TsSourceInput, List<CountryNode>>> NodeFuncs { get; set; }
-        public Dictionary<string, Func<List<CountryNode>, EdgeSet>> EdgeFuncs { get; set; }
+        public Dictionary<string, Func<List<CountryNode>, EdgeCollection>> EdgeFuncs { get; set; }
         public Dictionary<string, Func<IFailureStrategy>> FailFuncs { get; set; }
         
         // Current iteration parameters.
         private string _mNodeTag = "";
         private string _mEdgeTag = "";
         private string _mFailTag = "";
-        private EdgeSet _mEdges;
+        private EdgeCollection _mEdges;
         private List<CountryNode> _mNodes;
         private TsSourceInput _mSrcIn;
         private IFailureStrategy _mFail;
-        private ExportStrategyInput _mExpStratIn;
+        private ExportSchemeInput _mExpSchemeIn;
 
         #endregion
 
@@ -55,15 +52,14 @@ namespace BusinessLogic.Simulation
 
             // Default way to construct nodes.
             NodeFuncs = new Dictionary<string, Func<TsSourceInput, List<CountryNode>>>();
-            NodeFuncs.Add("6h batt (homo), 25TWh hydrogen (homo), 150 TWh hydro-bio (homo)",
-                s => ConfigurationUtils.CreateNodesWithBackup(s.Source, s.Length, s.Offset));
+            NodeFuncs.Add("No storage",s => ConfigurationUtils.CreateNodesNew());
             // Default way to construct edges.
-            EdgeFuncs = new Dictionary<string, Func<List<CountryNode>, EdgeSet>> { { "Europe edges", ConfigurationUtils.GetEuropeEdges } };
+            EdgeFuncs = new Dictionary<string, Func<List<CountryNode>, EdgeCollection>> { { "Europe edges", ConfigurationUtils.GetEuropeEdgeObject } };
             // Default way to define failures.
             FailFuncs = new Dictionary<string, Func<IFailureStrategy>>{{"No blackout", () => new NoBlackoutStrategy()}};
 
             Sources = new List<TsSourceInput>();
-            ExportStrategies = new List<ExportStrategyInput>();
+            ExportStrategies = new List<ExportSchemeInput>();
         }
 
         #region Execution
@@ -85,7 +81,7 @@ namespace BusinessLogic.Simulation
                 if (result == null)
                 {
                     update();
-                    result = RunSimulation(MapFromInput(_mExpStratIn), _mSrcIn.Length, genes);
+                    result = RunSimulation(Map(_mExpSchemeIn.Scheme), _mSrcIn.Length, genes);
                     foreach (var property in prop) result.Properties.Add(property.Key, property.Value);
 
                     // If cache is enabled, save the result.
@@ -116,7 +112,7 @@ namespace BusinessLogic.Simulation
                 if (result == null)
                 {
                     update();
-                    result = RunSimulation(MapFromInput(_mExpStratIn), _mSrcIn.Length, penetration, mixing);
+                    result = RunSimulation(Map(_mExpSchemeIn.Scheme), _mSrcIn.Length, penetration, mixing);
                     foreach (var property in prop) result.Properties.Add(property.Key, property.Value);
 
                     // If cache is enabled, save the result.
@@ -147,7 +143,7 @@ namespace BusinessLogic.Simulation
                     update();
                     result = new GridResult
                     {
-                        Grid = RunSimulation(MapFromInput(_mExpStratIn), _mSrcIn.Length, grid),
+                        Grid = RunSimulation(Map(_mExpSchemeIn.Scheme), _mSrcIn.Length, grid),
                         Properties = DefaultProperties()
                     };
                 }
@@ -180,7 +176,7 @@ namespace BusinessLogic.Simulation
                                 _mNodeTag = nodeFunc.Key;
                                 _mEdgeTag = edgeFunc.Key;
                                 _mFailTag = failFunc.Key;
-                                _mExpStratIn = exportStrategy;
+                                _mExpSchemeIn = exportStrategy;
 
                                 // Add sub result.
                                 results.Add(function(() =>
@@ -200,6 +196,8 @@ namespace BusinessLogic.Simulation
         }
 
         #endregion
+
+        #region Private
 
         private Dictionary<string, string> GetProperties(NodeGenes genes)
         {
@@ -228,8 +226,7 @@ namespace BusinessLogic.Simulation
         {
             return new Dictionary<string, string>
             {
-                {"DistributionStrategy", ((byte) _mExpStratIn.DistributionStrategy).ToString()},
-                {"ExportStrategy", ((byte) _mExpStratIn.ExportStrategy).ToString()},
+                {"ExportScheme", ((byte) _mExpSchemeIn.Scheme).ToString()},
                 {"TsSource", ((byte) _mSrcIn.Source).ToString()},
                 {"Length", _mSrcIn.Length.ToString()},
                 {"Offset", _mSrcIn.Offset.ToString()},
@@ -237,45 +234,33 @@ namespace BusinessLogic.Simulation
                 {"EdgeTag", _mEdgeTag},
                 {"FailureTag", _mFailTag},
                 {"LogAllNodeProperties", LogAllNodeProperties.ToString()},
-                {"LogSystemProperties", LogSystemProperties.ToString()},
-                {"LogNodalBalancing", LogNodalBalancing.ToString()},
                 {"LogFlows", LogFlows.ToString()}
             };
-        } 
-
-        private IExportStrategy MapFromInput(ExportStrategyInput input)
-        {
-            switch (input.ExportStrategy)
-            {
-                case ExportStrategy.None:
-                    return new NoExportStrategy();
-                case ExportStrategy.Selfish:
-                    return new SelfishExportStrategy(MapFromEnum(input.DistributionStrategy));
-                case ExportStrategy.Cooperative:
-                    return new CooperativeExportStrategy(MapFromEnum(input.DistributionStrategy));
-                case ExportStrategy.ConstrainedFlow:
-                    return new ConstrainedFlowExportStrategy(_mNodes, _mEdges);
-            }
-
-            throw new ArgumentException("No strategy matching {0}.", input.ExportStrategy.GetDescription());
         }
 
-        private IDistributionStrategy MapFromEnum(DistributionStrategy strategy)
+        private IExportScheme Map(ExportScheme input)
         {
-            switch (strategy)
+            switch (input)
             {
-                case DistributionStrategy.SkipFlow:
-                    return new SkipFlowStrategy();
-                case DistributionStrategy.MinimalFlow:
-                    return new MinimalFlowStrategy(_mNodes, _mEdges);
+                case ExportScheme.None:
+                    return new NoExportScheme();
+                case ExportScheme.UnconstrainedSynchronized:
+                    return new UncSyncScheme(_mNodes, _mEdges);
+                case ExportScheme.UnconstrainedLocalized:
+                    return new UncLocalScheme(_mNodes, _mEdges);
+                    // TODO: Fix the constrained schemes.
+                case ExportScheme.ConstrainedLocalized:
+                    return new ConLocalScheme(_mNodes, _mEdges);
+                //case ExportScheme.ConstrainedSynchronized:
+                //    return new ConSyncScheme(_mNodes, _mEdges);
             }
 
-            throw new ArgumentException("No strategy matching {0}.", strategy.GetDescription());
+            throw new ArgumentException(string.Format("No scheme matching, {0}.", input));
         }
 
-        private bool[,] RunSimulation(IExportStrategy strategy, double years, GridScanParameters grid)
+        private bool[,] RunSimulation(IExportScheme scheme, double years, GridScanParameters grid)
         {
-            var model = new NetworkModel(_mNodes, strategy, _mFail);
+            var model = new NetworkModel(_mNodes, scheme, _mFail);
             var simulation = SpawnSimulationCore(model);
             //var mCtrl = new MixController(_mNodes);
             var watch = new Stopwatch();
@@ -299,9 +284,9 @@ namespace BusinessLogic.Simulation
             }, new[] { grid.PenetrationSteps, grid.MixingSteps });
         }
 
-        private SimulationOutput RunSimulation(IExportStrategy strategy, double years, double penetration, double mixing)
+        private SimulationOutput RunSimulation(IExportScheme scheme, double years, double penetration, double mixing)
         {
-            var model = new NetworkModel(_mNodes, strategy, _mFail);
+            var model = new NetworkModel(_mNodes, scheme, _mFail);
             var simulation = SpawnSimulationCore(model);
             var watch = new Stopwatch();
             watch.Start();
@@ -317,9 +302,9 @@ namespace BusinessLogic.Simulation
             return simulation.Output;
         }
 
-        private SimulationOutput RunSimulation(IExportStrategy strategy, double years, NodeGenes genes)
+        private SimulationOutput RunSimulation(IExportScheme scheme, double years, NodeGenes genes)
         {
-            var model = new NetworkModel(_mNodes, strategy, _mFail);
+            var model = new NetworkModel(_mNodes, scheme, _mFail);
             var simulation = SpawnSimulationCore(model);
             var watch = new Stopwatch();
             watch.Start();
@@ -343,11 +328,18 @@ namespace BusinessLogic.Simulation
             {
                 LogAllNodeProperties = LogAllNodeProperties,
                 LogFlows = LogFlows,
-                LogNodalBalancing = LogNodalBalancing,
-                LogSystemProperties = LogSystemProperties
             };
         }
 
+        #endregion
+
+    }
+
+    public class ExportSchemeInput
+    {
+        public ExportScheme Scheme { get; set; }
+
+        // TODO: Maybe add logging properties here?
     }
 
     public class TsSourceInput
@@ -359,25 +351,6 @@ namespace BusinessLogic.Simulation
         public string Description
         {
             get { return string.IsNullOrEmpty(_mDescription) ? Source.GetDescription() + string.Format("-{0}-{1}", Offset, Length) : _mDescription; }
-            set { _mDescription = value; }
-        }
-
-        private string _mDescription;
-    }
-
-    public class ExportStrategyInput
-    {
-        public ExportStrategy ExportStrategy { get; set; }
-        public DistributionStrategy DistributionStrategy { get; set; }
-
-        public string Description
-        {
-            get
-            {
-                return string.IsNullOrEmpty(_mDescription)
-                    ? ExportStrategy.GetDescription() + ", " + DistributionStrategy.GetDescription()
-                    : _mDescription;
-            }
             set { _mDescription = value; }
         }
 

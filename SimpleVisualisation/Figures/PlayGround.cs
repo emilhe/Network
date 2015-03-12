@@ -139,12 +139,12 @@ namespace Main.Figures
         {
             //var ntcData =
             //    ProtoStore.LoadLinkData("NtcMatrix")
-            //        .Where(item => !item.CountryFrom.Equals(item.CountryTo))
+            //        .Where(item => !item.From.Equals(item.To))
             //        .Where(item => item.LinkCapacity > 0)
             //        .Select(item => new LinkDataRow
             //        {
-            //            CountryFrom = CountryInfo.GetShortAbbrev(item.CountryFrom),
-            //            CountryTo = CountryInfo.GetShortAbbrev(item.CountryTo),
+            //            From = CountryInfo.GetShortAbbrev(item.From),
+            //            To = CountryInfo.GetShortAbbrev(item.To),
             //            LinkCapacity = item.LinkCapacity/1000
             //        });
             //ntcData.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\transmission\ntcEdges.txt");
@@ -244,8 +244,8 @@ namespace Main.Figures
             return new LinkDataRow
             {
                 LinkCapacity = pair.Value,
-                CountryFrom = CountryInfo.GetShortAbbrev(pair.Key.Split('-')[0]),
-                CountryTo = CountryInfo.GetShortAbbrev(pair.Key.Split('-')[1]),
+                From = CountryInfo.GetShortAbbrev(pair.Key.Split('-')[0]),
+                To = CountryInfo.GetShortAbbrev(pair.Key.Split('-')[1]),
                 Type = Costs.LinkType[pair.Key]
             };
         }

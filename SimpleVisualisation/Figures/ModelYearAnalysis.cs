@@ -37,9 +37,9 @@ namespace Main.Figures
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput()
                 {
-                    ExportStrategy = inclTrans ? ExportStrategy.ConstrainedFlow : ExportStrategy.Cooperative,
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("Clean nodes", s =>
@@ -49,18 +49,16 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            ctrl.LogSystemProperties = true;
-            ctrl.LogNodalBalancing = true;
             ctrl.LogFlows = inclTrans;
 
             // Setup BC ESTIMATION control.
             var bcEstCtrl = new SimulationController { InvalidateCache = false };
             bcEstCtrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = config.Parameters["bc"].Key, Length = 1 }); // 23
             bcEstCtrl.ExportStrategies.Add(
-                new ExportStrategyInput
-                {
-                    ExportStrategy = ExportStrategy.Cooperative, DistributionStrategy = DistributionStrategy.SkipFlow
-                });
+                 new ExportSchemeInput()
+                 {
+                     Scheme = ExportScheme.UnconstrainedSynchronized
+                 });
             bcEstCtrl.NodeFuncs.Clear();
             bcEstCtrl.NodeFuncs.Add("Clean nodes", s =>
             {
@@ -69,16 +67,14 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            bcEstCtrl.LogNodalBalancing = true;
 
             // Setup BE ESTIMATION control.
             var beEstCtrl = new SimulationController { InvalidateCache = false };
             beEstCtrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = config.Parameters["be"].Key, Length = 1 }); // 25
             beEstCtrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput()
                 {
-                    ExportStrategy = ExportStrategy.Cooperative,
-                    DistributionStrategy = DistributionStrategy.SkipFlow
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             beEstCtrl.NodeFuncs.Clear();
             beEstCtrl.NodeFuncs.Add("Clean nodes", s =>
@@ -88,7 +84,6 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            beEstCtrl.LogSystemProperties = true;
 
             // Setup TC ESTIMATION control.
             var tcEstCtrl = new SimulationController { InvalidateCache = false };
@@ -101,10 +96,10 @@ namespace Main.Figures
                     Length = 1
                 }); // 14
                 tcEstCtrl.ExportStrategies.Add(
-                    new ExportStrategyInput
-                    {
-                        ExportStrategy = ExportStrategy.ConstrainedFlow
-                    });
+                new ExportSchemeInput()
+                {
+                    Scheme = ExportScheme.UnconstrainedSynchronized
+                });
                 tcEstCtrl.NodeFuncs.Clear();
                 tcEstCtrl.NodeFuncs.Add("Clean nodes", s =>
                 {
@@ -256,10 +251,9 @@ namespace Main.Figures
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput()
                 {
-                    ExportStrategy = inclTrans ? ExportStrategy.ConstrainedFlow : ExportStrategy.Cooperative,
-                    DistributionStrategy = DistributionStrategy.SkipFlow
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("Clean nodes", s =>
@@ -269,8 +263,6 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            ctrl.LogSystemProperties = true;
-            ctrl.LogNodalBalancing = true;
             ctrl.LogFlows = inclTrans;
 
             var alpha = (aMax + aMin) / 2;
@@ -415,9 +407,9 @@ namespace Main.Figures
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput()
                 {
-                    ExportStrategy = ExportStrategy.ConstrainedFlow
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("Clean nodes", s =>
@@ -427,8 +419,6 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            ctrl.LogSystemProperties = true;
-            ctrl.LogNodalBalancing = true;
             ctrl.LogFlows = true;
 
             // Try different alphas.

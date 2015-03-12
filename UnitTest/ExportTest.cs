@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BusinessLogic.Nodes;
-using BusinessLogic.Simulation;
-using NUnit.Framework;
 using BusinessLogic;
 using BusinessLogic.ExportStrategies;
-using BusinessLogic.ExportStrategies.DistributionStrategies;
+using BusinessLogic.Interfaces;
+using BusinessLogic.Nodes;
+using BusinessLogic.Simulation;
 using BusinessLogic.Storages;
 using BusinessLogic.TimeSeries;
+using BusinessLogic.Utils;
+using NUnit.Framework;
 
 namespace UnitTest
 {
@@ -21,9 +22,8 @@ namespace UnitTest
         public void NoExportTest()
         {
             PreareNodesExcess();
-            var model = new NetworkModel(_mNodes, new NoExportStrategy());
-            var simulation = new SimulationCore(model);
-            simulation.LogAllNodeProperties = true;
+            var model = new NetworkModel(_mNodes, new NoExportScheme());
+            var simulation = new SimulationCore(model) {LogAllNodeProperties = true};
             simulation.Simulate(1);
             
             //Assert.AreEqual(false, simulation.Output.Success);
@@ -33,45 +33,44 @@ namespace UnitTest
             Assert.AreEqual(0, ReadParam(simulation, "Test1", "Hydrogen storage"));
         }
 
-        [Test]
-        public void SelfishExportTestExcess()
-        {
-            PreareNodesExcess();
-            var model = new NetworkModel(_mNodes, new SelfishExportStrategy(new SkipFlowStrategy()));
-            var simulation = new SimulationCore(model);
-            simulation.LogAllNodeProperties = true;
-            simulation.Simulate(1);
+        //[Test]
+        //public void SelfishExportTestExcess()
+        //{
+        //    PreareNodesExcess();
+        //    var model = new NetworkModel(_mNodes, new SelfishExportStrategy(new SkipFlowStrategy()));
+        //    var simulation = new SimulationCore(model);
+        //    simulation.LogAllNodeProperties = true;
+        //    simulation.Simulate(1);
 
-            //Assert.AreEqual(true, simulation.Output.Success);
-            Assert.AreEqual(1, ReadParam(simulation, "Test0", "Battery storage"), 1e-5);
-            Assert.AreEqual(1, ReadParam(simulation, "Test0", "Hydrogen storage"), 1e-5);
-            //Assert.AreEqual(0, ReadParam(simulation, "Test1", "Battery storage"), 1e-5);
-            //Assert.AreEqual(0, ReadParam(simulation, "Test1", "Hydrogen storage"), 1e-5);
-        }
+        //    //Assert.AreEqual(true, simulation.Output.Success);
+        //    Assert.AreEqual(1, ReadParam(simulation, "Test0", "Battery storage"), 1e-5);
+        //    Assert.AreEqual(1, ReadParam(simulation, "Test0", "Hydrogen storage"), 1e-5);
+        //    //Assert.AreEqual(0, ReadParam(simulation, "Test1", "Battery storage"), 1e-5);
+        //    //Assert.AreEqual(0, ReadParam(simulation, "Test1", "Hydrogen storage"), 1e-5);
+        //}
 
-        [Test]
-        public void SelfishExportTestLack()
-        {
-            PreareNodesLack();
-            var model = new NetworkModel(_mNodes, new SelfishExportStrategy(new SkipFlowStrategy()));
-            var simulation = new SimulationCore(model);
-            simulation.LogAllNodeProperties = true;
-            simulation.Simulate(1);
+        //[Test]
+        //public void SelfishExportTestLack()
+        //{
+        //    PreareNodesLack();
+        //    var model = new NetworkModel(_mNodes, new SelfishExportStrategy(new SkipFlowStrategy()));
+        //    var simulation = new SimulationCore(model);
+        //    simulation.LogAllNodeProperties = true;
+        //    simulation.Simulate(1);
 
-            //Assert.AreEqual(false, simulation.Output.Success);
-            Assert.AreEqual(2, ReadParam(simulation, "Test0", "Battery storage"), 1e-5);
-            //Assert.AreEqual(1, ReadParam(simulation, "Test0", "Hydrogen storage"), 1e-5);
-            Assert.AreEqual(0, ReadParam(simulation, "Test1", "Battery storage"), 1e-5);
-            Assert.AreEqual(0, ReadParam(simulation, "Test1", "Hydrogen storage"), 1e-5);
-        }
+        //    //Assert.AreEqual(false, simulation.Output.Success);
+        //    Assert.AreEqual(2, ReadParam(simulation, "Test0", "Battery storage"), 1e-5);
+        //    //Assert.AreEqual(1, ReadParam(simulation, "Test0", "Hydrogen storage"), 1e-5);
+        //    Assert.AreEqual(0, ReadParam(simulation, "Test1", "Battery storage"), 1e-5);
+        //    Assert.AreEqual(0, ReadParam(simulation, "Test1", "Hydrogen storage"), 1e-5);
+        //}
 
         [Test]
         public void CooperativeExportTest()
         {
             PreareNodesExcess();
-            var model = new NetworkModel(_mNodes, new CooperativeExportStrategy(new SkipFlowStrategy()));
-            var simulation = new SimulationCore(model);
-            simulation.LogAllNodeProperties = true;
+            var model = new NetworkModel(_mNodes, new ConLocalScheme(_mNodes, Stuff.StraightLine(_mNodes)));
+            var simulation = new SimulationCore(model) {LogAllNodeProperties = true};
             simulation.Simulate(1);
 
             //Assert.AreEqual(true, simulation.Output.Success);
