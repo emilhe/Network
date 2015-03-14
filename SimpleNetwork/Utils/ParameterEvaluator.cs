@@ -259,7 +259,7 @@ namespace BusinessLogic.Utils
             _mBeCtrl = new SimulationController() {CacheEnabled = false};
             _mBeCtrl.ExportStrategies.Add(new ExportSchemeInput
             {
-                Scheme = ExportScheme.ConstrainedLocalized
+                Scheme = ExportScheme.ConstrainedSynchronized
             });
             _mBeCtrl.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["be"].Key });
             _mBeCtrl.NodeFuncs.Clear();
@@ -273,7 +273,7 @@ namespace BusinessLogic.Utils
             _mBcCtrl = new SimulationController() { CacheEnabled = false };
             _mBcCtrl.ExportStrategies.Add(new ExportSchemeInput
             {
-                Scheme = ExportScheme.ConstrainedLocalized
+                Scheme = ExportScheme.ConstrainedSynchronized
             });
             _mBcCtrl.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["bc"].Key });
             _mBcCtrl.NodeFuncs.Clear();
@@ -287,7 +287,7 @@ namespace BusinessLogic.Utils
             _mTcCtrl = new SimulationController() { CacheEnabled = false };
             _mTcCtrl.ExportStrategies.Add(new ExportSchemeInput
             {
-                Scheme = ExportScheme.ConstrainedLocalized
+                Scheme = ExportScheme.ConstrainedSynchronized
             });
             _mTcCtrl.LogFlows = true;
             _mTcCtrl.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["tc"].Key });

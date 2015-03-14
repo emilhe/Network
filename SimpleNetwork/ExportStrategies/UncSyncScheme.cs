@@ -22,6 +22,8 @@ namespace BusinessLogic.ExportStrategies
         private double[] _mInjections;
         private double[] _mFlows;
 
+        private double[] _mWeights;
+
         #region REHING THIS PART
 
         //private Response _mSystemResponse;
@@ -55,16 +57,20 @@ namespace BusinessLogic.ExportStrategies
             _mNodes = nodes;
             _mMismatches = mismatches;
             _mInjections = new double[mismatches.Length];
+
+            // Corresponds to the projection vector.
+            _mWeights = _mNodes.Select(node => CountryInfo.GetMeanLoad(node.Name)).ToArray();
+            _mWeights.Mult(1.0/_mWeights.Sum());
         }
 
         public void BalanceSystem()
         {
             // Do balancing.
-            var balance = _mMismatches.Average();
+            var toBalance = _mMismatches.Sum();
             for (int i = 0; i < _mNodes.Count; i++)
             {
-                _mNodes[i].Balancing.CurrentValue = balance;
-                _mInjections[i] = balance - _mMismatches[i];
+                _mNodes[i].Balancing.CurrentValue = toBalance*_mWeights[i];
+                _mInjections[i] = toBalance * _mWeights[i] - _mMismatches[i];
                 _mMismatches[i] = 0;
             }
             // Calculate flows (make optional? Check performance...).

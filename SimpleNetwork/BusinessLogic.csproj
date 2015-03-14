@@ -120,6 +120,7 @@
     <Compile Include="Cost\CostModels\ITransmissionCostModel.cs" />
     <Compile Include="Cost\CostModels\IWindCostModel.cs" />
     <Compile Include="Cost\CostModels\VariableLengthModel.cs" />
+    <Compile Include="ExportStrategies\ConLocalScheme2.cs" />
     <Compile Include="ExportStrategies\ConSyncScheme.cs" />
     <Compile Include="ExportStrategies\EdgeCollection.cs" />
     <Compile Include="ExportStrategies\ConLocalScheme.cs" />
@@ -181,7 +182,8 @@
     <Compile Include="Utils\LinearOptimizer.cs" />
     <Compile Include="Utils\GridEvaluator.cs" />
     <Compile Include="Utils\LinearOptimizer2.cs" />
-    <Compile Include="Utils\QuadraticOptimizer.cs" />
+    <Compile Include="Utils\ObjectiveFactory.cs" />
+    <Compile Include="Utils\QuadFlowOptimizer.cs" />
     <Compile Include="Utils\SystemOptimizer.cs" />
     <Compile Include="Utils\LineEvaluator.cs" />
     <Compile Include="Utils\MismatchOptimizer.cs" />

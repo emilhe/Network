@@ -8,20 +8,18 @@ using BusinessLogic.Nodes;
 using BusinessLogic.TimeSeries;
 using BusinessLogic.Utils;
 using Gurobi;
+using Utils;
 
 namespace BusinessLogic.ExportStrategies
 {
-    class UncLocalScheme : IExportScheme
+    class ConLocalScheme2 : IExportScheme
     {
 
-        private readonly LinearOptimizer2 _mOptimizer;
+        private readonly QuadFlowOptimizer _mOptimizer;
         private readonly EdgeCollection _mEdges;
-        private readonly PhaseAngleFlow _mFlow;
 
         private IList<INode> _mNodes;
         private double[] _mMismatches;
-        private double[] _mInjections;
-        private double[] _mFlows;
 
         #region REHINK THIS PART
 
@@ -31,17 +29,17 @@ namespace BusinessLogic.ExportStrategies
         //private readonly double[,] _mFlows;
 
         // TODO: Remove HACK
-        public UncLocalScheme(List<CountryNode> nodes, EdgeCollection edges)
+        public ConLocalScheme2(List<CountryNode> nodes, EdgeCollection edges)
             : this(nodes.Select(item => (INode) item).ToList(), edges)
         {
         }
 
-        public UncLocalScheme(IList<INode> nodes, EdgeCollection edges)
+        public ConLocalScheme2(IList<INode> nodes, EdgeCollection edges)
         {
             _mNodes = nodes;
             _mEdges = edges;
-            _mFlow = new PhaseAngleFlow(_mEdges.IncidenceMatrix);
-            _mOptimizer = new LinearOptimizer2(edges, 0); // HERE NO STORAGE IS ASSUMED!!
+            var core = new CoreOptimizer(_mEdges, 0, ObjectiveFactory.LinearBalancing){ApplyNodeExprConstr = true};
+            _mOptimizer = new QuadFlowOptimizer(core, core.ApplySystemConstr, core.RemoveSystemConstr); // HERE NO STORAGE IS ASSUMED!!
         }
 
         #endregion
@@ -50,7 +48,6 @@ namespace BusinessLogic.ExportStrategies
         {
             _mNodes = nodes;
             _mMismatches = mismatches;
-            _mInjections = new double[mismatches.Length];
         }
 
         public void BalanceSystem()
@@ -61,11 +58,8 @@ namespace BusinessLogic.ExportStrategies
             for (int i = 0; i < _mNodes.Count; i++)
             {
                 _mNodes[i].Balancing.CurrentValue = _mOptimizer.NodeOptima[i];
-                _mInjections[i] = _mOptimizer.NodeOptima[i] - _mMismatches[i];
                 _mMismatches[i] = 0;
             }
-
-            _mFlows = _mFlow.CalculateFlows(_mInjections);
         }
 
         #region Measurement
@@ -74,16 +68,18 @@ namespace BusinessLogic.ExportStrategies
 
         public void Start(int ticks)
         {
-            _mFlowTimeSeries = new List<DenseTimeSeries>();
-            foreach (var link in _mEdges.Links)
+            _mFlowTimeSeriesMap = new Dictionary<int, DenseTimeSeries>();
+
+            for (int i = 0; i < _mNodes.Count; i++)
             {
-                var from = _mNodes.Single(item => item.Name.Equals(link.From));
-                var to = _mNodes.Single(item => item.Name.Equals(link.To));
-                var ts = new DenseTimeSeries(from.Abbreviation + Environment.NewLine + to.Abbreviation, ticks);
-                ts.Properties.Add("Flow", "Unconstrained localized");                
-                ts.Properties.Add("From", from.Name);
-                ts.Properties.Add("To", to.Name);
-                _mFlowTimeSeries.Add(ts);
+                for (int j = i; j < _mNodes.Count; j++)
+                {
+                    if (!_mEdges.Connected(i, j)) continue;
+                    var ts = new DenseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation, ticks);
+                    ts.Properties.Add("From", _mNodes[i].Name);
+                    ts.Properties.Add("To", _mNodes[j].Name);
+                    _mFlowTimeSeriesMap.Add(i + _mNodes.Count * j, ts);
+                }
             }
 
             Measuring = true;
@@ -91,26 +87,30 @@ namespace BusinessLogic.ExportStrategies
 
         public void Clear()
         {
-            _mFlowTimeSeries = null;
+            _mFlowTimeSeriesMap = null;
             Measuring = false;
         }
 
         public void Sample(int tick)
         {
-            if (!Measuring) return;
-
-            for (int i = 0; i < _mFlows.Length; i++)
+            for (int i = 0; i < _mNodes.Count; i++)
             {
-                _mFlowTimeSeries[i].AppendData(_mFlows[i]);
+                for (int j = i; j < _mNodes.Count; j++)
+                {
+                    if (!_mEdges.Connected(i, j)) continue;
+                    _mFlowTimeSeriesMap[i + _mNodes.Count * j].AppendData(_mOptimizer.Flows[i, j] - _mOptimizer.Flows[j, i]);
+                }
             }
         }
 
         public List<ITimeSeries> CollectTimeSeries()
         {
-            return _mFlowTimeSeries.Select(item => (ITimeSeries) item).ToList();
+            var result = _mFlowTimeSeriesMap.Select(item => (ITimeSeries)item.Value).ToList();
+            foreach (var ts in result) ts.Properties.Add("Flow", "NewFlow");
+            return result;
         }
 
-        private List<DenseTimeSeries> _mFlowTimeSeries = new List<DenseTimeSeries>();
+        private Dictionary<int, DenseTimeSeries> _mFlowTimeSeriesMap = new Dictionary<int, DenseTimeSeries>();
 
         #endregion
 

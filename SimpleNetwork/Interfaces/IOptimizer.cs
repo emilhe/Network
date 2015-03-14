@@ -11,14 +11,9 @@ namespace BusinessLogic.Interfaces
     interface IOptimizer
     {
 
-        Action OnSolveCompleted { set; }
+        double[] NodeOptima { get; }
+        List<double[]> StorageOptima { get; }
 
-        int N { get; }
-        EdgeCollection Edges { get; }
-        ModelWrapper3 Wrap { get; }
-        double[] Deltas { get; }
-
-        void SetEdges(EdgeCollection edges);
         void SetNodes(double[] nodes, List<double[]> lowLimits, List<double[]> highLimits);
         void Solve();
 

@@ -89,8 +89,8 @@ namespace Main
             var calc = new NodeCostCalculator(new ParameterEvaluator(false));
             var opt = FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\VE50cukooK=3@default.txt");
             var mCf = NodeGenesFactory.SpawnCfMax(1, 1, 1);
+            Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
             Console.WriteLine("Optimization = " + calc.DetailedSystemCosts(opt, true).ToDebugString());
-            Console.WriteLine("Kapacitetsfaktor = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
 
             //////var files = Directory.GetFiles(@"C:\Users\Emil\Desktop\TestSolutions");
             //////var data = new Dictionary<string, List<List<double>>>();

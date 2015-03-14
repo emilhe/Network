@@ -26,14 +26,14 @@ namespace BusinessLogic
             //CsvImporter.Parse(TsSource.VE50PCT);
             //NtcImporter.Parse();
 
-            var opt = new LinearOptimizer2(2, 0);
             var nodes = new double[] { 2, -1 };
             var nodeNames = new[] { "Node1", "Node2" };
             var builder = new EdgeBuilder(nodeNames);
             builder.Connect(0, 1);
             var edges = builder.ToEdges();
+            var opt = new LinearOptimizer2(edges, 0);
+
             // Test the most basic test case.v
-            opt.SetEdges(edges);
             opt.SetNodes(nodes, new List<double[]>(), new List<double[]>());
             opt.Solve();
         }

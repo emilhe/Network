@@ -9,7 +9,7 @@ using Gurobi;
 
 namespace BusinessLogic.Utils
 {
-    class QuadraticOptimizer : IOptimizer
+    class QuadFlowOptimizer : IOptimizer
     {
 
         public bool ExtractFlows { get; set; }
@@ -19,25 +19,34 @@ namespace BusinessLogic.Utils
         public double[] NodeOptima { get; private set; }
         public List<double[]> StorageOptima { get; private set; }
 
-        private readonly SystemOptimizer _mCore;
-        private GRBQuadExpr _mFlowObjective;
+        private readonly CoreOptimizer _mCore;
+        private readonly GRBQuadExpr _mFlowObjective;
+        private readonly Action _mApplyConstr;
+        private readonly Action _mRemoveConstr; 
 
-        public QuadraticOptimizer(int n, int m)
+        public QuadFlowOptimizer(CoreOptimizer core, Action applyConstr, Action removeConstr)
         {
-            _mCore = new SystemOptimizer(n, m) {OnSolveCompleted = SolveQuadratic};
+            _mCore = core;
+            core.OnSolveCompleted = SolveQuadratic;
+            _mFlowObjective = ObjectiveFactory.SquaredFlow(_mCore.Edges, Wrap);
+            _mRemoveConstr = removeConstr;
+            _mApplyConstr = applyConstr;
 
-            Flows = new double[n, n];
-            NodeOptima = new double[n];
+            // Setup data structures.
+            Flows = new double[N, N];
+            NodeOptima = new double[N];
             StorageOptima = new List<double[]>();
-            for (int i = 0; i < m; i++) StorageOptima.Add(new double[n]);
+            for (int i = 0; i < _mCore.M; i++) StorageOptima.Add(new double[N]);
+
+            // So far, just track it all.
+            ExtractFlows = true;
+            ExtractStorageOptima = true;
         }
 
         private void SolveQuadratic()
         {
-            // Add new constraints. TODO: ADD STORAGE CONSTRAINTS TOO
-            GRBLinExpr sum = 0.0;
-            foreach (var expr in _mCore.Wrap.NodeExprs) sum.Add(expr);
-            var optimumConstr = _mCore.Wrap.Model.AddConstr(sum, GRB.LESS_EQUAL, _mCore.BalanceOptimum, "Optimal balance");
+            // Add new constraints.
+            _mApplyConstr();
             // Set new balancing objective and optimize.
             _mCore.Wrap.Model.SetObjective(_mFlowObjective);
             _mCore.Wrap.Model.Update();
@@ -45,7 +54,7 @@ namespace BusinessLogic.Utils
             // Extract results.
             ExtractResultsFromModel();
             // Remove new constraints.
-            _mCore.Wrap.Model.Remove(optimumConstr);
+            _mRemoveConstr();
 
             if (OnSolveCompleted != null) OnSolveCompleted();
         }
@@ -57,7 +66,7 @@ namespace BusinessLogic.Utils
                 // Extract node optima.
                 for (int i = 0; i < _mCore.N; i++)
                 {
-                    NodeOptima[i] = _mCore.Wrap.NodeExprs[i].Value * Math.Sign(_mCore.Deltas[i]);
+                    NodeOptima[i] = _mCore.Wrap.NodeExprs[i].GrbLinExpr.Value * Math.Sign(_mCore.Deltas[i]);
                 }
 
                 // Extract storage optima.
@@ -89,30 +98,12 @@ namespace BusinessLogic.Utils
             catch (Exception)
             {
                 _mCore.Wrap.Model.ComputeIIS();
-                _mCore.Wrap.Model.Write(@"C:\flowModel.ilp");
+                _mCore.Wrap.Model.Write(@"C:\Temp\flowModel.ilp");
                 throw;
             }
         }
 
-        /// <summary>
-        /// Set flow objective (when edges change).
-        /// </summary>
-        private GRBQuadExpr BuildFlowObjective()
-        {
-            GRBQuadExpr flowObjective = 0.0;
-
-            for (int i = 0; i < _mCore.N; i++)
-            {
-                for (int j = i; j < N; j++)
-                {
-                    if (!_mCore.Edges.Connected(i, j)) continue;
-                    // Note that the SQUARED flow is minimized (to minimize the needed capacity).
-                    flowObjective.AddTerm(_mCore.Edges.GetEdgeCost(i, j), _mCore.Wrap.Edges[i + j * N], _mCore.Wrap.Edges[i + j * N]);
-                }
-            }
-
-            return flowObjective;
-        }
+        public Action OnSolveCompleted { private get; set; }
 
         #region Delegation
 
@@ -121,11 +112,14 @@ namespace BusinessLogic.Utils
             ((IOptimizer)_mCore).Solve();
         }
 
-        public Action OnSolveCompleted { private get; set; }
-
         public int N
         {
             get { return _mCore.N; }
+        }
+
+        public int M
+        {
+            get { return _mCore.M; }
         }
 
         public EdgeCollection Edges
@@ -133,7 +127,7 @@ namespace BusinessLogic.Utils
             get { return _mCore.Edges; }
         }
 
-        public ModelWrapper3 Wrap
+        public MyModel Wrap
         {
             get { return _mCore.Wrap; }
         }
@@ -141,12 +135,6 @@ namespace BusinessLogic.Utils
         public double[] Deltas
         {
             get { return _mCore.Deltas; }
-        }
-
-        public void SetEdges(EdgeCollection edges)
-        {
-            ((IOptimizer)_mCore).SetEdges(edges);
-            _mFlowObjective = BuildFlowObjective();
         }
 
         public void SetNodes(double[] nodes, List<double[]> lowLimits, List<double[]> highLimits)
@@ -157,4 +145,5 @@ namespace BusinessLogic.Utils
         #endregion
 
     }
+
 }
