@@ -57,12 +57,12 @@ namespace BusinessLogic.Utils
 
         public static EdgeCollection GetEuropeEdgeObject(List<CountryNode> nodes)
         {
-            return GetEdgeObject(nodes.Select(item => item.Name).ToList(), "NtcMatrix", Double.MaxValue);
+            return GetEdgeObject(nodes.Select(item => item.Name).ToList(), "NtcMatrix", 1e3);
         }
 
         public static EdgeCollection GetEuropeEdgeObject(List<string> nodes)
         {
-            return GetEdgeObject(nodes, "NtcMatrix", Double.MaxValue);
+            return GetEdgeObject(nodes, "NtcMatrix", 1e3);
         }
 
         public static EdgeCollection GetEdgeObject(List<string> nodes, string key, double frac)

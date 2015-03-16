@@ -95,7 +95,7 @@ namespace BusinessLogic.Utils
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 _mCore.Wrap.Model.ComputeIIS();
                 _mCore.Wrap.Model.Write(@"C:\Temp\flowModel.ilp");

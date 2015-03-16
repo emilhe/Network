@@ -75,7 +75,7 @@ namespace BusinessLogic.Utils
             var ctrl = new SimulationController();
             ctrl.ExportStrategies.Add(new ExportSchemeInput
             {
-                Scheme = ExportScheme.ConstrainedSynchronized
+                Scheme = ExportScheme.ConstrainedLocalized
             });
             ctrl.LogFlows = true;
             ctrl.Sources.Add(new TsSourceInput { Length = length, Offset = 0 });
