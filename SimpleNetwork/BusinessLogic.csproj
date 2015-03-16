@@ -120,10 +120,9 @@
     <Compile Include="Cost\CostModels\ITransmissionCostModel.cs" />
     <Compile Include="Cost\CostModels\IWindCostModel.cs" />
     <Compile Include="Cost\CostModels\VariableLengthModel.cs" />
-    <Compile Include="ExportStrategies\ConLocalScheme2.cs" />
+    <Compile Include="ExportStrategies\ConLocalScheme.cs" />
     <Compile Include="ExportStrategies\ConSyncScheme.cs" />
     <Compile Include="ExportStrategies\EdgeCollection.cs" />
-    <Compile Include="ExportStrategies\ConLocalScheme.cs" />
     <Compile Include="ExportStrategies\PhaseAngleFlow.cs" />
     <Compile Include="ExportStrategies\UncLocalScheme.cs" />
     <Compile Include="ExportStrategies\UncSyncScheme.cs" />
@@ -140,7 +139,6 @@
     <Compile Include="Cost\Optimization\NodeGene.cs" />
     <Compile Include="Simulation\ISimulation.cs" />
     <Compile Include="Nodes\ReModel.cs" />
-    <Compile Include="Nodes\SuperNode.cs" />
     <Compile Include="Simulation\ISimulationController.cs" />
     <Compile Include="Simulation\SimulationController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />
@@ -162,7 +160,6 @@
     <Compile Include="TimeSeries\Mapping.cs" />
     <Compile Include="TimeSeries\ImmutableTimeSeries.cs" />
     <Compile Include="Utils\CoreOptimizer.cs" />
-    <Compile Include="Utils\FlowOptimizer.cs" />
     <Compile Include="Interfaces\IGenerator.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
     <Compile Include="Program.cs" />
@@ -178,15 +175,11 @@
     <Compile Include="TimeSeries\SparseTimeSeries.cs" />
     <Compile Include="TimeSeries\TickTimeSeriesItem.cs" />
     <Compile Include="Utils\ConfigurationUtils.cs" />
-    <Compile Include="Utils\ConstrainedFlowOptimizer.cs" />
-    <Compile Include="Utils\LinearOptimizer.cs" />
     <Compile Include="Utils\GridEvaluator.cs" />
-    <Compile Include="Utils\LinearOptimizer2.cs" />
+    <Compile Include="Utils\LinearOptimizer.cs" />
     <Compile Include="Utils\ObjectiveFactory.cs" />
     <Compile Include="Utils\QuadFlowOptimizer.cs" />
-    <Compile Include="Utils\SystemOptimizer.cs" />
     <Compile Include="Utils\LineEvaluator.cs" />
-    <Compile Include="Utils\MismatchOptimizer.cs" />
     <Compile Include="Utils\ParameterEvaluator.cs" />
     <Compile Include="Utils\Stuff.cs" />
   </ItemGroup>

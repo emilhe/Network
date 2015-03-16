@@ -16,14 +16,13 @@ namespace UnitTest
         [Test]
         public void TwoNodeTest()
         {
-            var opt = new LinearOptimizer2(2, 0);
             var nodes = new double[] {2, -1};
             var nodeNames = new[] {"Node1", "Node2"};
             var builder = new EdgeBuilder(nodeNames);
             builder.Connect(0, 1);
             var edges = builder.ToEdges();
+            var opt = new LinearOptimizer(edges, 0);
             // Test the most basic test case.
-            opt.SetEdges(edges);
             opt.SetNodes(nodes, new List<double[]>(), new List<double[]>());
             opt.Solve();
             AreAlmostEqual(new double[] {1, 0}, opt.NodeOptima, FlowDelta*edges.NodeCount);
@@ -42,7 +41,6 @@ namespace UnitTest
         [Test]
         public void FourNodeAllEdgeTest()
         {
-            var opt = new LinearOptimizer2(4, 0);
             var nodes = new double[] {2, -1, 4, -3};
             var nodeNames = new[] {"Node1", "Node2", "Node3", "Node4"};
             var builder = new EdgeBuilder(nodeNames);
@@ -53,8 +51,8 @@ namespace UnitTest
             builder.Connect(1, 3);
             builder.Connect(2, 3);
             var edges = builder.ToEdges();
+            var opt = new LinearOptimizer(edges, 0);
             // Test that the minimum flow is realised.
-            opt.SetEdges(edges);
             opt.SetNodes(nodes, null, null);
             opt.Solve();
             var flowSum = 0.0;
@@ -66,7 +64,6 @@ namespace UnitTest
         [Test]
         public void FourNodeFewEdgeTest()
         {
-            var opt = new LinearOptimizer2(4, 0);
             var nodes = new double[] {2, -1, 4, -3};
             var nodeNames = new[] {"Node1", "Node2", "Node3", "Node4"};
             var builder = new EdgeBuilder(nodeNames);
@@ -74,8 +71,8 @@ namespace UnitTest
             builder.Connect(0, 2);
             builder.Connect(2, 3);
             var edges = builder.ToEdges();
+            var opt = new LinearOptimizer(edges, 0);
             // Test that the minimum flow is realised.
-            opt.SetEdges(edges);
             opt.SetNodes(nodes, null, null);
             opt.Solve();
             var flowSum = 0.0;
@@ -87,14 +84,13 @@ namespace UnitTest
         [Test]
         public void ChargeLimitTest()
         {
-            var opt = new LinearOptimizer2(2, 1);
             var nodes = new double[] {2, -1};
             var nodeNames = new[] {"Node1", "Node2"};
             var builder = new EdgeBuilder(nodeNames);
             builder.Connect(0, 1);
             var edges = builder.ToEdges();
+            var opt = new LinearOptimizer(edges, 1);
             // Test that charging capacity limits are respected
-            opt.SetEdges(edges);
             opt.SetNodes(nodes, new List<double[]> {new double[] {0, -1}}, new List<double[]> {new double[] {0, 0}});
             opt.Solve();
             AreAlmostEqual(new double[,] {{0, -2}, {0, 0}}, opt.Flows, FlowDelta);
@@ -105,14 +101,13 @@ namespace UnitTest
         [Test]
         public void DischargeTest()
         {
-            var opt = new LinearOptimizer2(2, 1);
             var nodes = new double[] {2, -3};
             var nodeNames = new[] {"Node1", "Node2"};
             var builder = new EdgeBuilder(nodeNames);
             builder.Connect(0, 1);
             var edges = builder.ToEdges();
+            var opt = new LinearOptimizer(edges, 1);
             // Test the most basic test case.
-            opt.SetEdges(edges);
             opt.SetNodes(nodes, new List<double[]> {new[] {0.0, 0}}, new List<double[]> {new[] {0.0, 1}});
             opt.Solve();
             AreAlmostEqual(new double[,] {{0, -2}, {0, 0}}, opt.Flows, FlowDelta);

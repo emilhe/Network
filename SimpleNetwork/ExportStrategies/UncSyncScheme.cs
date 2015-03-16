@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
 using BusinessLogic.TimeSeries;
@@ -32,18 +30,27 @@ namespace BusinessLogic.ExportStrategies
         //private readonly double[,] _mFlows;
 
                 // TODO: Remove HACK
-        public UncSyncScheme(List<CountryNode> nodes, EdgeCollection edges)
-            : this(nodes.Select(item => (INode) item).ToList(), edges)
+        public UncSyncScheme(List<CountryNode> nodes, EdgeCollection edges, double[] weights = null)
+            : this(nodes.Select(item => (INode) item).ToList(), edges, weights)
         {
         }
 
-        public UncSyncScheme(IList<INode> nodes, EdgeCollection edges)
+        public UncSyncScheme(IList<INode> nodes, EdgeCollection edges, double[] weights = null)
         {
             //if (nodes.Count != edges.NodeCount) throw new ArgumentException("Nodes and edges do not match.");
 
             _mNodes = nodes;
             _mEdges = edges;
             _mFlow = new PhaseAngleFlow(_mEdges.IncidenceMatrix);
+
+            if (weights != null)
+            {
+                _mWeights = weights;
+                return;
+            }
+
+            // Corresponds to the projection vector.
+            _mWeights = _mNodes.Select(node => CountryInfo.GetMeanLoad(node.Name)).ToArray().Norm();
 
             //_mLoLims = new double[nodes.Count];
             //_mHiLims = new double[nodes.Count];
@@ -57,10 +64,6 @@ namespace BusinessLogic.ExportStrategies
             _mNodes = nodes;
             _mMismatches = mismatches;
             _mInjections = new double[mismatches.Length];
-
-            // Corresponds to the projection vector.
-            _mWeights = _mNodes.Select(node => CountryInfo.GetMeanLoad(node.Name)).ToArray();
-            _mWeights.Mult(1.0/_mWeights.Sum());
         }
 
         public void BalanceSystem()

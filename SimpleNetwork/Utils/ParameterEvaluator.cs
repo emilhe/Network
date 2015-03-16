@@ -35,19 +35,24 @@ namespace BusinessLogic.Utils
         private readonly ModelYearConfig _mConfig;
         private readonly ISimulationController _mCtrl;
 
-        public SimpleCore(ISimulationController controller, int length = 32, List<CountryNode> nodes = null)
+        public SimpleCore(ISimulationController controller, int length = 32, List<CountryNode> nodes = null, ModelYearConfig config = null)
         {
             _mCtrl = controller;
-            _mConfig = new ModelYearConfig
-            {
-                Parameters = new Dictionary<string, KeyValuePair<int, double>>
-                {
-                    {"be", new KeyValuePair<int, double>(0, 1.0/length)},
-                    {"bc", new KeyValuePair<int, double>(0, 1)},
-                    {"tc", new KeyValuePair<int, double>(0, 1)}
 
-                }
-            };
+            if (config == null)
+            {
+                config = new ModelYearConfig
+                {
+                    Parameters = new Dictionary<string, KeyValuePair<int, double>>
+                    {
+                        {"be", new KeyValuePair<int, double>(0, 1.0/length)},
+                        {"bc", new KeyValuePair<int, double>(0, 1)},
+                        {"tc", new KeyValuePair<int, double>(0, 1)}
+
+                    }
+                };
+            }
+            _mConfig = config;
 
             if (nodes == null) nodes = ConfigurationUtils.CreateNodesNew();
             Nodes = nodes;
@@ -70,7 +75,7 @@ namespace BusinessLogic.Utils
             var ctrl = new SimulationController();
             ctrl.ExportStrategies.Add(new ExportSchemeInput
             {
-                Scheme = ExportScheme.UnconstrainedSynchronized
+                Scheme = ExportScheme.ConstrainedSynchronized
             });
             ctrl.LogFlows = true;
             ctrl.Sources.Add(new TsSourceInput { Length = length, Offset = 0 });
@@ -236,9 +241,66 @@ namespace BusinessLogic.Utils
     }
 
     /// <summary>
-    /// Do THREE simulations, one for Kb, Kc and Tc,
+    /// Do ONE simulation only,
     /// </summary>
     public class ModelYearCore : IParameterEvaluatorCore
+    {
+
+        #region Delegation
+
+        private readonly SimpleCore _mCore;
+
+        public List<CountryNode> Nodes
+        {
+            get { return _mCore.Nodes; }
+        }
+
+        public ModelYearConfig Config
+        {
+            get { return _mCore.Config; }
+        }
+
+        public ISimulationController BeController
+        {
+            get { return _mCore.BeController; }
+        }
+
+        public ISimulationController BcController
+        {
+            get { return _mCore.BcController; }
+        }
+
+        public ISimulationController TcController
+        {
+            get { return _mCore.TcController; }
+        }
+
+        #endregion
+
+        public ModelYearCore(ModelYearConfig config)
+        {
+            var nodes = ConfigurationUtils.CreateNodesNew();
+
+            // Transmission eval.
+            var ctrl = new SimulationController();
+            ctrl.ExportStrategies.Add(new ExportSchemeInput
+            {
+                Scheme = ExportScheme.ConstrainedSynchronized
+            });
+            ctrl.LogFlows = true;
+            ctrl.Sources.Add(new TsSourceInput { Length = 1, Offset = config.Parameters["be"].Key }); // SAME OFFSET: CRUTIAL!!
+            ctrl.NodeFuncs.Clear();
+            ctrl.NodeFuncs.Add("No storage", input => nodes);
+
+            _mCore = new SimpleCore(ctrl, 1, nodes);
+        }
+
+    }
+
+    /// <summary>
+    /// Do THREE simulations, one for Kb, Kc and Tc,
+    /// </summary>
+    public class TripleModelYearCore : IParameterEvaluatorCore
     {
         public List<CountryNode> Nodes { get; private set; }
         public ModelYearConfig Config { get { return _mConfig; } }
@@ -252,52 +314,55 @@ namespace BusinessLogic.Utils
         private readonly ISimulationController _mTcCtrl;
 
         // TODO: CHANGE TO SYNCHRONIZED
-        public ModelYearCore(ModelYearConfig config)
+        public TripleModelYearCore(ModelYearConfig config)
         {
             _mConfig = config;
             // Backup energy controller.
-            _mBeCtrl = new SimulationController() {CacheEnabled = false};
-            _mBeCtrl.ExportStrategies.Add(new ExportSchemeInput
+            var beCtrl = new SimulationController {CacheEnabled = false};
+            beCtrl.ExportStrategies.Add(new ExportSchemeInput
             {
                 Scheme = ExportScheme.ConstrainedSynchronized
             });
-            _mBeCtrl.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["be"].Key });
-            _mBeCtrl.NodeFuncs.Clear();
-            _mBeCtrl.NodeFuncs.Add("No storage", input =>
+            beCtrl.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["be"].Key });
+            beCtrl.NodeFuncs.Clear();
+            beCtrl.NodeFuncs.Add("No storage", input =>
             {
                 foreach (var node in Nodes)
                     node.Model.SetOffset((int)input.Offset * Stuff.HoursInYear);
                 return Nodes;
             });
+            _mBeCtrl = beCtrl;
             // Backup capacity controller.
-            _mBcCtrl = new SimulationController() { CacheEnabled = false };
-            _mBcCtrl.ExportStrategies.Add(new ExportSchemeInput
+            var bcCtrl = new SimulationController() { CacheEnabled = false };
+            bcCtrl.ExportStrategies.Add(new ExportSchemeInput
             {
                 Scheme = ExportScheme.ConstrainedSynchronized
             });
-            _mBcCtrl.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["bc"].Key });
-            _mBcCtrl.NodeFuncs.Clear();
-            _mBcCtrl.NodeFuncs.Add("No storage", input =>
+            bcCtrl.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["bc"].Key });
+            bcCtrl.NodeFuncs.Clear();
+            bcCtrl.NodeFuncs.Add("No storage", input =>
             {
                 foreach (var node in Nodes)
                     node.Model.SetOffset((int)input.Offset * Stuff.HoursInYear);
                 return Nodes;
             });
+            _mBcCtrl = bcCtrl;
             // Transmission capacity controller.
-            _mTcCtrl = new SimulationController() { CacheEnabled = false };
-            _mTcCtrl.ExportStrategies.Add(new ExportSchemeInput
+            var tcCtrl = new SimulationController() { CacheEnabled = false };
+            tcCtrl.ExportStrategies.Add(new ExportSchemeInput
             {
                 Scheme = ExportScheme.ConstrainedSynchronized
             });
-            _mTcCtrl.LogFlows = true;
-            _mTcCtrl.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["tc"].Key });
-            _mTcCtrl.NodeFuncs.Clear();
-            _mTcCtrl.NodeFuncs.Add("No storage", input =>
+            tcCtrl.LogFlows = true;
+            tcCtrl.Sources.Add(new TsSourceInput { Length = 1, Offset = _mConfig.Parameters["tc"].Key });
+            tcCtrl.NodeFuncs.Clear();
+            tcCtrl.NodeFuncs.Add("No storage", input =>
             {
                 foreach (var node in Nodes)
                     node.Model.SetOffset((int)input.Offset * Stuff.HoursInYear);
                 return Nodes;
             });
+            _mTcCtrl = tcCtrl;
             // TODO: Make source configurable
             Nodes = ConfigurationUtils.CreateNodesNew();
         }
@@ -343,7 +408,7 @@ namespace BusinessLogic.Utils
             {   
                 // TODO: Make config a variable? For now, just use default...
                 var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\noStorageAlpha0.5to1Gamma0.5to2.txt");
-                _mCore = new ModelYearCore(config);
+                _mCore = new TripleModelYearCore(config);
             }
         }
 
@@ -354,47 +419,57 @@ namespace BusinessLogic.Utils
 
         #region Data evaluation
 
-        // Sigma
-        public double Sigma(NodeGenes nodeGenes)
-        {
-            var data = _mCore.BeController.EvaluateTs(nodeGenes);
-            var ts = data[0].TimeSeries.Single(item => item.Name.Equals("Mismatch"));
-            var std = ts.GetAllValues().StdDev(item => item/CountryInfo.GetMeanLoadSum());
-            return std;
-        }
-
         // Capacity factor
         public double CapacityFactor(NodeGenes nodeGenes)
         {
             var windCF =
                 nodeGenes.Select(
                     item =>
-                        item.Value.Alpha*item.Value.Gamma*CountryInfo.GetMeanLoad(item.Key)*
-                        CountryInfo.GetOnshoreWindCf(item.Key)).Sum()/
+                        item.Value.Alpha * item.Value.Gamma * CountryInfo.GetMeanLoad(item.Key) *
+                        CountryInfo.GetOnshoreWindCf(item.Key)).Sum() /
                 CountryInfo.GetMeanLoadSum();
             var solarCF = nodeGenes.Select(
                 item =>
-                    (1 - item.Value.Alpha)*item.Value.Gamma*CountryInfo.GetMeanLoad(item.Key)*
-                    CountryInfo.GetSolarCf(item.Key)).Sum()/
+                    (1 - item.Value.Alpha) * item.Value.Gamma * CountryInfo.GetMeanLoad(item.Key) *
+                    CountryInfo.GetSolarCf(item.Key)).Sum() /
                           CountryInfo.GetMeanLoadSum();
 
             return (windCF + solarCF);
+        }
+
+        // Sigma
+        public double Sigma(NodeGenes nodeGenes)
+        {
+            var data = _mCore.BeController.EvaluateTs(nodeGenes);
+            return Sigma(data[0]);
+        }
+
+        public static double Sigma(SimulationOutput data)
+        {
+            var ts = data.TimeSeries.Single(item => item.Name.Equals("Mismatch"));
+            var std = ts.GetAllValues().StdDev(item => item / CountryInfo.GetMeanLoadSum());
+            return std;
         }
 
         // Individual link capacities.
         public Dictionary<string,double> LinkCapacities(NodeGenes nodeGenes)
         {
             var config = _mCore.Config.Parameters["tc"];
-            
-            // Run simulation.
             var data = _mCore.TcController.EvaluateTs(nodeGenes);
+            return LinkCapacities(data[0], config.Value);
+        }
+
+        public static Dictionary<string, double> LinkCapacities(SimulationOutput data, double scale = 1, int from = 0, int to = -1)
+        {
             // Extract system values.
             var result = new Dictionary<string, double>();
-            var flowTs = data[0].TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
+            var flowTs = data.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
             foreach (var ts in flowTs)
             {
-                var capacity = MathUtils.CalcCapacity(ts.GetAllValues());
-                result.Add(Costs.GetKey(ts.Properties["From"], ts.Properties["To"]), capacity* config.Value);
+                var values = ts.GetAllValues().Skip(from);
+                if (to != -1) values = values.Take(to);
+                var capacity = MathUtils.CalcCapacity(values);
+                result.Add(Costs.GetKey(ts.Properties["From"], ts.Properties["To"]), capacity * scale);
             }
 
             return result;
@@ -406,40 +481,53 @@ namespace BusinessLogic.Utils
             return LinkCapacities(nodeGenes).Select(item => Costs.LinkLength[item.Key]*item.Value).Sum();
         }
 
+        public static double TransmissionCapacity(SimulationOutput data, double scale = 1, int from = 0, int to = -1)
+        {
+            return LinkCapacities(data, scale, from, to).Select(item => Costs.LinkLength[item.Key] * item.Value).Sum();
+        }
+
         // Total backup capacity.
         public double BackupCapacity(NodeGenes nodeGenes)
         {
             var config = _mCore.Config.Parameters["bc"];
-
-            // Run simulation.
             var data = _mCore.BcController.EvaluateTs(nodeGenes);
-            // Extract system values.
+            return BackupCapacity(data[0], config.Value);
+        }
+
+        public static double BackupCapacity(SimulationOutput data, double scale = 1, int from = 0, int to = -1)
+        {
             var bc = 0.0;
-            var balancingTs = data[0].TimeSeries.Where(item => item.Name.Contains("Balancing"));
+            var balancingTs = data.TimeSeries.Where(item => item.Name.Contains("Balancing"));
             foreach (var ts in balancingTs)
             {
-                bc += MathUtils.Percentile(ts.GetAllValues().Select(item => Math.Max(0,-item)), 99);
+                var values = ts.GetAllValues().Skip(from);
+                if (to != -1) values = values.Take(to);
+                bc += MathUtils.Percentile(values.Select(item => Math.Max(0, -item)), 99);
             }
 
-            return bc * config.Value;
+            return bc * 1;
         }
 
         // Total backup energy.
         public double BackupEnergy(NodeGenes nodeGenes)
         {
             var config = _mCore.Config.Parameters["be"];
-
-            // Run simulation.
             var data = _mCore.BeController.EvaluateTs(nodeGenes);
-            // Extract system values.
+            return BackupEnergy(data[0], config.Value);
+        }
+
+        public static double BackupEnergy(SimulationOutput data, double scale = 1, int from = 0, int to = -1)
+        {
             var bc = 0.0;
-            var balancingTs = data[0].TimeSeries.Where(item => item.Name.Contains("Balancing"));
+            var balancingTs = data.TimeSeries.Where(item => item.Name.Contains("Balancing"));
             foreach (var ts in balancingTs)
             {
-                bc += ts.GetAllValues().Select(item => Math.Max(0,-item)).Sum();
+                var values = ts.GetAllValues().Skip(from);
+                if (to != -1) values = values.Take(to);
+                bc += values.Select(item => Math.Max(0, -item)).Sum();
             }
 
-            return bc * config.Value;
+            return bc * scale;
         }
 
         #endregion

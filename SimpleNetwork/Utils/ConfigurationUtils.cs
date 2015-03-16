@@ -67,7 +67,6 @@ namespace BusinessLogic.Utils
 
         public static EdgeCollection GetEdgeObject(List<string> nodes, string key, double frac)
         {
-            // TODO: INCLUDE CONSTRAINT (e.g. use FRAC variable)
             var keys = new List<string>();
             var links = new List<LinkDataRow>();
             foreach (var link in ProtoStore.LoadLinkData(key))
@@ -76,6 +75,7 @@ namespace BusinessLogic.Utils
                 if (link.From.Equals(link.To)) continue;
                 if (keys.Contains(link.From + "-" + link.To)) continue;
                 if (keys.Contains(link.To + "-" + link.From)) continue;
+                link.LinkCapacity *= frac;
                 links.Add(link);
                 keys.Add(link.From + "-" + link.To);
             }

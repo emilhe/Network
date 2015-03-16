@@ -37,6 +37,13 @@ namespace Utils
             return source;
         }
 
+        public static double[] Norm(this double[] source, double norm = 1)
+        {
+            var sum = source.Sum();
+            for (int i = 0; i < source.Length; i++) source[i] = source[i] * (norm/sum);
+            return source;
+        }
+
         public static T[] Fill<T>(this T[] source, T elem)
         {
             for (int i = 0; i < source.Length; i++) source[i] = elem;

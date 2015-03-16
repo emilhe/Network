@@ -14,7 +14,7 @@ namespace BusinessLogic.ExportStrategies
     class UncLocalScheme : IExportScheme
     {
 
-        private readonly LinearOptimizer2 _mOptimizer;
+        private readonly LinearOptimizer _mOptimizer;
         private readonly EdgeCollection _mEdges;
         private readonly PhaseAngleFlow _mFlow;
 
@@ -41,7 +41,7 @@ namespace BusinessLogic.ExportStrategies
             _mNodes = nodes;
             _mEdges = edges;
             _mFlow = new PhaseAngleFlow(_mEdges.IncidenceMatrix);
-            _mOptimizer = new LinearOptimizer2(edges, 0); // HERE NO STORAGE IS ASSUMED!!
+            _mOptimizer = new LinearOptimizer(edges, 0); // HERE NO STORAGE IS ASSUMED!!
         }
 
         #endregion

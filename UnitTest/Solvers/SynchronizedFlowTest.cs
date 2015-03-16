@@ -21,26 +21,6 @@ namespace UnitTest
     {
 
         [Test]
-        public void WithoutFlowTest()
-        {
-            var nodes = FakeNodes();
-            var scheme = new UncSyncScheme(nodes, Edges(nodes));
-            var mismatches = new[] {-1.0, 2.0, 5.0, -3.0, 7.0};
-            var avg = mismatches.Average();
-            scheme.Bind(nodes, mismatches);
-            scheme.BalanceSystem();
-            foreach (var n in nodes) Assert.AreEqual(n.Balancing.CurrentValue, avg, 1e-3);
-            foreach (var m in mismatches) Assert.AreEqual(m, 0, 1e-3);
-        }
-
-        private static List<INode> FakeNodes()
-        {
-            var d = new DenseTimeSeries("Dummy");
-            d.AppendData(0);
-            return SpawnNodes(new[] { d, d, d, d, d, d }).Select(item => (INode)item).ToList();
-        }
-
-        [Test]
         public void UnconstrainedSynchronizedFlowTest()
         {
             var ts = SpawnTs();
@@ -88,7 +68,7 @@ namespace UnitTest
         {
             Costs.Unsafe = true;
             var nodes = SpawnNodes(ts);
-            var model = new NetworkModel(nodes, new UncSyncScheme(nodes, Edges(nodes)));
+            var model = new NetworkModel(nodes, new UncSyncScheme(nodes, Edges(nodes), new double[nodes.Count].Ones()));
             return new MockSimulationController(new SimulationCore(model))
             {
                 Ticks = ts[0].Count

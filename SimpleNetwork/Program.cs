@@ -31,7 +31,7 @@ namespace BusinessLogic
             var builder = new EdgeBuilder(nodeNames);
             builder.Connect(0, 1);
             var edges = builder.ToEdges();
-            var opt = new LinearOptimizer2(edges, 0);
+            var opt = new LinearOptimizer(edges, 0);
 
             // Test the most basic test case.v
             opt.SetNodes(nodes, new List<double[]>(), new List<double[]>());

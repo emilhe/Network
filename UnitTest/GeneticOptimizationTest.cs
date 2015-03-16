@@ -16,15 +16,15 @@ namespace UnitTest
         [Test]
         public void HelloWorld()
         {
-            //// ReBirth population.
-            //var n = 100;
-            //var strategy = new GeneticStringOptimizationStrategy();
-            //var population = new IChromosome[n];
-            //for (int i = 0; i < population.Length; i++) population[i] = GeneticStringOptimizationStrategy.SpawnChromosome();
-            //// Find optimum.
-            //var optimizer = new GeneticOptimizer<HelloWorldChromosome>(strategy);
-            //var optimum = optimizer.Optimize(population);
-            //Assert.AreEqual("Hello World!", optimum.Genes);
+            // ReBirth population.
+            var n = 100;
+            var strategy = new GeneticStringOptimizationStrategy();
+            var population = new HelloWorldChromosome[n];
+            for (int i = 0; i < population.Length; i++) population[i] = GeneticStringOptimizationStrategy.Spawn();
+            // Find optimum.
+            var optimizer = new GeneticOptimizer<HelloWorldChromosome>(strategy, new HelloWorldCostCalculator());
+            var optimum = optimizer.Optimize(population);
+            Assert.AreEqual("Hello World!", optimum.Genes);
         }
 
         class GeneticStringOptimizationStrategy : IGeneticOptimizationStrategy<HelloWorldChromosome>
@@ -98,30 +98,15 @@ namespace UnitTest
                 private set
                 {
                     _mGenes = value;
-                    Cost = CalculateCost();
+                    InvalidCost = true;
                 }
             }
 
-            private const string _mTarget = "Hello World!";
             private string _mGenes;
 
             public HelloWorldChromosome(string genes)
             {
                 Genes = genes;
-            }
-
-            private double CalculateCost()
-            {
-                var cost = 0.0;
-                var idx = 0;
-
-                foreach (var gene in Genes)
-                {
-                    cost += Math.Abs(gene - _mTarget[idx]);
-                    idx++;
-                }
-
-                return cost;
             }
 
             public IChromosome Mate(IChromosome partner)
@@ -137,7 +122,8 @@ namespace UnitTest
 
             public void UpdateCost(Func<ISolution, double> eval)
             {
-                eval(this);
+                Cost = eval(this);
+                InvalidCost = false;
             }
 
             public void Mutate()
@@ -164,6 +150,41 @@ namespace UnitTest
             public ISolution Clone()
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        class HelloWorldCostCalculator : ICostCalculator<HelloWorldChromosome>
+        {
+
+            private const string _mTarget = "Hello World!";
+            private int _mEvals = 0;
+
+            public int Evaluations
+            {
+                get { return _mEvals; }
+            }
+
+            public void UpdateCost(IList<HelloWorldChromosome> solutions)
+            {
+                _mEvals += solutions.Count;
+                foreach (var solution in solutions)
+                {
+                    solution.UpdateCost(CalculateCost);
+                }
+            }
+
+            private double CalculateCost(ISolution solution)
+            {
+                var cost = 0.0;
+                var idx = 0;
+
+                foreach (var gene in (solution as HelloWorldChromosome).Genes)
+                {
+                    cost += Math.Abs(gene - _mTarget[idx]);
+                    idx++;
+                }
+
+                return cost;
             }
         }
 

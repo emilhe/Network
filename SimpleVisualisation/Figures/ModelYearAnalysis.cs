@@ -27,7 +27,7 @@ namespace Main.Figures
         {
 
             // Read year config.
-            var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\noStorageAlpha0.5to1Gamma0.5to2.txt");
+            var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Sync.txt");
             var gammaRes = 10;
             var alphaRes = 10;
 
@@ -51,65 +51,66 @@ namespace Main.Figures
             });
             ctrl.LogFlows = inclTrans;
 
-            // Setup BC ESTIMATION control.
-            var bcEstCtrl = new SimulationController { InvalidateCache = false };
-            bcEstCtrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = config.Parameters["bc"].Key, Length = 1 }); // 23
-            bcEstCtrl.ExportStrategies.Add(
+            // Setup ESTIMATION control.
+            var estCtrl = new SimulationController { InvalidateCache = false };
+            estCtrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = config.Parameters["bc"].Key, Length = 1 });
+            estCtrl.ExportStrategies.Add(
                  new ExportSchemeInput()
                  {
                      Scheme = ExportScheme.UnconstrainedSynchronized
                  });
-            bcEstCtrl.NodeFuncs.Clear();
-            bcEstCtrl.NodeFuncs.Add("Clean nodes", s =>
+            estCtrl.NodeFuncs.Clear();
+            estCtrl.NodeFuncs.Add("Clean nodes", s =>
             {
                 var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
                 //ConfigurationUtils.SetupHomoStuff(nodes, s.Length, true, true, false);
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
+            estCtrl.LogFlows = true;
 
-            // Setup BE ESTIMATION control.
-            var beEstCtrl = new SimulationController { InvalidateCache = false };
-            beEstCtrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = config.Parameters["be"].Key, Length = 1 }); // 25
-            beEstCtrl.ExportStrategies.Add(
-                new ExportSchemeInput()
-                {
-                    Scheme = ExportScheme.UnconstrainedSynchronized
-                });
-            beEstCtrl.NodeFuncs.Clear();
-            beEstCtrl.NodeFuncs.Add("Clean nodes", s =>
-            {
-                var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
-                //ConfigurationUtils.SetupHomoStuff(nodes, s.Length, true, true, false);
-                //ConfigurationUtils.SetupMegaStorage(nodes);
-                return nodes;
-            });
+            //// Setup BE ESTIMATION control.
+            //var beEstCtrl = new SimulationController { InvalidateCache = false };
+            //beEstCtrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = config.Parameters["be"].Key, Length = 1 });
+            //beEstCtrl.ExportStrategies.Add(
+            //    new ExportSchemeInput()
+            //    {
+            //        Scheme = ExportScheme.UnconstrainedSynchronized
+            //    });
+            //beEstCtrl.NodeFuncs.Clear();
+            //beEstCtrl.NodeFuncs.Add("Clean nodes", s =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
+            //    //ConfigurationUtils.SetupHomoStuff(nodes, s.Length, true, true, false);
+            //    //ConfigurationUtils.SetupMegaStorage(nodes);
+            //    return nodes;
+            //});
 
-            // Setup TC ESTIMATION control.
-            var tcEstCtrl = new SimulationController { InvalidateCache = false };
-            if (inclTrans)
-            {
-                tcEstCtrl.Sources.Add(new TsSourceInput
-                {
-                    Source = TsSource.VE,
-                    Offset = config.Parameters["tc"].Key,
-                    Length = 1
-                }); // 14
-                tcEstCtrl.ExportStrategies.Add(
-                new ExportSchemeInput()
-                {
-                    Scheme = ExportScheme.UnconstrainedSynchronized
-                });
-                tcEstCtrl.NodeFuncs.Clear();
-                tcEstCtrl.NodeFuncs.Add("Clean nodes", s =>
-                {
-                    var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
-                    //ConfigurationUtils.SetupHomoStuff(nodes, s.Length, true, true, false);
-                    //ConfigurationUtils.SetupMegaStorage(nodes);
-                    return nodes;
-                });
-                tcEstCtrl.LogFlows = true;
-            }
+            //// Setup TC ESTIMATION control.
+            //var tcEstCtrl = new SimulationController { InvalidateCache = false };
+            //if (inclTrans)
+            //{
+            //    tcEstCtrl.Sources.Add(new TsSourceInput
+            //    {
+            //        Source = TsSource.VE,
+            //        Offset = config.Parameters["tc"].Key,
+            //        Length = 1
+            //    }); // 14
+            //    tcEstCtrl.ExportStrategies.Add(
+            //    new ExportSchemeInput()
+            //    {
+            //        Scheme = ExportScheme.UnconstrainedSynchronized
+            //    });
+            //    tcEstCtrl.NodeFuncs.Clear();
+            //    tcEstCtrl.NodeFuncs.Add("Clean nodes", s =>
+            //    {
+            //        var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
+            //        //ConfigurationUtils.SetupHomoStuff(nodes, s.Length, true, true, false);
+            //        //ConfigurationUtils.SetupMegaStorage(nodes);
+            //        return nodes;
+            //    });
+            //    tcEstCtrl.LogFlows = true;
+            //}
 
             #endregion
 
@@ -130,27 +131,22 @@ namespace Main.Figures
                 {
                     var alpha = alphas[j];
                     var data = ctrl.EvaluateTs(gamma, alpha);
-                    var bcEstData = bcEstCtrl.EvaluateTs(gamma, alpha);
-                    var beEstData = beEstCtrl.EvaluateTs(gamma, alpha);
+                    var estData = estCtrl.EvaluateTs(gamma, alpha);
                     // Calculate the interesting variables.
-                    var backupCapacity = CalculateBackupCapacity(data[0]);
-                    var transmissionCapacity = CalculateFlowCapacity(data[0]);
-                    var energy = CalculateBackupEnergy(data[0])/32;
-                    var estBackupCapacity = CalculateBackupCapacity(bcEstData[0]);
-                    var estEnergy = CalculateBackupEnergy(beEstData[0]);
+                    var backupCapacity = ParameterEvaluator.BackupCapacity(data[0]);
+                    var transmissionCapacity = ParameterEvaluator.TransmissionCapacity(data[0]);
+                    var energy = ParameterEvaluator.BackupEnergy(data[0])/32;
+                    var estBackupCapacity = ParameterEvaluator.BackupCapacity(estData[0]);
+                    var estEnergy = ParameterEvaluator.BackupEnergy(estData[0]);
                     // Record result in matrix (to be plotted); scaling applied.
-                    beMatrix[i, j] = (estEnergy * config.Parameters["be"].Value - energy) / energy;
-                    bcMatrix[i, j] = (estBackupCapacity * config.Parameters["bc"].Value - backupCapacity) / backupCapacity;
+                    beMatrix[i, j] = (estEnergy*config.Parameters["be"].Value - energy)/energy;
+                    bcMatrix[i, j] = (estBackupCapacity*config.Parameters["bc"].Value - backupCapacity)/backupCapacity;
                     gammaMatrix[i, j] = gamma;
                     alphaMatrix[i, j] = alpha;
                     // Do transmission only if necessary.
-                    if (inclTrans)
-                    {
-                        var tcEstData = tcEstCtrl.EvaluateTs(gamma, alpha);
-                        var estTransmissionCapacity = CalculateFlowCapacity(tcEstData[0]);
-                        tcMatrix[i, j] = (estTransmissionCapacity * config.Parameters["tc"].Value - transmissionCapacity) /
-                                         transmissionCapacity;
-                    }
+                    var estTransmissionCapacity = ParameterEvaluator.TransmissionCapacity(estData[0]);
+                    tcMatrix[i, j] = (estTransmissionCapacity*config.Parameters["tc"].Value - transmissionCapacity)/
+                                     transmissionCapacity;
                 }
             }
 
@@ -173,47 +169,17 @@ namespace Main.Figures
             dict.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\modelYear\errorAnalysis.txt");
         }
 
-        private static double CalculateFlowCapacity(SimulationOutput sim)
-        {
-            var flows = sim.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
-            var allFlow = 0.0;
-            // Fill in data.
-            foreach (var flow in flows)
-            {
-                var length = Costs.LinkLength[Costs.GetKey(flow.Properties["From"], flow.Properties["To"])];
-                var capacity = MathUtils.CalcCapacity(flow.GetAllValues());
-                allFlow += length * capacity;
-            }
-            return allFlow;
-        }
-
-        private static double CalculateBackupCapacity(SimulationOutput sim)
-        {
-            var data = sim.TimeSeries.Where(item => item.Name.Equals("Curtailment"))
-                .Select(item => (DenseTimeSeries)item)
-                .Single().GetAllValues().Where(item => item < 0).Select(item => -item).ToList();
-            return MathUtils.Percentile(data, 99);
-        }
-
-        private static double CalculateBackupEnergy(SimulationOutput sim)
-        {
-            var data = sim.TimeSeries.Where(item => item.Name.Equals("Curtailment"))
-                .Select(item => (DenseTimeSeries)item)
-                .Single().GetAllValues().Where(item => item < 0).Select(item => -item).ToList();
-            return data.Sum();
-        }
-
         #endregion
 
         #region Locating the model year
 
-        public static void PrintModelYearStuff(MainForm main, bool inclTrans = false)
+        public static void PrintModelYearStuff(MainForm main)
         {
             var aMin = 0.5;
             var aMax = 1;
             var gMin = 0.5;
             var gMax = 1;
-            ModelYearStuff(aMin, aMax, gMin, gMax, inclTrans, data =>
+            ModelYearStuff(aMin, aMax, gMin, gMax, data =>
             {
                 PrintData(CalculateBackupEnergy, data, "be.txt");
                 PrintData(CalculateBackupCapacity, data, "bc.txt");
@@ -221,31 +187,7 @@ namespace Main.Figures
             });
         }
 
-        public static void DetermineModelYears(MainForm main, bool inclTrans = false)
-        {
-            var aMin = 0.5;
-            var aMax = 1;
-            var gMin = 0.5;
-            var gMax = 2;
-            ModelYearStuff(aMin, aMax, gMin, gMax, inclTrans, data =>
-            {
-                var result = new ModelYearConfig
-                {
-                    AlphaMin = aMin,
-                    AlphaMax = aMax,
-                    GammaMin = gMin,
-                    GammaMax = gMax,
-                    Parameters = new Dictionary<string, KeyValuePair<int, double>>()
-                };
-                result.Parameters.Add("be", FindBcYear(CalculateBackupEnergy, data));
-                result.Parameters.Add("bc", FindBcYear(CalculateBackupCapacity, data));
-                if (inclTrans) result.Parameters.Add("tc", FindBcYear(CalculateTransmissionCapacity, data));
-
-                result.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\noStorageAlpha0.5to1Gamma0.5to2.txt");
-            });
-        }
-
-        private static void ModelYearStuff(double aMin, double aMax, double gMin, double gMax, bool inclTrans, Action<List<SimulationOutput>> action)
+        private static void ModelYearStuff(double aMin, double aMax, double gMin, double gMax, Action<List<SimulationOutput>> action)
         {
             // Prepare simulation.
             var ctrl = new SimulationController { InvalidateCache = false };
@@ -260,10 +202,9 @@ namespace Main.Figures
             {
                 var nodes = ConfigurationUtils.CreateNodes(s.Source, s.Offset);
                 //ConfigurationUtils.SetupHomoStuff(nodes, s.Length, true, true, false);
-                //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            ctrl.LogFlows = inclTrans;
+            ctrl.LogFlows = true;
 
             var alpha = (aMax + aMin) / 2;
             var gamma = (gMax + gMin) / 2;
@@ -278,21 +219,74 @@ namespace Main.Figures
             action(data);
         }
 
-        private static KeyValuePair<int, double> FindBcYear(Action<SimulationOutput, Dictionary<int, double>> fill, List<SimulationOutput> data)
+        public static void DetermineModelYear(MainForm main)
         {
-            var cenYears = new Dictionary<int, double>();
-            var aMinYears = new Dictionary<int, double>();
-            var aMaxYears = new Dictionary<int, double>();
-            var gMinYears = new Dictionary<int, double>();
-            var gMaxYears = new Dictionary<int, double>();
-            var dicts = new List<Dictionary<int, double>> { cenYears, aMinYears, aMaxYears, gMinYears, gMaxYears };
-            for (int i = 0; i < 5; i++) fill(data[i], dicts[i]);
-            var dAlpha = cenYears.Keys.ToDictionary(key => key, key => Math.Pow(aMinYears[key] - aMaxYears[key], 2));
-            var dGamma = cenYears.Keys.ToDictionary(key => key, key => Math.Pow(gMinYears[key] - gMaxYears[key], 2));
-            var dAll = cenYears.Keys.ToDictionary(key => key, key => dAlpha[key] + dGamma[key]);
-            var year = dAll.Where(item0 => item0.Value == dAll.Select(item1 => item1.Value).Min()).Select(item => item.Key).First();
-            return new KeyValuePair<int, double>(year, 1 / cenYears[year]);
+            var aMin = 0.5;
+            var aMax = 1;
+            var gMin = 0.5;
+            var gMax = 2;
+            ModelYearStuff(aMin, aMax, gMin, gMax, data =>
+            {
+                var result = new ModelYearConfig
+                {
+                    AlphaMin = aMin,
+                    AlphaMax = aMax,
+                    GammaMin = gMin,
+                    GammaMax = gMax,
+                    Parameters = FindBestYear(new Dictionary<string, Action<SimulationOutput, Dictionary<int, double>>>
+                    {
+                        {"be",CalculateBackupEnergy},
+                        {"bc",CalculateBackupCapacity},
+                        {"tc",CalculateTransmissionCapacity},
+                    },data)
+                };
+                result.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha{0}to{1}Gamma{2}to{3}Sync.txt",aMin, aMax, gMin, gMax));
+            });
         }
+
+        private static Dictionary<string, KeyValuePair<int, double>> FindBestYear(Dictionary<string,Action<SimulationOutput, Dictionary<int, double>>> fill, List<SimulationOutput> data)
+        {
+            var dTot = new Dictionary<int, double>();
+            var cenYearsDict = fill.Keys.ToDictionary(item => item, item => new Dictionary<int, double>());
+            foreach (var key in fill.Keys)
+            {
+                var aMinYears = new Dictionary<int, double>();
+                var aMaxYears = new Dictionary<int, double>();
+                var gMinYears = new Dictionary<int, double>();
+                var gMaxYears = new Dictionary<int, double>();
+                var cenYears = new Dictionary<int, double>();
+                var dicts = new List<Dictionary<int, double>> { cenYears, aMinYears, aMaxYears, gMinYears, gMaxYears };
+                for (int i = 0; i < 5; i++) fill[key](data[i], dicts[i]);
+                var dAlpha = cenYears.Keys.ToDictionary(item => item, item => Math.Pow(aMinYears[item] - aMaxYears[item], 2));
+                var dGamma = cenYears.Keys.ToDictionary(item => item, item => Math.Pow(gMinYears[item] - gMaxYears[item], 2));
+                var dAll = cenYears.Keys.ToDictionary(item => item, item => dAlpha[item] + dGamma[item]);
+
+                cenYearsDict[key] = cenYears;
+                foreach (var item in dAll.Keys)
+                {
+                    if(!dTot.ContainsKey(item)) dTot.Add(item, 0);
+                    dTot[item] = dTot[item] + dAll[item];
+                }
+            }
+            var year = dTot.Where(item0 => item0.Value == dTot.Select(item1 => item1.Value).Min()).Select(item => item.Key).First();
+            return fill.Keys.ToDictionary(key => key, key => new KeyValuePair<int, double>(year, 1.0/cenYearsDict[key][year]));
+        }
+
+        //private static KeyValuePair<int, double> FindBcYear(Action<SimulationOutput, Dictionary<int, double>> fill, List<SimulationOutput> data)
+        //{
+        //    var cenYears = new Dictionary<int, double>();
+        //    var aMinYears = new Dictionary<int, double>();
+        //    var aMaxYears = new Dictionary<int, double>();
+        //    var gMinYears = new Dictionary<int, double>();
+        //    var gMaxYears = new Dictionary<int, double>();
+        //    var dicts = new List<Dictionary<int, double>> { cenYears, aMinYears, aMaxYears, gMinYears, gMaxYears };
+        //    for (int i = 0; i < 5; i++) fill(data[i], dicts[i]);
+        //    var dAlpha = cenYears.Keys.ToDictionary(key => key, key => Math.Pow(aMinYears[key] - aMaxYears[key], 2));
+        //    var dGamma = cenYears.Keys.ToDictionary(key => key, key => Math.Pow(gMinYears[key] - gMaxYears[key], 2));
+        //    var dAll = cenYears.Keys.ToDictionary(key => key, key => dAlpha[key] + dGamma[key]);
+        //    var year = dAll.Where(item0 => item0.Value == dAll.Select(item1 => item1.Value).Min()).Select(item => item.Key).First();
+        //    return new KeyValuePair<int, double>(year, 1 / cenYears[year]);
+        //}
 
         private static void PrintData(Action<SimulationOutput, Dictionary<int, double>> fill, List<SimulationOutput> data, string name)
         {
@@ -318,82 +312,33 @@ namespace Main.Figures
 
         private static void CalculateBackupEnergy(SimulationOutput sim, Dictionary<int, double> energyMap)
         {
-            var curtailment = sim.TimeSeries.Where(item => item.Name.Equals("Curtailment"))
-                .Select(item => (DenseTimeSeries)item)
-                .Single();
-            var years = (int) Math.Ceiling((double) (curtailment.Count/8766));
-            // Prepare data structures.
-            var yearBins = new Dictionary<int, List<double>>();
-            var allData = new List<double>(years * 5000);
-            for (int i = 0; i < years; i++) yearBins.Add(i, new List<double>(5000));
-            // Fill in data.
-            var idx = -1;
-            foreach (var value in curtailment.GetAllValues())
-            {
-                idx++;
-                if (value > 0) continue;
-                allData.Add(-value);
-                yearBins[idx / 8766].Add(-value);
-            }
-            // Calculate the interesting variables.
-            var energy = allData.Sum() / years;
-            energyMap.Clear();
+            var years = (int)Math.Ceiling((double)(sim.TimeSeries[0].Count / Stuff.HoursInYear));
+            var energy = ParameterEvaluator.BackupEnergy(sim) / years;
             for (int i = 0; i < years; i++)
             {
-                energyMap.Add(i, yearBins[i].Sum() / energy);
+                energyMap.Add(i, ParameterEvaluator.BackupEnergy(sim, 1, i * Stuff.HoursInYear, Stuff.HoursInYear) / energy);
             }
         }
 
         private static void CalculateBackupCapacity(SimulationOutput sim, Dictionary<int, double> capacityMap)
         {
-            var curtailment = sim.TimeSeries.Where(item => item.Name.Equals("Curtailment"))
-                .Select(item => (DenseTimeSeries) item)
-                .Single();
-            var years = (int)Math.Ceiling((double)(curtailment.Count / 8766));
-            // Prepare data structures.
-            var yearBins = new Dictionary<int, List<double>>();
-            var allData = new List<double>(years * 5000);
-            for (int i = 0; i < years; i++) yearBins.Add(i, new List<double>(5000));
-            // Fill in data.
-            var idx = -1;
-            foreach (var value in curtailment.GetAllValues())
-            {
-                idx++;
-                if(value > 0) continue;
-                allData.Add(-value);
-                yearBins[idx/8766].Add(-value);
-            }
-            // Calculate the interesting variables.
-            var capacity = MathUtils.Percentile(allData, 99);
-            capacityMap.Clear();
+            var years = (int)Math.Ceiling((double)(sim.TimeSeries[0].Count / Stuff.HoursInYear));
+            var energy = ParameterEvaluator.BackupCapacity(sim);
             for (int i = 0; i < years; i++)
             {
-                capacityMap.Add(i, MathUtils.Percentile(yearBins[i], 99)/capacity);
+                capacityMap.Add(i, ParameterEvaluator.BackupCapacity(sim, 1, i * Stuff.HoursInYear, Stuff.HoursInYear) / energy);
             }
         }
 
         private static void CalculateTransmissionCapacity(SimulationOutput sim, Dictionary<int, double> capacityMap)
         {
-            var flows = sim.TimeSeries.Where(item => item.Properties.ContainsKey("Flow"));
-            var years = (int)Math.Ceiling((double)(flows.First().Count / 8766));
-            // Prepare data structures.
-            var allFlow = 0.0;
-            capacityMap.Clear();
-            for (int i = 0; i < years; i++) capacityMap.Add(i, 0);
-            // Fill in data.
-            foreach (var flow in flows)
+            var years = (int)Math.Ceiling((double)(sim.TimeSeries[0].Count / Stuff.HoursInYear));
+            var flow = ParameterEvaluator.TransmissionCapacity(sim);
+            for (int i = 0; i < years; i++)
             {
-                var length = Costs.LinkLength[Costs.GetKey(flow.Properties["From"], flow.Properties["To"])];
-                var capacity = MathUtils.CalcCapacity(flow.GetAllValues());
-                allFlow += capacity*length;
-                for (int i = 0; i < years; i++)
-                {
-                    capacityMap[i] += MathUtils.CalcCapacity(flow.Where(item =>
-                        item.Tick < (i + 1)*8766).Where(item => item.Tick > i*8766).Select(item => item.Value))*length;
-                }
+                capacityMap.Add(i, ParameterEvaluator.TransmissionCapacity(sim, 1, i * Stuff.HoursInYear, Stuff.HoursInYear) / flow);
             }
-            for (int i = 0; i < years; i++) capacityMap[i] = capacityMap[i] / allFlow;
-        }
+      }
 
         #region Backup analysis
 

@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.Nodes;
+using Utils;
+using Utils.Statistics;
 
 namespace BusinessLogic.Utils
 {
@@ -42,6 +45,30 @@ namespace BusinessLogic.Utils
                 beta += delta;
             }
             return Math.Max(0,beta-delta);
+        }
+
+        // Delta weights - so far ONLY using one year
+        public static double[] DeltaWeights(List<CountryNode> nodes, NodeGenes genes)
+        {
+            var weights = new double[nodes.Count];
+
+            for (int j = 0; j < nodes.Count; j++)
+            {
+                var node = nodes[j];
+                node.Model.Gamma = genes[node.Name].Gamma;
+                node.Model.Alpha = genes[node.Name].Alpha;
+                node.Model.OffshoreFraction = genes[node.Name].OffshoreFraction;
+                var backup = new double[HoursInYear];
+                for (int i = 0; i < HoursInYear; i++)
+                {
+                    node.TickChanged(i);
+                    backup[i] = node.GetDelta();
+                }
+                weights[j] = Math.Abs(MathUtils.Percentile(backup,1));
+            }
+            weights.Norm();
+
+            return weights;
         }
 
     }

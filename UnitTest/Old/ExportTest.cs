@@ -65,20 +65,20 @@ namespace UnitTest
         //    Assert.AreEqual(0, ReadParam(simulation, "Test1", "Hydrogen storage"), 1e-5);
         //}
 
-        [Test]
-        public void CooperativeExportTest()
-        {
-            PreareNodesExcess();
-            var model = new NetworkModel(_mNodes, new ConLocalScheme(_mNodes, Stuff.StraightLine(_mNodes)));
-            var simulation = new SimulationCore(model) {LogAllNodeProperties = true};
-            simulation.Simulate(1);
+        //[Test]
+        //public void CooperativeExportTest()
+        //{
+        //    PreareNodesExcess();
+        //    var model = new NetworkModel(_mNodes, new ConLocalScheme(_mNodes, Stuff.StraightLine(_mNodes)));
+        //    var simulation = new SimulationCore(model) {LogAllNodeProperties = true};
+        //    simulation.Simulate(1);
 
-            //Assert.AreEqual(true, simulation.Output.Success);
-            Assert.AreEqual(1, ReadParam(simulation, "Test0", "Battery storage"));
-            Assert.AreEqual(0.4, ReadParam(simulation, "Test0", "Hydrogen storage"), 1e-5);
-            Assert.AreEqual(1, ReadParam(simulation, "Test1", "Battery storage"));
-            Assert.AreEqual(0, ReadParam(simulation, "Test1", "Hydrogen storage"));
-        }
+        //    //Assert.AreEqual(true, simulation.Output.Success);
+        //    Assert.AreEqual(1, ReadParam(simulation, "Test0", "Battery storage"));
+        //    Assert.AreEqual(0.4, ReadParam(simulation, "Test0", "Hydrogen storage"), 1e-5);
+        //    Assert.AreEqual(1, ReadParam(simulation, "Test1", "Battery storage"));
+        //    Assert.AreEqual(0, ReadParam(simulation, "Test1", "Hydrogen storage"));
+        //}
 
         private void PreareNodesExcess()
         {

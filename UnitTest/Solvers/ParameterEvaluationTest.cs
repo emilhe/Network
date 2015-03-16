@@ -22,9 +22,6 @@ namespace UnitTest
         [Test]
         public void BakupEnergyTest()
         {
-
-
-
             // TODO: Parameter evaluation tests!!!
         }
 
@@ -62,13 +59,13 @@ namespace UnitTest
             var eval = SpawnParamEval(ts);
 
             var tCap = eval.LinkCapacities(null);
-            Assert.AreEqual(tCap["Denmark-Germany"], 4, 1e-3);
-            Assert.AreEqual(tCap["Denmark-Norway"], 4, 1e-3);
+            Assert.AreEqual(tCap["Germany-Denmark"], 4, 1e-3);
+            Assert.AreEqual(tCap["Norway-Denmark"], 4, 1e-3);
             Assert.AreEqual(tCap["Germany-Spain"], 0.75, 1e-3);
             Assert.AreEqual(tCap["Germany-Sweden"], 1.25, 1e-3);
             Assert.AreEqual(tCap["Spain-Sweden"], 0.5, 1e-3);
             Assert.AreEqual(tCap["Spain-Norway"], 0.75, 1e-3);
-            Assert.AreEqual(tCap["Sweden-Norway"], 1.25, 1e-3);
+            Assert.AreEqual(tCap["Norway-Sweden"], 1.25, 1e-3);
 
             var bCap = eval.BackupCapacity(null);
             var bEne = eval.BackupEnergy(null);
