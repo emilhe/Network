@@ -108,12 +108,15 @@
   <ItemGroup>
     <Compile Include="AccessClient.cs" />
     <Compile Include="Cost\CostModels\IBackupCostModel.cs" />
+    <Compile Include="Cost\NodeVecCostCalculator.cs" />
     <Compile Include="Cost\Optimization\CukooNodeOptimizationStrategy.cs" />
     <Compile Include="Cost\Optimization\GenePool.cs" />
     <Compile Include="Cost\Optimization\GeneticNodeOptimizationStrategy.cs" />
     <Compile Include="Cost\INodeCostCalculator.cs" />
     <Compile Include="Cost\Optimization\NodeGenes.cs" />
     <Compile Include="Cost\Optimization\NodeGenesFactory.cs" />
+    <Compile Include="Cost\Optimization\NodeVec.cs" />
+    <Compile Include="Cost\Optimization\SimplexNodeOptimizationStrategy.cs" />
     <Compile Include="Cost\ParallelCostCalculator.cs" />
     <Compile Include="Cost\CostModels\FixedLengthModel.cs" />
     <Compile Include="Cost\CostModels\ISolarCostModel.cs" />

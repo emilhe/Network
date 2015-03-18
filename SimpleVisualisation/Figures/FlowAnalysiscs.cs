@@ -442,7 +442,7 @@ namespace Main.Figures
             ctrl.ExportStrategies.Add(
                 new ExportSchemeInput()
                 {
-                    Scheme = ExportScheme.UnconstrainedSynchronized
+                    Scheme = ExportScheme.ConstrainedLocalized
                 });
             var outputs = ctrl.EvaluateTs(1.026, 0.65);
             var view = main.DisplayHistogram();

@@ -248,7 +248,6 @@ namespace BusinessLogic.Simulation
                     return new UncSyncScheme(_mNodes, _mEdges);
                 case ExportScheme.UnconstrainedLocalized:
                     return new UncLocalScheme(_mNodes, _mEdges);
-                    // TODO: Fix the constrained schemes.
                 case ExportScheme.ConstrainedLocalized:
                     return new ConLocalScheme(_mNodes, _mEdges);
                 case ExportScheme.ConstrainedSynchronized:

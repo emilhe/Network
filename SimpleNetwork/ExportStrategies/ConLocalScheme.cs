@@ -54,7 +54,14 @@ namespace BusinessLogic.ExportStrategies
         {
             // Do balancing.
             _mOptimizer.SetNodes(_mMismatches, null, null);
-            _mOptimizer.Solve();
+            try
+            {
+                _mOptimizer.Solve();
+            }
+            catch (Exception ex)
+            {
+                var hest = "hat";
+            }
             for (int i = 0; i < _mNodes.Count; i++)
             {
                 _mNodes[i].Balancing.CurrentValue = _mOptimizer.NodeOptima[i];

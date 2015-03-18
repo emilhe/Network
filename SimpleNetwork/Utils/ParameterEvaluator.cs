@@ -285,7 +285,7 @@ namespace BusinessLogic.Utils
             var ctrl = new SimulationController();
             ctrl.ExportStrategies.Add(new ExportSchemeInput
             {
-                Scheme = ExportScheme.ConstrainedSynchronized
+                Scheme = ExportScheme.UnconstrainedSynchronized
             });
             ctrl.LogFlows = true;
             ctrl.Sources.Add(new TsSourceInput { Length = 1, Offset = config.Parameters["be"].Key }); // SAME OFFSET: CRUTIAL!!
@@ -407,8 +407,8 @@ namespace BusinessLogic.Utils
             else
             {   
                 // TODO: Make config a variable? For now, just use default...
-                var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\noStorageAlpha0.5to1Gamma0.5to2.txt");
-                _mCore = new TripleModelYearCore(config);
+                var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Sync.txt");
+                _mCore = new ModelYearCore(config);
             }
         }
 

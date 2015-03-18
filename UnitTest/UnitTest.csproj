@@ -60,7 +60,7 @@
     <Compile Include="Playground.cs" />
     <Compile Include="Solvers\FlowOptimizerTest.cs" />
     <Compile Include="GenePoolTest.cs" />
-    <Compile Include="GeneticOptimizationTest.cs" />
+    <Compile Include="OptimizationTest.cs" />
     <Compile Include="Old\GridEvaluatorTest.cs" />
     <Compile Include="Solvers\ParameterEvaluationTest.cs" />
     <Compile Include="Solvers\ExportSchemeTest.cs" />

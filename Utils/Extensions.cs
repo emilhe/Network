@@ -44,11 +44,18 @@ namespace Utils
             return source;
         }
 
+        public static double[] Add(this double[] source, double[] other, double weight = 1)
+        {
+            for (int i = 0; i < source.Length; i++) source[i] = source[i] + other[i]*weight;
+            return source;
+        }
+
         public static T[] Fill<T>(this T[] source, T elem)
         {
             for (int i = 0; i < source.Length; i++) source[i] = elem;
             return source;
         }
+
         public static T[] Copy<T>(this T[] source)
         {
             var result = new T[source.Length];

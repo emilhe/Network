@@ -272,7 +272,7 @@ namespace BusinessLogic.Utils
                 sum.Add(expr.GrbLinExpr);
                 valSum += expr.GrbLinExpr.Value;
             }
-            _mSystemBalancingConstr = Wrap.Model.AddConstr(sum, GRB.LESS_EQUAL, valSum, "Optimal balance");
+            _mSystemBalancingConstr = Wrap.Model.AddConstr(sum, GRB.EQUAL, valSum, "Optimal balance");
         }
 
         public void RemoveSystemConstr()

@@ -93,5 +93,36 @@ namespace Main
             optimum.Genes.ToJsonFile(@"C:\proto\simulatedAnnealing.txt");
         }
 
+        public static void Simplex()
+        {
+            GenePool.K = 2;
+            // Build simplex.
+            var cord = 0.25;
+            var center = new NodeVec(() => GenePool.K / 2, () => (GenePool.AlphaMax-GenePool.AlphaMin)/2 + GenePool.AlphaMin);
+            var n = center.Length;
+            var simplex = new NodeVec[n + 1];
+            for (int i = 0; i < n+1; i++)
+            {
+                var vertex = center.GetVectorCopy();
+                if (i < n)
+                {
+                    //var sign = (i < simplex.Length / 2) ? ((vertex[i] < GenePool.K / 2) ? 1 : -1) : ((vertex[i] < 0.5) ? 1 : -1);
+                    vertex[i] = vertex[i] + cord; // sign*cord;
+                }
+                simplex[i] = new NodeVec(vertex);
+            }
+            // Build optimizer.
+            var optimizer = new SimplexOptimizer<NodeVec>(new SimplexNodeOptimizationStrategy(),
+                new NodeVecCostCalculator())
+            {
+                Beta = 1 + 2.0/n,
+                Gamma = 0.75 - 1.0/(2*n),
+                Delta = 1 - 1.0/n
+            };
+            // Optimize.
+            var optimum = optimizer.Optimize(simplex);
+            optimum.ToJsonFile(@"C:\proto\simplex.txt");
+        }
+
     }
 }
