@@ -42,8 +42,8 @@ namespace Optimization
             {
                 var c = _mStrat.Centroid(simplex.Take(n - 1).ToArray());
                 // Reflection.
-                var xr = c.Add(c.Sub(h), Alpha);
-                _mCostCalculator.UpdateCost(new[] {xr});
+                var xr = c.Add(c.Delta(h), Alpha);
+                UpdateCost(xr);
                 if (l.Cost <= xr.Cost && xr.Cost < s.Cost)
                 {
                     simplex[n - 1] = xr;
@@ -51,8 +51,8 @@ namespace Optimization
                 // Expansion.
                 else if (xr.Cost < l.Cost)
                 {
-                    var xe = c.Add(xr.Sub(c), Gamma);
-                    _mCostCalculator.UpdateCost(new[] {xe});
+                    var xe = c.Add(xr.Delta(c), Gamma);
+                    UpdateCost(xe);
                     if (xe.Cost < xr.Cost) simplex[n - 1] = xe;
                     else simplex[n - 1] = xr;
                 }
@@ -60,15 +60,15 @@ namespace Optimization
                 else if (xr.Cost >= s.Cost)
                 {
                     var best = (xr.Cost < h.Cost) ? xr : h;
-                    var xc = c.Add(best.Sub(c), Beta);
-                    _mCostCalculator.UpdateCost(new[] {xc});
+                    var xc = c.Add(best.Delta(c), Beta);
+                    UpdateCost(xc);
                     if (xc.Cost < best.Cost) simplex[n - 1] = xc;
                     else
                     {
                         // Shrink
                         for (int i = 0; i < n; i++)
                         {
-                            simplex[i] = l.Add(simplex[i].Sub(l), Delta);
+                            simplex[i] = l.Add(simplex[i].Delta(l), Delta);
                         }
                     }
                 }
@@ -86,6 +86,16 @@ namespace Optimization
             }
 
             return simplex[0];
+        }
+
+        private void UpdateCost(T vertex)
+        {
+            if (!vertex.InvalidCost) return;
+
+            var start = DateTime.Now;
+            _mCostCalculator.UpdateCost(new List<T>{vertex});
+            var end = DateTime.Now.Subtract(start).TotalSeconds;
+            //Console.WriteLine("Evaluation took {0} seconds.", end);
         }
 
         private T[] OrderPopulation(T[] unorderedPopulation)

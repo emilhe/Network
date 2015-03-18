@@ -22,7 +22,7 @@ namespace BusinessLogic.Cost.Optimization
         {
             get
             {
-                if (InvalidCost) throw new ArgumentException("Cost is not updated.");
+                if (InvalidCost) throw new ArgumentException("Cost is not evaluated.");
                 return _mCost;
             }
             // Should ONLY be set internally or by JSON deserializer.
@@ -49,7 +49,7 @@ namespace BusinessLogic.Cost.Optimization
         {
             _mVector = new double[Labels.Count * LabelMultiplicity];
             InvalidCost = true;
-            EnforceLimits();
+            CheckLimits();
         }
 
         public NodeVec(Func<double> gamma, Func<double> alpha)
@@ -61,37 +61,42 @@ namespace BusinessLogic.Cost.Optimization
                 _mVector[Labels.Count + i] = alpha();
             }
             InvalidCost = true;
-            EnforceLimits();
+            CheckLimits();
         }
 
         public NodeVec(double[] vector) 
         {
             _mVector = vector;
             InvalidCost = true;
-            EnforceLimits();
+            CheckLimits();
         }
 
-        private void EnforceLimits()
+        private void CheckLimits()
         {
-            if (GenePool.Renormalize(_mVector)) return;
-            // If the solution is renormalizeable, cost is infinite.
-            Cost = double.MaxValue;            
-            InvalidCost = false;
+            if (!Validate(_mVector)) throw new ArgumentException("Non renormalizeable vector");
         }
 
         public void UpdateCost(Func<ISolution, double> eval)
         {
+            if (!InvalidCost) return;
             Cost = eval(this);
+            InvalidCost = false;
         }
 
-        public NodeVec Add(NodeVec other, double weight)
+        public NodeVec Add(double[] vec, double weight)
         {
-            return new NodeVec(_mVector.Copy().Add(other._mVector, weight));
+            var guess = _mVector.Copy().Add(vec, weight);
+            while (!Validate(guess))
+            {
+                weight = weight/2.0;
+                guess = _mVector.Copy().Add(vec, weight);
+            }
+            return new NodeVec(guess);
         }
 
-        public NodeVec Sub(NodeVec other)
+        public double[] Delta(NodeVec other)
         {
-            return Add(other, -1);
+            return _mVector.Copy().Add(other._mVector, -1);
         }
 
         public double[] GetVectorCopy()
@@ -99,6 +104,18 @@ namespace BusinessLogic.Cost.Optimization
             return _mVector.Copy();
         }
 
+        private static bool Validate(double[] vector)
+        {
+            var n = Labels.Count;
+            // Enforce alpha constraints.
+            for (int i = n; i < 2 * n; i++)
+            {
+                if (vector[i] < GenePool.AlphaMin) vector[i] = GenePool.AlphaMin;
+                if (vector[i] > GenePool.AlphaMax) vector[i] = GenePool.AlphaMax;
+            }
+            // Try to do renormalization.
+            return GenePool.Renormalize(vector);
+        }
 
     }
 }

@@ -9,8 +9,8 @@ namespace Optimization
     public interface IVectorSolution<T> : ISolution where T : IVectorSolution<T>
     {
 
-        T Add(T other, double weight);
-        T Sub(T other);
+        T Add(double[] vec, double weight);
+        double[] Delta(T other);
 
     }
 }
