@@ -4,28 +4,39 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic.Cost.Optimization;
+using BusinessLogic.Cost.Transmission;
+using BusinessLogic.Utils;
 using Optimization;
 
 namespace BusinessLogic.Cost
 {
-    // ADAPTER!!!
+
     public class NodeVecCostCalculator : ICostCalculator<NodeVec>
     {
-        readonly ParallelNodeCostCalculator _mCore = new ParallelNodeCostCalculator();
+        
+        private readonly NodeCostCalculator _mCalc;
+        private int _mEvaluations;
 
         public int Evaluations
         {
-            get { return _mCore.Evaluations; }
+            get { return _mEvaluations; }
+        }
+
+        public NodeVecCostCalculator()
+        {
+            // TODO: Enable changing the calc.
+            _mCalc = new NodeCostCalculator(new ParameterEvaluator(false) { CacheEnabled = false }) { SolarCostModel = new SolarCostModelImpl() };            
         }
 
         public void UpdateCost(IList<NodeVec> solutions)
         {
-            var map = solutions.ToDictionary(item => item, item => new NodeChromosome(item));
-            _mCore.UpdateCost(map.Values.ToList());
-            foreach (var solution in solutions)
+            var toUpdate = solutions.Where(item => item.InvalidCost).ToArray();
+            _mEvaluations += toUpdate.Length;
+            foreach (var vec in toUpdate)
             {
-                solution.Cost = map[solution].Cost;
+                vec.Cost = _mCalc.SystemCost(new NodeChromosome(vec).Genes);
             }
         }
     }
+
 }

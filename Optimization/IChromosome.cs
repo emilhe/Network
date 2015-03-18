@@ -13,5 +13,5 @@ namespace Optimization
         IChromosome Mate(IChromosome partner);
 
     }
-}
+}   
  
