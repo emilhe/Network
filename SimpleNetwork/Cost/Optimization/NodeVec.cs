@@ -49,7 +49,7 @@ namespace BusinessLogic.Cost.Optimization
         {
             _mVector = new double[Labels.Count * LabelMultiplicity];
             InvalidCost = true;
-            CheckLimits();
+            //CheckLimits();
         }
 
         public NodeVec(Func<double> gamma, Func<double> alpha)
@@ -61,25 +61,25 @@ namespace BusinessLogic.Cost.Optimization
                 _mVector[Labels.Count + i] = alpha();
             }
             InvalidCost = true;
-            CheckLimits();
+            //CheckLimits();
         }
 
         public NodeVec(double[] vector) 
         {
             _mVector = vector;
             InvalidCost = true;
-            CheckLimits();
+            //CheckLimits();
         }
 
-        private void CheckLimits()
-        {
-            if (!Validate(_mVector)) throw new ArgumentException("Non renormalizeable vector");
-        }
+        //private void CheckLimits()
+        //{
+        //    if (!Validate(_mVector)) throw new ArgumentException("Non renormalizeable vector");
+        //}
 
         public void UpdateCost(Func<ISolution, double> eval)
         {
             if (!InvalidCost) return;
-            Cost = eval(this);
+            Cost = Validate(_mVector) ? eval(this) : 100.0;
             InvalidCost = false;
         }
 
