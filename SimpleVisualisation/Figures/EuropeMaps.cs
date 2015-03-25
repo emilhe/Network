@@ -15,6 +15,24 @@ namespace Main.Figures
     class EuropeMaps
     {
 
+        public static void DrawCfs()
+        {
+            // Mean load distribution.
+            var nodes = ConfigurationUtils.CreateNodesNew();
+            //var ctrl = new MixController(nodes);
+            //ctrl.SetMix(0.65);
+            //ctrl.SetPenetration(1.026);
+            //ctrl.Execute();
+
+            var loadScaling = nodes.ToDictionary(item => item.Name, item => CountryInfo.GetOnshoreWindCf(item.Name));
+            var chart = EuropeChart.DrawEurope(loadScaling, Color.Black, Color.LightBlue, Color.DarkBlue);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Slides2\Images\wCfDistribution.png");
+
+            loadScaling = nodes.ToDictionary(item => item.Name, item => CountryInfo.GetSolarCf(item.Name));
+            chart = EuropeChart.DrawEurope(loadScaling, Color.Black, Color.Yellow, Color.DarkRed);
+            chart.Save(@"C:\Users\Emil\Dropbox\Master Thesis\Slides2\Images\sCfDistribution.png");
+        }
+
         #region DistributionMaps
 
         public static void DrawDistributions()
