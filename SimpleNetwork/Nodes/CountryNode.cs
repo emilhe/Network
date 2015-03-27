@@ -18,7 +18,7 @@ namespace BusinessLogic.Nodes
         public ReModel Model { get; set; }
         public Measureable Balancing { get; set; }
         public List<IGenerator> Generators { get; set; }
-        public StorageCollection StorageCollection { get; set; }
+        public List<IStorage> Storages { get; set; }
 
         private double _mLoad { get; set; }
 
@@ -27,8 +27,10 @@ namespace BusinessLogic.Nodes
             Model = model;
 
             Balancing = new Measureable("Balancing");
+            Balancing.Properties.Add("Country", Name);
+
             Generators = Model.GetGenerators();
-            StorageCollection = new StorageCollection();
+            Storages = new List<IStorage>();
         }
 
         public double GetDelta()
@@ -47,9 +49,9 @@ namespace BusinessLogic.Nodes
             {
                 result.AddRange(generator.CollectTimeSeries());
             }
-            foreach (var item in StorageCollection.Where(item => item.Value.Measuring))
+            foreach (var storage in Storages.Where(item => item.Measuring))
             {
-                result.AddRange(item.Value.CollectTimeSeries());
+                result.AddRange(storage.CollectTimeSeries());
             }
             // Bind country dependence.
             foreach (var ts in result) ts.Properties.Add("Country", Name);
@@ -74,21 +76,21 @@ namespace BusinessLogic.Nodes
         public void Start(int ticks)
         {
             foreach (var generator in Generators) generator.Start(ticks);
-            foreach (var item in StorageCollection) item.Value.Start(ticks);
+            foreach (var storage in Storages) storage.Start(ticks);
             Measuring = true;
         }
 
         public void Clear()
         {
             foreach (var generator in Generators) generator.Clear();
-            foreach (var item in StorageCollection) item.Value.Clear();
+            foreach (var storage in Storages) storage.Clear();
             Measuring = false;
         }
 
         public void Sample(int tick)
         {
             foreach (var generator in Generators) generator.Sample(tick);
-            foreach (var item in StorageCollection) item.Value.Sample(tick);
+            foreach (var storage in Storages) storage.Sample(tick);
         }
 
         #endregion
@@ -97,7 +99,7 @@ namespace BusinessLogic.Nodes
         {
             _mLoad = Model.LoadTimeSeries.GetValue(tick);
             foreach (var generator in Generators) generator.TickChanged(tick);
-            //foreach (var item in StorageCollection) item.Value.TickChanged(tick);
+            //foreach (var storage in Storages) storage.TickChanged(tick);
         }
 
     }

@@ -12,57 +12,41 @@ using Utils;
 
 namespace BusinessLogic.ExportStrategies
 {
-    public class ConLocalScheme : IExportScheme
+    public class ConLocalScheme: IExportScheme
     {
 
         private readonly QuadFlowOptimizer _mOptimizer;
         private readonly EdgeCollection _mEdges;
+        private readonly INode[] _mNodes;
+        private readonly StorageMap _mMap;
 
-        private IList<INode> _mNodes;
         private double[] _mMismatches;
 
-        #region REHINK THIS PART
-
-        //private Response _mSystemResponse;
-        //private readonly double[] _mLoLims;
-        //private readonly double[] _mHiLims;
-        //private readonly double[,] _mFlows;
-
-        // TODO: Remove HACK
-        public ConLocalScheme(List<CountryNode> nodes, EdgeCollection edges)
-            : this(nodes.Select(item => (INode) item).ToList(), edges)
-        {
-        }
-
-        public ConLocalScheme(IList<INode> nodes, EdgeCollection edges)
+        public ConLocalScheme(INode[] nodes, EdgeCollection edges)
         {
             _mNodes = nodes;
             _mEdges = edges;
-            var core = new CoreOptimizer(_mEdges, 0, ObjectiveFactory.LinearBalancing){ApplyNodeExprConstr = true};
-            _mOptimizer = new QuadFlowOptimizer(core, core.ApplySystemConstr, core.RemoveSystemConstr); // HERE NO STORAGE IS ASSUMED!!
+            _mMap = new StorageMap(nodes);
+            var core = new CoreOptimizer(_mEdges, _mMap.Levels, ObjectiveFactory.LinearBalancing, null, null);
+            _mOptimizer = new QuadFlowOptimizer(core, core.ApplySystemConstr, core.RemoveSystemConstr);
         }
 
-        #endregion
-
-        public void Bind(IList<INode> nodes, double[] mismatches)
+        public void Bind(double[] mismatches)
         {
-            _mNodes = nodes;
             _mMismatches = mismatches;
         }
 
         public void BalanceSystem()
         {
+            // Create storage limit vectors.
+            _mMap.RefreshLims();
             // Do balancing.
-            _mOptimizer.SetNodes(_mMismatches, null, null);
-            try
-            {
-                _mOptimizer.Solve();
-            }
-            catch (Exception ex)
-            {
-                var hest = "hat";
-            }
-            for (int i = 0; i < _mNodes.Count; i++)
+            _mOptimizer.SetNodes(_mMismatches, _mMap.LowLims, _mMap.HighLims);
+            _mOptimizer.Solve();
+            // Charge storages.
+            _mMap.Inject(_mOptimizer.StorageOptima);
+            // Dump remaining stuff in balancing vector.
+            for (int i = 0; i < _mNodes.Length; i++)
             {
                 _mNodes[i].Balancing.CurrentValue = _mOptimizer.NodeOptima[i];
                 _mMismatches[i] = 0;
@@ -77,15 +61,15 @@ namespace BusinessLogic.ExportStrategies
         {
             _mFlowTimeSeriesMap = new Dictionary<int, DenseTimeSeries>();
 
-            for (int i = 0; i < _mNodes.Count; i++)
+            for (int i = 0; i < _mNodes.Length; i++)
             {
-                for (int j = i; j < _mNodes.Count; j++)
+                for (int j = i; j < _mNodes.Length; j++)
                 {
                     if (!_mEdges.Connected(i, j)) continue;
                     var ts = new DenseTimeSeries(_mNodes[i].Abbreviation + Environment.NewLine + _mNodes[j].Abbreviation, ticks);
                     ts.Properties.Add("From", _mNodes[i].Name);
                     ts.Properties.Add("To", _mNodes[j].Name);
-                    _mFlowTimeSeriesMap.Add(i + _mNodes.Count * j, ts);
+                    _mFlowTimeSeriesMap.Add(i + _mNodes.Length * j, ts);
                 }
             }
 
@@ -100,12 +84,12 @@ namespace BusinessLogic.ExportStrategies
 
         public void Sample(int tick)
         {
-            for (int i = 0; i < _mNodes.Count; i++)
+            for (int i = 0; i < _mNodes.Length; i++)
             {
-                for (int j = i; j < _mNodes.Count; j++)
+                for (int j = i; j < _mNodes.Length; j++)
                 {
                     if (!_mEdges.Connected(i, j)) continue;
-                    _mFlowTimeSeriesMap[i + _mNodes.Count * j].AppendData(_mOptimizer.Flows[i, j] - _mOptimizer.Flows[j, i]);
+                    _mFlowTimeSeriesMap[i + _mNodes.Length * j].AppendData(_mOptimizer.Flows[i, j] - _mOptimizer.Flows[j, i]);
                 }
             }
         }

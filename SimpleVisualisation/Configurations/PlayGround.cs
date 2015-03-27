@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic;
+using BusinessLogic.Cost;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
@@ -19,23 +20,30 @@ namespace Main.Configurations
 
         public static void ShowTimeSeris(MainForm main)
         {
-            var ctrl = new SimulationController { InvalidateCache = true };
-            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.ISET, Offset = 0, Length = 1 });
-            ctrl.ExportStrategies.Add(new ExportSchemeInput
+            var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Local.txt");
+            var core = new ModelYearCore(config);
+            //var param = new ParameterEvaluator(core);
+            //var calc = new NodeCostCalculator(param);
+            //var mCf = new NodeGenes(1, 1);
+            //Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
+
+            var ctrl = (core.BeController as SimulationController);
+            ctrl.InvalidateCache = true;
+            ctrl.NodeFuncs.Clear();
+            ctrl.NodeFuncs.Add("6h storage", input =>
             {
-                Scheme = ExportScheme.ConstrainedLocalized,
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupHomoStuff(nodes, 1, true, false, false);
+                return nodes;
             });
+            ctrl.LogFlows = true;
+            ctrl.LogAllNodeProperties = true;
+            var data = ctrl.EvaluateTs(1, 1);
 
-            var data = ctrl.EvaluateTs(1.029, 0.65);
-
-            foreach (var item in data)
-            {
-                foreach (var ts in item.TimeSeries)
-                {
-                    ts.Properties.Add("ExportScheme", ((ExportScheme)Byte.Parse(item.Properties["ExportScheme"])).GetDescription());
-                    ts.DisplayProperties.Add("ExportScheme");
-                }
-            }
+            var param = new ParameterEvaluator(core);
+            var calc = new NodeCostCalculator(param);
+            var mCf = new NodeGenes(1, 1);
+            Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
 
             main.DisplayTimeSeries().SetData(data.SelectMany(item => item.TimeSeries).ToList());
         }
@@ -215,7 +223,7 @@ namespace Main.Configurations
             LineEvaluator.EvalSimulation(lineParams, simulation, 8);
         }
 
-        public static SimulationCore Optimization(List<CountryNode> nodes)
+        public static SimulationCore Optimization(CountryNode[] nodes)
         {
             //var opt = new MixOptimizer(nodes);
             //opt.OptimizeIndividually();

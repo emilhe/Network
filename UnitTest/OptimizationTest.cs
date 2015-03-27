@@ -27,169 +27,169 @@ namespace UnitTest
             Assert.AreEqual("Hello World!", optimum.Genes);
         }
 
-        [Test]
-        public void Simplex()
-        {
-            // ReBirth population.
-            var strategy = new SimplexStringOptimizationStrategy();
-            var simplex = new HelloWorldChromosome[13];
-            // Construct simplex (centered around the center value; 64).
-            var mother = GeneticStringOptimizationStrategy.Spawn();
-            for (int i = 0; i < simplex.Length; i++)
-            {
-                var charArray = mother.Genes.ToArray();
-                if (i < charArray.Length) charArray[i] = Convert.ToChar(charArray[i] + 5);
-                simplex[i] = new HelloWorldChromosome(new string(charArray));
-            }
-            // Find optimum.
-            var optimizer = new SimplexOptimizer<HelloWorldChromosome>(strategy, new HelloWorldCostCalculator());
-            var optimum = optimizer.Optimize(simplex);
-            Assert.AreEqual("Hello World!", optimum.Genes);
-        }
+        //[Test]
+        //public void Simplex()
+        //{
+        //    // ReBirth population.
+        //    var strategy = new SimplexStringOptimizationStrategy();
+        //    var simplex = new HelloWorldChromosome[13];
+        //    // Construct simplex (centered around the center value; 64).
+        //    var mother = GeneticStringOptimizationStrategy.Spawn();
+        //    for (int i = 0; i < simplex.Length; i++)
+        //    {
+        //        var charArray = mother.Genes.ToArray();
+        //        if (i < charArray.Length) charArray[i] = Convert.ToChar(charArray[i] + 5);
+        //        simplex[i] = new HelloWorldChromosome(new string(charArray));
+        //    }
+        //    // Find optimum.
+        //    var optimizer = new SimplexOptimizer<HelloWorldChromosome>(strategy, new HelloWorldCostCalculator());
+        //    var optimum = optimizer.Optimize(simplex);
+        //    Assert.AreEqual("Hello World!", optimum.Genes);
+        //}
 
-        #region Numbered simplex
+        //#region Numbered simplex
 
-        [Test]
-        public void NumSimplex()
-        {
-            // ReBirth population.
-            var strategy = new SimplexNumOptimizationStrategy();
-            // Construct simplex (centered around the center value; 64).
-            var center = new[] {100.0, 100, 100, 100, 100, 100, 100, 100, 1000, 10, 100, 200};
-            var simplex = new NumSolution[center.Length+1];
-            for (int i = 0; i < simplex.Length; i++)
-            {
-                var vertex = center;
-                if (i < center.Length) vertex[i] = vertex[i] + 5 * (i + 1);
-                simplex[i] = new NumSolution(vertex);
-            }
-            // Find optimum.
-            var optimizer = new SimplexOptimizer<NumSolution>(strategy, new NumCostCalculator());
-            var optimum = optimizer.Optimize(simplex);
-            Assert.AreEqual(0, optimum.Cost, 1e-5);
-        }
+        //[Test]
+        //public void NumSimplex()
+        //{
+        //    // ReBirth population.
+        //    var strategy = new SimplexNumOptimizationStrategy();
+        //    // Construct simplex (centered around the center value; 64).
+        //    var center = new[] {100.0, 100, 100, 100, 100, 100, 100, 100, 1000, 10, 100, 200};
+        //    var simplex = new NumSolution[center.Length+1];
+        //    for (int i = 0; i < simplex.Length; i++)
+        //    {
+        //        var vertex = center;
+        //        if (i < center.Length) vertex[i] = vertex[i] + 5 * (i + 1);
+        //        simplex[i] = new NumSolution(vertex);
+        //    }
+        //    // Find optimum.
+        //    var optimizer = new SimplexOptimizer<NumSolution>(strategy, new NumCostCalculator());
+        //    var optimum = optimizer.Optimize(simplex);
+        //    Assert.AreEqual(0, optimum.Cost, 1e-5);
+        //}
 
-        class SimplexNumOptimizationStrategy : ISimplexOptimizationStrategy<NumSolution>
-        {
-            public bool TerminationCondition(NumSolution[] nests, int evaluations)
-            {
-                return nests[0].Cost < 1e-5;
-            }
+        //class SimplexNumOptimizationStrategy : ISimplexOptimizationStrategy<NumSolution>
+        //{
+        //    public bool TerminationCondition(NumSolution[] nests, int evaluations)
+        //    {
+        //        return nests[0].Cost < 1e-5;
+        //    }
 
-            public NumSolution Centroid(NumSolution[] solutions)
-            {
-                var n = solutions[0].Genes.Length;
-                var genes = new double[n];
-                for (int i = 0; i < n; i++)
-                {
-                    genes[i] = solutions.Select(item => item.Genes[i]).Average();
-                }
-                return new NumSolution(genes);
-            }
-        }
+        //    public NumSolution Centroid(NumSolution[] solutions)
+        //    {
+        //        var n = solutions[0].Genes.Length;
+        //        var genes = new double[n];
+        //        for (int i = 0; i < n; i++)
+        //        {
+        //            genes[i] = solutions.Select(item => item.Genes[i]).Average();
+        //        }
+        //        return new NumSolution(genes);
+        //    }
+        //}
 
-        class NumSolution : IVectorSolution
-        {
+        //class NumSolution : IVectorSolution
+        //{
 
-            private bool _mInvalidCost = true;
-            private double _mCost = 0;
+        //    private bool _mInvalidCost = true;
+        //    private double _mCost = 0;
 
-            public double[] Genes { get; private set; }
+        //    public double[] Genes { get; private set; }
 
-            public NumSolution(double[] genes)
-            {
-                Genes = genes;
-            }
+        //    public NumSolution(double[] genes)
+        //    {
+        //        Genes = genes;
+        //    }
 
-            public double Cost
-            {
-                get { return _mCost;}
-            }
+        //    public double Cost
+        //    {
+        //        get { return _mCost;}
+        //    }
 
-            public bool InvalidCost
-            {
-                get { return _mInvalidCost;}
-            }
+        //    public bool InvalidCost
+        //    {
+        //        get { return _mInvalidCost;}
+        //    }
 
-            public void UpdateCost(Func<ISolution, double> eval)
-            {
-                _mCost = eval(this);
-                _mInvalidCost = false;
-            }
+        //    public void UpdateCost(Func<ISolution, double> eval)
+        //    {
+        //        _mCost = eval(this);
+        //        _mInvalidCost = false;
+        //    }
 
-            public IVectorSolution Add(IVectorSolution partner, double weight)
-            {
-                var other = partner as NumSolution;
-                if (other == null) throw new ArgumentException("Invalid partner.");
+        //    public IVectorSolution Add(IVectorSolution partner, double weight)
+        //    {
+        //        var other = partner as NumSolution;
+        //        if (other == null) throw new ArgumentException("Invalid partner.");
 
-                var genes = new double[Genes.Length];
-                for (int i = 0; i < Genes.Length; i++)
-                {
-                    genes[i] = genes[i] + other.Genes[i] * weight;
-                }
-                return new NumSolution(genes);
-            }
+        //        var genes = new double[Genes.Length];
+        //        for (int i = 0; i < Genes.Length; i++)
+        //        {
+        //            genes[i] = genes[i] + other.Genes[i] * weight;
+        //        }
+        //        return new NumSolution(genes);
+        //    }
 
-            public IVectorSolution Sub(IVectorSolution other)
-            {
-                return Add(other, -1);
-            }
-        }
+        //    public IVectorSolution Sub(IVectorSolution other)
+        //    {
+        //        return Add(other, -1);
+        //    }
+        //}
 
-        class NumCostCalculator : ICostCalculator<NumSolution>
-        {
+        //class NumCostCalculator : ICostCalculator<NumSolution>
+        //{
 
-            private int _mEvals = 0;
+        //    private int _mEvals = 0;
 
-            public int Evaluations
-            {
-                get { return _mEvals; }
-            }
+        //    public int Evaluations
+        //    {
+        //        get { return _mEvals; }
+        //    }
 
-            public void UpdateCost(IList<NumSolution> solutions)
-            {
-                _mEvals += solutions.Count;
-                foreach (var solution in solutions)
-                {
-                    solution.UpdateCost(CalculateCost);
-                }
-            }
+        //    public void UpdateCost(IList<NumSolution> solutions)
+        //    {
+        //        _mEvals += solutions.Count;
+        //        foreach (var solution in solutions)
+        //        {
+        //            solution.UpdateCost(CalculateCost);
+        //        }
+        //    }
 
-            private double CalculateCost(ISolution partner)
-            {
-                var other = partner as NumSolution;
-                if (other == null) throw new ArgumentException("Invalid partner.");
+        //    private double CalculateCost(ISolution partner)
+        //    {
+        //        var other = partner as NumSolution;
+        //        if (other == null) throw new ArgumentException("Invalid partner.");
 
-                return other.Genes.Select(item => item*item).Sum();
-            }
-        }
+        //        return other.Genes.Select(item => item*item).Sum();
+        //    }
+        //}
 
-        #endregion
+        //#endregion
 
-        class SimplexStringOptimizationStrategy : ISimplexOptimizationStrategy<HelloWorldChromosome>
-        {
+        //class SimplexStringOptimizationStrategy : ISimplexOptimizationStrategy<HelloWorldChromosome>
+        //{
 
-            public bool TerminationCondition(HelloWorldChromosome[] chromosomes, int evaluations)
-            {
-                if (Math.Abs(chromosomes[0].Cost) < 1e-10)
-                {
-                    var hest = 2;
-                    return true;
-                }
-                return Math.Abs(chromosomes[0].Cost) < 1e-10;
-            }
+        //    public bool TerminationCondition(HelloWorldChromosome[] chromosomes, int evaluations)
+        //    {
+        //        if (Math.Abs(chromosomes[0].Cost) < 1e-10)
+        //        {
+        //            var hest = 2;
+        //            return true;
+        //        }
+        //        return Math.Abs(chromosomes[0].Cost) < 1e-10;
+        //    }
 
-            public HelloWorldChromosome Centroid(HelloWorldChromosome[] solutions)
-            {
-                var charArray = new char[12];
-                for (int i = 0; i < charArray.Length; i++)
-                {
-                    charArray[i] = Convert.ToChar((int)Math.Round(solutions.Select(item => (int) item.Genes[i]).Average(item => item)));
-                }
-                return new HelloWorldChromosome(new string(charArray));
-            }
+        //    public HelloWorldChromosome Centroid(HelloWorldChromosome[] solutions)
+        //    {
+        //        var charArray = new char[12];
+        //        for (int i = 0; i < charArray.Length; i++)
+        //        {
+        //            charArray[i] = Convert.ToChar((int)Math.Round(solutions.Select(item => (int) item.Genes[i]).Average(item => item)));
+        //        }
+        //        return new HelloWorldChromosome(new string(charArray));
+        //    }
 
-        }
+        //}
 
         class GeneticStringOptimizationStrategy : IGeneticOptimizationStrategy<HelloWorldChromosome>
         {
@@ -247,7 +247,7 @@ namespace UnitTest
 
         }
 
-        class HelloWorldChromosome : IChromosome, IVectorSolution
+        class HelloWorldChromosome : IChromosome//, IVectorSolution
         {
             private const int _mMin = 0;
             private const int _mMax = 127;
@@ -316,26 +316,26 @@ namespace UnitTest
                 throw new NotImplementedException();
             }
 
-            public IVectorSolution Add(IVectorSolution partner, double weight)
-            {
-                var validPartner = partner as HelloWorldChromosome;
-                if (validPartner == null) throw new ArgumentException("Invalid partner.");
+            //public IVectorSolution Add(IVectorSolution partner, double weight)
+            //{
+            //    var validPartner = partner as HelloWorldChromosome;
+            //    if (validPartner == null) throw new ArgumentException("Invalid partner.");
 
-                var charArray = new char[12];
-                for (int i = 0; i < charArray.Length; i++)
-                {
-                    var value = (int)Math.Round((int)Genes[i] + weight * validPartner.Genes[i]);
-                    if (value < _mMin) value = _mMin;
-                    if (value > _mMax) value = _mMax;
-                    charArray[i] = Convert.ToChar(value);
-                }
-                return new HelloWorldChromosome(new string(charArray));
-            }
+            //    var charArray = new char[12];
+            //    for (int i = 0; i < charArray.Length; i++)
+            //    {
+            //        var value = (int)Math.Round((int)Genes[i] + weight * validPartner.Genes[i]);
+            //        if (value < _mMin) value = _mMin;
+            //        if (value > _mMax) value = _mMax;
+            //        charArray[i] = Convert.ToChar(value);
+            //    }
+            //    return new HelloWorldChromosome(new string(charArray));
+            //}
 
-            public IVectorSolution Sub(IVectorSolution other)
-            {
-                return Add(other, -1);
-            }
+            //public IVectorSolution Sub(IVectorSolution other)
+            //{
+            //    return Add(other, -1);
+            //}
         }
 
         class HelloWorldCostCalculator : ICostCalculator<HelloWorldChromosome>

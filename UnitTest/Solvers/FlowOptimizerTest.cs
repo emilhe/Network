@@ -58,7 +58,7 @@ namespace UnitTest
             var flowSum = 0.0;
             foreach (var flow in opt.Flows) flowSum += Math.Abs(flow);
             AreAlmostEqual(4, flowSum, FlowDelta*edges.NodeCount);
-            AreAlmostEqual(new double[] {2, 0, 0, 0}, opt.NodeOptima, FlowDelta);
+            AreAlmostEqual(new double[] {0, 0, 2, 0}, opt.NodeOptima, FlowDelta);
         }
 
         [Test]

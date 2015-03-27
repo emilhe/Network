@@ -27,7 +27,7 @@ namespace BusinessLogic.Simulation
 
         #region Model delegation
 
-        public IList<INode> Nodes
+        public INode[] Nodes
         {
             get { return _mModel.Nodes; }
             set { _mModel.Nodes = value; }
@@ -100,9 +100,9 @@ namespace BusinessLogic.Simulation
         /// </summary>
         private void ResetStorages()
         {
-            foreach (var item in Nodes.SelectMany(item => item.StorageCollection))
+            foreach (var item in Nodes.SelectMany(item => item.Storages))
             {
-                item.Value.ResetEnergy();
+                item.ResetEnergy();
             }
         }
 

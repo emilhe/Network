@@ -66,7 +66,7 @@ namespace BusinessLogic.Utils
                 // Extract node optima.
                 for (int i = 0; i < _mCore.N; i++)
                 {
-                    NodeOptima[i] = _mCore.Wrap.NodeExprs[i].GrbLinExpr.Value * Math.Sign(_mCore.Deltas[i]);
+                    NodeOptima[i] = _mCore.Wrap.NodeExprs[i].Value;// * _mCore.Deltas[i];
                 }
 
                 // Extract storage optima.

@@ -29,8 +29,8 @@ namespace BusinessLogic.Simulation
         public List<TsSourceInput> Sources { get; set; }
         public List<ExportSchemeInput> ExportStrategies { get; set; }
         // Optional parameters.
-        public Dictionary<string, Func<TsSourceInput, List<CountryNode>>> NodeFuncs { get; set; }
-        public Dictionary<string, Func<List<CountryNode>, EdgeCollection>> EdgeFuncs { get; set; }
+        public Dictionary<string, Func<TsSourceInput, CountryNode[]>> NodeFuncs { get; set; }
+        public Dictionary<string, Func<CountryNode[], EdgeCollection>> EdgeFuncs { get; set; }
         public Dictionary<string, Func<IFailureStrategy>> FailFuncs { get; set; }
         
         // Current iteration parameters.
@@ -38,7 +38,7 @@ namespace BusinessLogic.Simulation
         private string _mEdgeTag = "";
         private string _mFailTag = "";
         private EdgeCollection _mEdges;
-        private List<CountryNode> _mNodes;
+        private CountryNode[] _mNodes;
         private TsSourceInput _mSrcIn;
         private IFailureStrategy _mFail;
         private ExportSchemeInput _mExpSchemeIn;
@@ -51,10 +51,10 @@ namespace BusinessLogic.Simulation
             InvalidateCache = false;
 
             // Default way to construct nodes.
-            NodeFuncs = new Dictionary<string, Func<TsSourceInput, List<CountryNode>>>();
+            NodeFuncs = new Dictionary<string, Func<TsSourceInput, CountryNode[]>>();
             NodeFuncs.Add("No storage",s => ConfigurationUtils.CreateNodesNew());
             // Default way to construct edges.
-            EdgeFuncs = new Dictionary<string, Func<List<CountryNode>, EdgeCollection>> { { "Europe edges", ConfigurationUtils.GetEuropeEdgeObject } };
+            EdgeFuncs = new Dictionary<string, Func<CountryNode[], EdgeCollection>> { { "Europe edges", ConfigurationUtils.GetEuropeEdgeObject } };
             // Default way to define failures.
             FailFuncs = new Dictionary<string, Func<IFailureStrategy>>{{"No blackout", () => new NoBlackoutStrategy()}};
 
@@ -243,7 +243,7 @@ namespace BusinessLogic.Simulation
             switch (input)
             {
                 case ExportScheme.None:
-                    return new NoExportScheme();
+                    return new NoExportScheme(_mNodes);
                 case ExportScheme.UnconstrainedSynchronized:
                     return new UncSyncScheme(_mNodes, _mEdges);
                 case ExportScheme.UnconstrainedLocalized:

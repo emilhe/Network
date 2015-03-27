@@ -184,6 +184,7 @@
     <Compile Include="Utils\QuadFlowOptimizer.cs" />
     <Compile Include="Utils\LineEvaluator.cs" />
     <Compile Include="Utils\ParameterEvaluator.cs" />
+    <Compile Include="Utils\StorageMap.cs" />
     <Compile Include="Utils\Stuff.cs" />
   </ItemGroup>
   <ItemGroup>

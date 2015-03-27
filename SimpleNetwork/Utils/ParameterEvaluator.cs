@@ -16,7 +16,7 @@ namespace BusinessLogic.Utils
 
     public interface IParameterEvaluatorCore
     {
-        List<CountryNode> Nodes { get; }
+        CountryNode[] Nodes { get; }
         ModelYearConfig Config { get; }
         ISimulationController BeController { get; }
         ISimulationController BcController { get; }
@@ -26,7 +26,7 @@ namespace BusinessLogic.Utils
     public class SimpleCore : IParameterEvaluatorCore
     {
 
-        public List<CountryNode> Nodes { get; private set; }
+        public CountryNode[] Nodes { get; private set; }
         public ModelYearConfig Config { get { return _mConfig; } }
         public ISimulationController BeController { get { return _mCtrl; } }
         public ISimulationController BcController { get { return _mCtrl; } }
@@ -35,7 +35,7 @@ namespace BusinessLogic.Utils
         private readonly ModelYearConfig _mConfig;
         private readonly ISimulationController _mCtrl;
 
-        public SimpleCore(ISimulationController controller, int length = 32, List<CountryNode> nodes = null, ModelYearConfig config = null)
+        public SimpleCore(ISimulationController controller, int length = 32, CountryNode[] nodes = null, ModelYearConfig config = null)
         {
             _mCtrl = controller;
 
@@ -67,7 +67,7 @@ namespace BusinessLogic.Utils
     public class FullCore : IParameterEvaluatorCore
     {
 
-        public FullCore(int length = 32, List<CountryNode> nodes = null)
+        public FullCore(int length = 32, CountryNode[] nodes = null)
         {
             if (nodes == null) nodes = ConfigurationUtils.CreateNodesNew();
 
@@ -89,7 +89,7 @@ namespace BusinessLogic.Utils
 
         private readonly SimpleCore _mCore;
 
-        public List<CountryNode> Nodes
+        public CountryNode[] Nodes
         {
             get { return _mCore.Nodes; }
         }
@@ -150,7 +150,7 @@ namespace BusinessLogic.Utils
 
         private readonly SimpleCore _mCore;
 
-        public List<CountryNode> Nodes
+        public CountryNode[] Nodes
         {
             get { return _mCore.Nodes; }
         }
@@ -185,7 +185,7 @@ namespace BusinessLogic.Utils
     public class NoFlowCore : IParameterEvaluatorCore
     {
 
-        public NoFlowCore(int length = 32, List<CountryNode> nodes = null)
+        public NoFlowCore(int length = 32, CountryNode[] nodes = null)
         {
             if (nodes == null) nodes = ConfigurationUtils.CreateNodesNew();
 
@@ -211,7 +211,7 @@ namespace BusinessLogic.Utils
 
         private readonly SimpleCore _mCore;
 
-        public List<CountryNode> Nodes
+        public CountryNode[] Nodes
         {
             get { return _mCore.Nodes; }
         }
@@ -250,7 +250,7 @@ namespace BusinessLogic.Utils
 
         private readonly SimpleCore _mCore;
 
-        public List<CountryNode> Nodes
+        public CountryNode[] Nodes
         {
             get { return _mCore.Nodes; }
         }
@@ -285,7 +285,7 @@ namespace BusinessLogic.Utils
             var ctrl = new SimulationController();
             ctrl.ExportStrategies.Add(new ExportSchemeInput
             {
-                Scheme = ExportScheme.UnconstrainedSynchronized
+                Scheme = ExportScheme.ConstrainedLocalized
             });
             ctrl.LogFlows = true;
             ctrl.Sources.Add(new TsSourceInput { Length = 1, Offset = config.Parameters["be"].Key }); // SAME OFFSET: CRUTIAL!!
@@ -302,7 +302,7 @@ namespace BusinessLogic.Utils
     /// </summary>
     public class TripleModelYearCore : IParameterEvaluatorCore
     {
-        public List<CountryNode> Nodes { get; private set; }
+        public CountryNode[] Nodes { get; private set; }
         public ModelYearConfig Config { get { return _mConfig; } }
         public ISimulationController BeController { get { return _mBeCtrl; } }
         public ISimulationController BcController { get { return _mBcCtrl; } }
@@ -374,7 +374,7 @@ namespace BusinessLogic.Utils
     public class ParameterEvaluator
     {
 
-        public List<CountryNode> Nodes { get { return _mCore.Nodes; }}
+        public CountryNode[] Nodes { get { return _mCore.Nodes; } }
 
         public bool InvalidateCache
         {

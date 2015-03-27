@@ -127,7 +127,7 @@ namespace UnitTest
             Assert.AreEqual(cost["Fuel"], 10.3439799184806, delta);
         }
 
-        private void CommonSetup(SimulationController[] ctrls, List<CountryNode> nodes)
+        private void CommonSetup(SimulationController[] ctrls, CountryNode[] nodes)
         {
             // Common setup.
             foreach (var ctrl in ctrls)
@@ -145,7 +145,7 @@ namespace UnitTest
             }
         }
 
-        private double Benchmark(SimulationController ctrl, List<CountryNode> nodes)
+        private double Benchmark(SimulationController ctrl, CountryNode[] nodes)
         {
             var simpleCore = new SimpleCore(ctrl, 1, nodes);
             var now = DateTime.Now;
@@ -153,7 +153,7 @@ namespace UnitTest
             return DateTime.Now.Subtract(now).TotalMilliseconds;
         }
 
-        private Dictionary<string, double> GetDetailedSystemCosts(SimulationController ctrl, List<CountryNode> nodes)
+        private Dictionary<string, double> GetDetailedSystemCosts(SimulationController ctrl, CountryNode[] nodes)
         {
             var simpleCore = new SimpleCore(ctrl, 1, nodes);
             var eval = new ParameterEvaluator(simpleCore);

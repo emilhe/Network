@@ -50,12 +50,12 @@ namespace BusinessLogic.Utils
         //    return result;
         //}
 
-        public static EdgeCollection GetEdgeObject(List<INode> nodes, string key, double frac)
+        public static EdgeCollection GetEdgeObject(CountryNode[] nodes, string key, double frac)
         {
             return GetEdgeObject(nodes.Select(item => item.Name).ToList(), key, frac);
         }
 
-        public static EdgeCollection GetEuropeEdgeObject(List<CountryNode> nodes)
+        public static EdgeCollection GetEuropeEdgeObject(CountryNode[] nodes)
         {
             return GetEdgeObject(nodes.Select(item => item.Name).ToList(), "NtcMatrix", 1);
         }
@@ -85,19 +85,19 @@ namespace BusinessLogic.Utils
 
         #region Basic CountryNode setup
 
-        public static List<CountryNode> CreateNodesWithBackup(TsSource source = TsSource.ISET, int years = 1, double offset = 0)
+        public static CountryNode[] CreateNodesWithBackup(TsSource source = TsSource.ISET, int years = 1, double offset = 0)
         {
             var nodes = CreateNodes(source, offset);
             SetupHomoStuff(nodes, years, true, true, true);
             return nodes;
         }
 
-        public static List<CountryNode> CreateNodes(TsSource source = TsSource.ISET, double offset = 0)
+        public static CountryNode[] CreateNodes(TsSource source = TsSource.ISET, double offset = 0)
         {
             return AccessClient.GetAllCountryDataOld(source, (int)(offset * Utils.Stuff.HoursInYear));
         }
 
-        public static List<CountryNode> CreateNodesNew(double offset = 0, Dictionary<string, double> offshoreFractions = null)
+        public static CountryNode[] CreateNodesNew(double offset = 0, Dictionary<string, double> offshoreFractions = null)
         {
             var nodes = AccessClient.GetAllCountryDataNew(TsSource.VE50PCT, (int)(offset * Utils.Stuff.HoursInYear));
             if (offshoreFractions == null) return nodes;
@@ -117,50 +117,50 @@ namespace BusinessLogic.Utils
 
         #region Storage/backup - scaled distributions
 
-        public static void SetupHomoStuff(List<CountryNode> nodes, int years, bool bat, bool storage, bool backup)
+        public static void SetupHomoStuff(CountryNode[] nodes, int years, bool bat, bool storage, bool backup)
         {
             SetupStuff(nodes, years, bat, storage, backup, LoadScaling(nodes));
         }
 
-        public static void SetupStuff(List<CountryNode> nodes, int years, bool bat, bool storage, bool backup, Dictionary<string, double> scaling)
+        public static void SetupStuff(CountryNode[] nodes, int years, bool bat, bool storage, bool backup, Dictionary<string, double> scaling)
         {
             foreach (var node in nodes)
             {
                 var scale = scaling[node.Name];
 
-                if (bat) node.StorageCollection.Add(new BatteryStorage(2200 * scale)); 
-                if (storage) node.StorageCollection.Add(new HydrogenStorage(25000 * scale));
-                if (backup) node.StorageCollection.Add(new BasicBackup("Hydro-bio backup", (150000 * years) * scale));
+                if (bat) node.Storages.Add(new BatteryStorage(2200 * scale));
+                if (storage) node.Storages.Add(new HydrogenStorage(25000 * scale));
+                if (backup) node.Storages.Add(new BasicBackup("Hydro-bio backup", (150000 * years) * scale));
             }
         }
 
-        public static void SetupOptimalBackup(List<CountryNode> nodes, int years)
+        public static void SetupOptimalBackup(CountryNode[] nodes, int years)
         {
             var opts = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalOptimalBackupBatteryAndHydrogenWithLinks.txt");
 
             SetupBackup(nodes, years, opts, "Optimal backup");
         }
 
-        public static void SetupOptimalBackupDelta(List<CountryNode> nodes, int years)
+        public static void SetupOptimalBackupDelta(CountryNode[] nodes, int years)
         {
             var opts = FileUtils.DictionaryFromFile<string, double>(@"C:\proto\OptimalBatteryHydrogenDelta.txt");
 
             SetupBackup(nodes, years, opts, "Optimal backup");
         }
 
-        public static void SetupHeterogeneousBackup(List<CountryNode> nodes, int years)
+        public static void SetupHeterogeneousBackup(CountryNode[] nodes, int years)
         {
             SetupBackup(nodes, years, HeterogeneousBackupScaling(nodes), "Hydro reservoir");
         }
 
-        public static void SetupHeterogeneousStorage(List<CountryNode> nodes, int years)
+        public static void SetupHeterogeneousStorage(CountryNode[] nodes, int years)
         {
             SetupHydrogenStorage(nodes, years, HeterogeneousStorageScaling(nodes));
         }
 
         #region Scalings
 
-        public static Dictionary<string, double> HeterogeneousBackupScaling(List<CountryNode> nodes)
+        public static Dictionary<string, double> HeterogeneousBackupScaling(CountryNode[] nodes)
         {
             // Note: All countries with below 10 TWh of hydro has been neglected. In addition romania has been neglected (primaryly run-of-river).
             return new Dictionary<string, double>
@@ -182,12 +182,12 @@ namespace BusinessLogic.Utils
             };
         }
 
-        public static Dictionary<string, double> HeterogeneousStorageScaling(List<CountryNode> nodes)
+        public static Dictionary<string, double> HeterogeneousStorageScaling(CountryNode[] nodes)
         {
             return new Dictionary<string, double>{{"Germany", 1.0}};
         }
 
-        public static Dictionary<string, double> LoadScaling(List<CountryNode> nodes)
+        public static Dictionary<string, double> LoadScaling(CountryNode[] nodes)
         {
             var results = nodes.ToDictionary(item => item.Name, item => item.Model.AvgLoad);
 
@@ -200,9 +200,9 @@ namespace BusinessLogic.Utils
             return results;
         }
 
-        public static Dictionary<string, double> MismatchScaling(List<CountryNode> nodes)
+        public static Dictionary<string, double> MismatchScaling(CountryNode[] nodes)
         {
-            var results = new Dictionary<string, double>(nodes.Count);
+            var results = new Dictionary<string, double>(nodes.Length);
 
             foreach (var node in nodes)
             {
@@ -228,7 +228,7 @@ namespace BusinessLogic.Utils
 
         #endregion
 
-        private static void SetupBackup(List<CountryNode> nodes, int years, Dictionary<string, double> scheme, string label)
+        private static void SetupBackup(CountryNode[] nodes, int years, Dictionary<string, double> scheme, string label)
         {
             var sum = scheme.Select(item => item.Value).Sum();
 
@@ -236,12 +236,12 @@ namespace BusinessLogic.Utils
             {
                 if (!scheme.Keys.Contains(node.Name)) continue;
 
-                node.StorageCollection.Add(new BasicBackup(label,
+                node.Storages.Add(new BasicBackup(label,
                     (150000*years/sum)*scheme[node.Name]));
             }
         }
 
-        private static void SetupHydrogenStorage(List<CountryNode> nodes, int years, Dictionary<string, double> scheme)
+        private static void SetupHydrogenStorage(CountryNode[] nodes, int years, Dictionary<string, double> scheme)
         {
             var sum = scheme.Select(item => item.Value).Sum();
 
@@ -249,7 +249,7 @@ namespace BusinessLogic.Utils
             {
                 if (!scheme.Keys.Contains(node.Name)) continue;
 
-                node.StorageCollection.Add(new HydrogenStorage(
+                node.Storages.Add(new HydrogenStorage(
                     (25000 * years / sum) * scheme[node.Name]));
             }
         }
@@ -258,15 +258,15 @@ namespace BusinessLogic.Utils
 
         #region Special storage
 
-        public static void SetupMegaStorage(List<CountryNode> nodes)
+        public static void SetupMegaStorage(CountryNode[] nodes)
         {
             foreach (var node in nodes)
             {
-                node.StorageCollection.Add(new BasicBackup("Backup", 1e9));
+                node.Storages.Add(new BasicBackup("Backup", 1e9));
             }
         }
 
-        public static void SetupHydroStorage(List<CountryNode> nodes)
+        public static void SetupHydroStorage(CountryNode[] nodes)
         {
             
         }
@@ -278,7 +278,7 @@ namespace BusinessLogic.Utils
             {
                 Capacity = generatorCapacity
             };
-            countryNode.StorageCollection.Add(new HydroReservoirStorage(internalReservoir));
+            countryNode.Storages.Add(new HydroReservoirStorage(internalReservoir));
             countryNode.Generators.Add(new HydroReservoirGenerator(yearlyInflow, inflowPattern, internalReservoir));
             // TODO: Consider adding a pumped hydro storage too...
         }
@@ -292,7 +292,7 @@ namespace BusinessLogic.Utils
         /// </summary>
         /// <param name="nodes"> the nodes on which the generators are to be added </param>
         /// <param name="data"> the data from which the generators are to be constructed </param>
-        public static void SetupNodesFromEcnData(List<CountryNode> nodes, List<EcnDataRow> data)
+        public static void SetupNodesFromEcnData(INode[] nodes, List<EcnDataRow> data)
         {
             AddStorages(nodes, data, "Pumped storage hydropower");
             AddBackups(nodes, data, "Biomass");
@@ -305,7 +305,7 @@ namespace BusinessLogic.Utils
         /// <param name="nodes"> the nodes on which the generators are to be added </param>
         /// <param name="data"> the data from which the generators are to be constructed </param>
         /// <param name="type"> which parameter (this method is generic) </param>
-        public static void AddGenerators(List<CountryNode> nodes, List<EcnDataRow> data, string type)
+        public static void AddGenerators(INode[] nodes, List<EcnDataRow> data, string type)
         {
             var relevantData = data.Where(item =>
                 item.RowHeader.Equals(type) &&
@@ -327,7 +327,7 @@ namespace BusinessLogic.Utils
         /// <param name="nodes"> the nodes on which the backups are to be added </param>
         /// <param name="data"> the data from which the backups are to be constructed </param>
         /// <param name="type"> which parameter (this method is generic) </param>
-        public static void AddBackups(List<CountryNode> nodes, List<EcnDataRow> data, string type)
+        public static void AddBackups(INode[] nodes, List<EcnDataRow> data, string type)
         {
             var relevantData = data.Where(item =>
                 item.RowHeader.Equals(type) &&
@@ -339,7 +339,7 @@ namespace BusinessLogic.Utils
                 var match = relevantData.SingleOrDefault(item => item.Country.Equals(node.Name));
                 if (match == null) continue;
                 // We have a match, let's add the backup.
-                node.StorageCollection.Add(new BasicBackup(type, match.Value));
+                node.Storages.Add(new BasicBackup(type, match.Value));
             }
         }
 
@@ -350,7 +350,7 @@ namespace BusinessLogic.Utils
         /// <param name="data"> the data from which the storages are to be constructed </param>
         /// <param name="type"> which parameter (this method is generic) </param>
         /// <param name="efficiency"> the efficiency of the storage (one way) </param>
-        public static void AddStorages(List<CountryNode> nodes, List<EcnDataRow> data, string type, double efficiency = 0.9)
+        public static void AddStorages(INode[] nodes, List<EcnDataRow> data, string type, double efficiency = 0.9)
         {
             var hydroData = data.Where(item =>
                 item.RowHeader.Equals(type) &&
@@ -362,7 +362,7 @@ namespace BusinessLogic.Utils
                 var match = hydroData.SingleOrDefault(item => item.Country.Equals(node.Name));
                 if (match == null) continue;
                 // We have a match, let's add the storage.
-                node.StorageCollection.Add(new BasicStorage(type, efficiency, match.Value));
+                node.Storages.Add(new BasicStorage(type, efficiency, match.Value));
             }
         }
 

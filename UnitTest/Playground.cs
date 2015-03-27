@@ -42,7 +42,7 @@ namespace UnitTest
             Console.WriteLine("System cost is " + cost.Select(item => item.Value).Sum());
         }
 
-        private Dictionary<string, double> GetDetailedSystemCosts(SimulationController ctrl, List<CountryNode> nodes)
+        private Dictionary<string, double> GetDetailedSystemCosts(SimulationController ctrl, CountryNode[] nodes)
         {
             var simpleCore = new SimpleCore(ctrl, 1, nodes);
             var eval = new ParameterEvaluator(simpleCore);
@@ -66,7 +66,7 @@ namespace UnitTest
         }
 
         public IExportScheme Scheme { get; set; }
-        public List<CountryNode> Nodes { get; set; }
+        public CountryNode[] Nodes { get; set; }
         public int Years { get; set; }
 
         public List<SimulationOutput> EvaluateTs(NodeGenes genes)

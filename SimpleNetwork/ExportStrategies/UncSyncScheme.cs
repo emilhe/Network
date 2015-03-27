@@ -8,37 +8,25 @@ using Utils;
 
 namespace BusinessLogic.ExportStrategies
 {
-    
-    public class UncSyncScheme : IExportScheme
+
+    public class UncSyncScheme: IExportScheme
     {
 
         private readonly EdgeCollection _mEdges;
         private readonly PhaseAngleFlow _mFlow;
+        private readonly INode[] _mNodes;
+        private readonly double[] _mWeights;
 
-        private IList<INode> _mNodes;
         private double[] _mMismatches;
         private double[] _mInjections;
         private double[] _mFlows;
 
-        private double[] _mWeights;
-
-        #region REHING THIS PART
-
-        //private Response _mSystemResponse;
         //private readonly double[] _mLoLims;
         //private readonly double[] _mHiLims;
         //private readonly double[,] _mFlows;
 
-                // TODO: Remove HACK
-        public UncSyncScheme(List<CountryNode> nodes, EdgeCollection edges, double[] weights = null)
-            : this(nodes.Select(item => (INode) item).ToList(), edges, weights)
+        public UncSyncScheme(INode[] nodes, EdgeCollection edges, double[] weights = null)
         {
-        }
-
-        public UncSyncScheme(IList<INode> nodes, EdgeCollection edges, double[] weights = null)
-        {
-            //if (nodes.Count != edges.NodeCount) throw new ArgumentException("Nodes and edges do not match.");
-
             _mNodes = nodes;
             _mEdges = edges;
             _mFlow = new PhaseAngleFlow(_mEdges.IncidenceMatrix);
@@ -51,17 +39,10 @@ namespace BusinessLogic.ExportStrategies
 
             // Corresponds to the projection vector.
             _mWeights = _mNodes.Select(node => CountryInfo.GetMeanLoad(node.Name)).ToArray().Norm();
-
-            //_mLoLims = new double[nodes.Count];
-            //_mHiLims = new double[nodes.Count];
-            //_mFlows = new double[nodes.Count,nodes.Count];
         }
 
-        #endregion
-
-        public void Bind(IList<INode> nodes, double[] mismatches)
+        public void Bind(double[] mismatches)
         {
-            _mNodes = nodes;
             _mMismatches = mismatches;
             _mInjections = new double[mismatches.Length];
         }
@@ -70,7 +51,7 @@ namespace BusinessLogic.ExportStrategies
         {
             // Do balancing.
             var toBalance = _mMismatches.Sum();
-            for (int i = 0; i < _mNodes.Count; i++)
+            for (int i = 0; i < _mNodes.Length; i++)
             {
                 _mNodes[i].Balancing.CurrentValue = toBalance*_mWeights[i];
                 _mInjections[i] = toBalance * _mWeights[i] - _mMismatches[i];

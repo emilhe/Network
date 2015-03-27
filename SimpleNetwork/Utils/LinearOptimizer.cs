@@ -33,7 +33,6 @@ namespace BusinessLogic.Utils
             _mCore = new CoreOptimizer(edges, m, BaseObjective, AddVars, AddConstrs)
             {
                 OnSolveCompleted = ExtractResultsFromModel,
-                ApplyNodeExprConstr = true
             };
 
             // So far, just track it all.
