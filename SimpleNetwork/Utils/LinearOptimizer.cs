@@ -136,7 +136,7 @@ namespace BusinessLogic.Utils
 
         public double[] Deltas
         {
-            get { return _mCore.Deltas; }
+            get { return _mCore.Mismatches; }
         }
 
         public void SetNodes(double[] nodes, List<double[]> lowLimits, List<double[]> highLimits)

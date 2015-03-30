@@ -94,7 +94,7 @@ namespace BusinessLogic.Utils
 
         public static CountryNode[] CreateNodes(TsSource source = TsSource.ISET, double offset = 0)
         {
-            return AccessClient.GetAllCountryDataOld(source, (int)(offset * Utils.Stuff.HoursInYear));
+            return AccessClient.GetAllCountryDataOld(source, (int)(offset * Stuff.HoursInYear));
         }
 
         public static CountryNode[] CreateNodesNew(double offset = 0, Dictionary<string, double> offshoreFractions = null)
@@ -128,8 +128,8 @@ namespace BusinessLogic.Utils
             {
                 var scale = scaling[node.Name];
 
-                if (bat) node.Storages.Add(new BatteryStorage(2200 * scale));
-                if (storage) node.Storages.Add(new HydrogenStorage(25000 * scale));
+                if (bat) node.Storages.Add(new BatteryStorage(2200 * scale, 2200 * scale));
+                if (storage) node.Storages.Add(new HydrogenStorage(25000 * scale, 25000 * scale));
                 if (backup) node.Storages.Add(new BasicBackup("Hydro-bio backup", (150000 * years) * scale));
             }
         }

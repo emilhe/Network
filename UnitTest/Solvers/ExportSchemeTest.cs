@@ -103,7 +103,7 @@ namespace UnitTest
             CommonSetup(ctrls, nodes);
             var cost = GetDetailedSystemCosts(ctrls[0], nodes);
             // Assertions.
-            Assert.AreEqual(cost["Transmission"], 5.4850861819261523, delta);
+            Assert.AreEqual(cost["Transmission"], 5.46017035325324, delta);
             Assert.AreEqual(cost["Backup"], 7.20753402651722, delta);
             Assert.AreEqual(cost["Fuel"], 10.3439799184806, delta);
         }
@@ -122,7 +122,7 @@ namespace UnitTest
             CommonSetup(ctrls, nodes);
             var cost = GetDetailedSystemCosts(ctrls[0], nodes);
             // Assertions.
-            Assert.AreEqual(cost["Transmission"], 5.38280868006467, delta);
+            Assert.AreEqual(cost["Transmission"], 5.37290868006467, delta);
             Assert.AreEqual(cost["Backup"], 7.1540392585009407, delta);
             Assert.AreEqual(cost["Fuel"], 10.3439799184806, delta);
         }

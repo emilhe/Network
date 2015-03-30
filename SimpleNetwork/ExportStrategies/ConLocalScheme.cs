@@ -21,13 +21,19 @@ namespace BusinessLogic.ExportStrategies
         private readonly StorageMap _mMap;
 
         private double[] _mMismatches;
+        private readonly double _mBalanceWeight = 1e6;
 
         public ConLocalScheme(INode[] nodes, EdgeCollection edges)
         {
             _mNodes = nodes;
             _mEdges = edges;
             _mMap = new StorageMap(nodes);
-            var core = new CoreOptimizer(_mEdges, _mMap.Levels, ObjectiveFactory.LinearBalancing, null, null);
+            var core = new CoreOptimizer(_mEdges, _mMap.Levels, item =>
+            {
+                var obj = new GRBLinExpr();
+                obj.MultAdd(_mBalanceWeight, ObjectiveFactory.LinearBalancing(item));
+                return obj;
+            });
             _mOptimizer = new QuadFlowOptimizer(core, core.ApplySystemConstr, core.RemoveSystemConstr);
         }
 

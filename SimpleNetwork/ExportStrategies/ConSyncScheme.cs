@@ -18,12 +18,10 @@ namespace BusinessLogic.ExportStrategies
         private readonly QuadFlowOptimizer _mOptimizer;
         private readonly EdgeCollection _mEdges;
         private readonly INode[] _mNodes;
+        private readonly StorageMap _mMap;
 
         private double[] _mMismatches;
-
-        //private readonly double[] _mLoLims;
-        //private readonly double[] _mHiLims;
-        //private readonly double[,] _mFlows;
+        private readonly double _mBalanceWeight = 1e6;
 
         public ConSyncScheme(INode[] nodes, EdgeCollection edges)
         {
@@ -33,8 +31,14 @@ namespace BusinessLogic.ExportStrategies
             // Corresponds to the projection vector.
             var weights = _mNodes.Select(node => 1.0 / CountryInfo.GetMeanLoad(node.Name)).ToArray();
             weights.Mult(1.0 / weights.Sum());
+            _mMap = new StorageMap(nodes);
 
-            var core = new CoreOptimizer(_mEdges, 0, item => ObjectiveFactory.QuadraticBalancing(item, weights));
+            var core = new CoreOptimizer(_mEdges, _mMap.Levels, item =>
+            {
+                var obj = new GRBQuadExpr();
+                obj.MultAdd(_mBalanceWeight, ObjectiveFactory.QuadraticBalancing(item, weights));
+                return obj;
+            });
             _mOptimizer = new QuadFlowOptimizer(core, core.ApplyNodalConstrs, core.RemoveNodalConstrs); // HERE NO STORAGE IS ASSUMED!!
         }
 
@@ -45,9 +49,14 @@ namespace BusinessLogic.ExportStrategies
 
         public void BalanceSystem()
         {
+            // Create storage limit vectors.
+            _mMap.RefreshLims();
             // Do balancing.
-            _mOptimizer.SetNodes(_mMismatches, null, null);
+            _mOptimizer.SetNodes(_mMismatches, _mMap.LowLims, _mMap.HighLims);
             _mOptimizer.Solve();
+            // Charge storages.
+            _mMap.Inject(_mOptimizer.StorageOptima);
+            // Dump remaining stuff in balancing vector.
             for (int i = 0; i < _mNodes.Length; i++)
             {
                 _mNodes[i].Balancing.CurrentValue = _mOptimizer.NodeOptima[i];

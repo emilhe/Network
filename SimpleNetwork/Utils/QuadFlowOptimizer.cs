@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic.ExportStrategies;
@@ -61,45 +62,52 @@ namespace BusinessLogic.Utils
 
         private void ExtractResultsFromModel()
         {
-            try
+            int status = _mCore.Wrap.Model.Get(GRB.IntAttr.Status);
+            if (status == GRB.Status.INFEASIBLE)
             {
-                // Extract node optima.
-                for (int i = 0; i < _mCore.N; i++)
-                {
-                    NodeOptima[i] = _mCore.Wrap.NodeExprs[i].Value;// * _mCore.Deltas[i];
-                }
+                _mCore.Wrap.Model.ComputeIIS();
+                _mCore.Wrap.Model.Write(@"C:\Temp\flowModel.ilp");
+            }
+            if (status == GRB.Status.NUMERIC)
+            {
+                throw new ArgumentException("Gurobi had numerical difficulties...");
+            }
+            if (status != GRB.Status.OPTIMAL && status != GRB.Status.SUBOPTIMAL)
+            {
+                Console.WriteLine("Optimization was stopped with status " + status);
+                throw new ArgumentException("Model fucked up!");
+            }
 
-                // Extract storage optima.
-                if (ExtractStorageOptima)
+            // Extract node optima.
+            for (int i = 0; i < _mCore.N; i++)
+            {
+                NodeOptima[i] = _mCore.Wrap.NodeExprs[i].Value;
+            }
+
+            // Extract storage optima.
+            if (ExtractStorageOptima)
+            {
+                for (int j = 0; j < _mCore.N; j++)
                 {
-                    for (int j = 0; j < _mCore.N; j++)
+                    for (int i = 0; i < _mCore.Wrap.Storages.Count; i++)
                     {
-                        for (int i = 0; i < _mCore.Wrap.Storages.Count; i++)
-                        {
-                            StorageOptima[i][j] = _mCore.Wrap.Storages[i][j].Get(GRB.DoubleAttr.X);
-                        }
-                    }
-                }
-
-                // Extract flow optima.
-                if (ExtractFlows)
-                {
-                    for (int i = 0; i < _mCore.N; i++)
-                    {
-                        for (int j = 0; j < _mCore.N; j++)
-                        {
-                            if (!_mCore.Edges.EdgeExists(i, j)) continue;
-
-                            Flows[i, j] = _mCore.Wrap.Edges[i + _mCore.N * j].Get(GRB.DoubleAttr.X);
-                        }
+                        StorageOptima[i][j] = _mCore.Wrap.Storages[i][j].Get(GRB.DoubleAttr.X);
                     }
                 }
             }
-            catch (Exception ex)
+
+            // Extract flow optima.
+            if (ExtractFlows)
             {
-                //_mCore.Wrap.Model.ComputeIIS();
-                //_mCore.Wrap.Model.Write(@"C:\Temp\flowModel.ilp");
-                throw;
+                for (int i = 0; i < _mCore.N; i++)
+                {
+                    for (int j = 0; j < _mCore.N; j++)
+                    {
+                        if (!_mCore.Edges.EdgeExists(i, j)) continue;
+
+                        Flows[i, j] = _mCore.Wrap.Edges[i + _mCore.N*j].Get(GRB.DoubleAttr.X);
+                    }
+                }
             }
         }
 
@@ -134,7 +142,7 @@ namespace BusinessLogic.Utils
 
         public double[] Deltas
         {
-            get { return _mCore.Deltas; }
+            get { return _mCore.Mismatches; }
         }
 
         public void SetNodes(double[] nodes, List<double[]> lowLimits, List<double[]> highLimits)

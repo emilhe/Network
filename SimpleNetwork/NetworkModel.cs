@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using BusinessLogic.ExportStrategies;
@@ -85,7 +86,15 @@ namespace BusinessLogic
             Mismatch = _mMismatches.Sum();
 
             // Delegate balancing to the export scheme.
-            ExportScheme.BalanceSystem();
+            try
+            {
+                ExportScheme.BalanceSystem();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("System balancing failure.");
+                throw;
+            }
 
             // TODO: What about failure scheme?
             // FailureStrategy.Record(Failure);

@@ -505,7 +505,7 @@ namespace BusinessLogic.Utils
                 bc += MathUtils.Percentile(values.Select(item => Math.Max(0, -item)), 99);
             }
 
-            return bc * 1;
+            return bc * scale;
         }
 
         // Total backup energy.
@@ -518,16 +518,16 @@ namespace BusinessLogic.Utils
 
         public static double BackupEnergy(SimulationOutput data, double scale = 1, int from = 0, int to = -1)
         {
-            var bc = 0.0;
+            var be = 0.0;
             var balancingTs = data.TimeSeries.Where(item => item.Name.Contains("Balancing"));
             foreach (var ts in balancingTs)
             {
                 var values = ts.GetAllValues().Skip(from);
                 if (to != -1) values = values.Take(to);
-                bc += values.Select(item => Math.Max(0, -item)).Sum();
+                be += values.Select(item => Math.Max(0, -item)).Sum();
             }
 
-            return bc * scale;
+            return be * scale;
         }
 
         #endregion

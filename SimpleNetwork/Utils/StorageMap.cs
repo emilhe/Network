@@ -50,8 +50,8 @@ namespace BusinessLogic.Utils
             {
                 for (int j = 0; j < _mNodes.Length; j++)
                 {
-                    LowLims[i][j] = -_mNodes[j].Storages[i].RemainingEnergy(Response.Discharge);
-                    HighLims[i][j] = _mNodes[j].Storages[i].RemainingEnergy(Response.Charge);
+                    LowLims[i][j] = _mNodes[j].Storages[i].AvailableEnergy(Response.Discharge);
+                    HighLims[i][j] = _mNodes[j].Storages[i].AvailableEnergy(Response.Charge);
                 }
             }
         }

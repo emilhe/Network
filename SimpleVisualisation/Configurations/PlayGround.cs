@@ -27,24 +27,30 @@ namespace Main.Configurations
             //var mCf = new NodeGenes(1, 1);
             //Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
 
-            var ctrl = (core.BeController as SimulationController);
-            ctrl.InvalidateCache = true;
+            var ctrl = (core.BeController as SimulationController); // new SimulationController(); 
+            //ctrl.InvalidateCache = true;
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("6h storage", input =>
             {
-                var nodes = ConfigurationUtils.CreateNodesNew();
-                ConfigurationUtils.SetupHomoStuff(nodes, 1, true, false, false);
+                var nodes = ConfigurationUtils.CreateNodes();
+                ConfigurationUtils.SetupHomoStuff(nodes, 1, true, true, false);
                 return nodes;
             });
             ctrl.LogFlows = true;
             ctrl.LogAllNodeProperties = true;
-            var data = ctrl.EvaluateTs(1, 1);
+            //ctrl.ExportStrategies.Add(new ExportSchemeInput
+            //{
+            //    Scheme = ExportScheme.ConstrainedLocalized
+            //});
+            ctrl.Sources.Clear();
+            ctrl.Sources.Add(new TsSourceInput { Length = 7, Offset = 0 });
 
             var param = new ParameterEvaluator(core);
             var calc = new NodeCostCalculator(param);
-            var mCf = new NodeGenes(1, 1);
+            var mCf = new NodeGenes(0.56, 1.03);
             Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
-
+            
+            var data = ctrl.EvaluateTs(0.56, 1.03);
             main.DisplayTimeSeries().SetData(data.SelectMany(item => item.TimeSeries).ToList());
         }
 
@@ -284,6 +290,35 @@ namespace Main.Configurations
         }
 
         #endregion
+
+        class MockSimulationController : ISimulationController
+        {
+
+            public List<SimulationOutput> Results { get; set; } 
+
+            public bool CacheEnabled
+            {
+                get { throw new NotImplementedException(); }
+                set { throw new NotImplementedException(); }
+            }
+
+            public bool InvalidateCache
+            {
+                get { throw new NotImplementedException(); }
+                set { throw new NotImplementedException(); }
+            }
+
+            public List<SimulationOutput> EvaluateTs(NodeGenes genes)
+            {
+                return Results;
+            }
+
+            public List<SimulationOutput> EvaluateTs(double penetration, double mixing)
+            {
+                return Results;
+            }
+
+        }
 
     }
 }
