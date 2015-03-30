@@ -30,9 +30,10 @@ namespace Main.Configurations
             var ctrl = (core.BeController as SimulationController); // new SimulationController(); 
             ctrl.InvalidateCache = true;
             ctrl.NodeFuncs.Clear();
-            ctrl.NodeFuncs.Add("6h storage", input =>
+            ctrl.NodeFuncs.Add("hydro storage", input =>
             {
                 var nodes = ConfigurationUtils.CreateNodes();
+                //ConfigurationUtils.SetupHydroStorage(nodes);
                 ConfigurationUtils.SetupHomoStuff(nodes, 1, true, true, false);
                 return nodes;
             });
@@ -44,13 +45,14 @@ namespace Main.Configurations
                 Scheme = ExportScheme.UnconstrainedSynchronized
             });
             ctrl.Sources.Clear();
-            ctrl.Sources.Add(new TsSourceInput { Length = 7, Offset = 0 });
+            ctrl.Sources.Add(new TsSourceInput { Length = 8, Offset = 0 });
 
             var param = new ParameterEvaluator(core);
             var calc = new NodeCostCalculator(param);
             var mCf = new NodeGenes(0.56, 1.03);
             Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
-            
+            ctrl.InvalidateCache = false;
+
             var data = ctrl.EvaluateTs(0.56, 1.03);
             main.DisplayTimeSeries().SetData(data.SelectMany(item => item.TimeSeries).ToList());
         }

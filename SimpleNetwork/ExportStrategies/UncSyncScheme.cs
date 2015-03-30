@@ -10,7 +10,7 @@ using Utils;
 namespace BusinessLogic.ExportStrategies
 {
     /// <summary>
-    /// Synchronized flow. Use when flow is unconstrained and storage is homogeneous (in terms of the balancing vector). Does NOT use gurobi.
+    /// Synchronized flow. Use when flow is unconstrained. Does NOT use gurobi.
     /// </summary>
     public class UncSyncScheme: IExportScheme
     {
@@ -18,7 +18,8 @@ namespace BusinessLogic.ExportStrategies
         private readonly EdgeCollection _mEdges;
         private readonly PhaseAngleFlow _mFlow;
         private readonly INode[] _mNodes;
-        private readonly double[] _mWeights;
+        private readonly double[] _mBalProjVec;
+        private readonly List<double[]> _mStoProjVec;
 
         private double[] _mMismatches;
         private double[] _mInjections;
@@ -32,12 +33,18 @@ namespace BusinessLogic.ExportStrategies
 
             if (weights != null)
             {
-                _mWeights = weights;
+                _mBalProjVec = weights;
                 return;
             }
 
-            // Corresponds to the projection vector.
-            _mWeights = _mNodes.Select(node => CountryInfo.GetMeanLoad(node.Name)).ToArray().Norm();
+            // Balancing projection vector.
+            _mBalProjVec = _mNodes.Select(node => CountryInfo.GetMeanLoad(node.Name)).ToArray().Norm();
+            // Storage projection vector(s).
+            _mStoProjVec = new List<double[]>(_mNodes[0].Storages.Count);
+            for (int i = 0; i < _mNodes[0].Storages.Count; i++)
+            {
+                _mStoProjVec.Add(_mNodes.Select(node => node.Storages[i].NominalEnergy).ToArray().Norm());
+            }
         }
 
         public void Bind(double[] mismatches)
@@ -48,17 +55,24 @@ namespace BusinessLogic.ExportStrategies
 
         public void BalanceSystem()
         {
-            // Do balancing.
+            // Consider storage.
             var toBalance = _mMismatches.Sum();
+            _mInjections.Fill(0);
+            for (int i = 0; i < _mNodes[0].Storages.Count; i++)
+            {
+                var proj = _mStoProjVec[i];
+                for (int j = 0; j < _mNodes.Length; j++)
+                {
+                    var balanced = (proj[j]*toBalance - _mNodes[j].Storages[i].Inject(proj[j]*toBalance));
+                    _mInjections[j] += balanced;
+                }
+                toBalance = _mMismatches.Sum() - _mInjections.Sum();
+            }
+            // Dump the rest in the balancing vector.
             for (int i = 0; i < _mNodes.Length; i++)
             {
-                var nodalBalance = toBalance*_mWeights[i];
-                _mInjections[i] = nodalBalance - _mMismatches[i];
-                // Apply storage (in levels) if any.
-                foreach (var storage in _mNodes[i].Storages)
-                {
-                    nodalBalance = storage.Inject(nodalBalance);
-                }
+                var nodalBalance = toBalance*_mBalProjVec[i];
+                _mInjections[i] += nodalBalance - _mMismatches[i];
                 _mNodes[i].Balancing.CurrentValue = nodalBalance;
                 _mMismatches[i] = 0;
             }

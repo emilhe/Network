@@ -271,7 +271,7 @@ namespace BusinessLogic.Utils
             foreach (var node in nodes)
             {
                 if (node.Name.Equals("Norway")) SetupHydro(node, 300, 85000, null, 110000);
-                //else SetupHydro(node, 0, 0, null, 0);
+                else SetupHydro(node, 0, 0, null, 0);
             }
         }
 
