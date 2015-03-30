@@ -10,7 +10,7 @@ using Utils;
 namespace BusinessLogic.ExportStrategies
 {
     /// <summary>
-    /// Synchronized flow. Use when flow is unconstrained. Does NOT use gurobi.
+    /// Synchronized flow. Use when flow is unconstrained and storage is homogeneous (in terms of the balancing vector). Does NOT use gurobi.
     /// </summary>
     public class UncSyncScheme: IExportScheme
     {

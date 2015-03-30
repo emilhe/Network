@@ -268,19 +268,23 @@ namespace BusinessLogic.Utils
 
         public static void SetupHydroStorage(CountryNode[] nodes)
         {
-            
+            foreach (var node in nodes)
+            {
+                if (node.Name.Equals("Norway")) SetupHydro(node, 300, 85000, null, 110000);
+                //else SetupHydro(node, 0, 0, null, 0);
+            }
         }
 
         private static void SetupHydro(CountryNode countryNode, double generatorCapacity, double resSize, ITimeSeries inflowPattern, double yearlyInflow)
         {
-            // Initial filling level is assumed = 70%
-            var internalReservoir = new BasicStorage("Hydro reservoir", 1, resSize, resSize * 0.7)
-            {
-                Capacity = generatorCapacity
-            };
-            countryNode.Storages.Add(new HydroReservoirStorage(internalReservoir));
-            countryNode.Generators.Add(new HydroReservoirGenerator(yearlyInflow, inflowPattern, internalReservoir));
-            // TODO: Consider adding a pumped hydro storage too...
+            countryNode.Storages.Add(new SimpleHydroReservoirStorage(resSize, inflowPattern, yearlyInflow) { Capacity = generatorCapacity });
+            //// Initial filling level is assumed = 70%
+            //var internalReservoir = new BasicStorage("Internal hydro reservoir", 1, resSize, resSize * 0.7)
+            //{
+            //    Capacity = generatorCapacity
+            //};
+            //countryNode.Storages.Add(new HydroReservoirStorage(internalReservoir));
+            //countryNode.Generators.Add(new HydroReservoirGenerator(yearlyInflow, inflowPattern, internalReservoir));
         }
 
         #endregion

@@ -148,6 +148,7 @@
     <Compile Include="Storages\CompositeStorage.cs" />
     <Compile Include="Generators\HydroReservoirGenerator.cs" />
     <Compile Include="Storages\HydroReservoirStorage.cs" />
+    <Compile Include="Storages\SimpleHydroReservoirStorage.cs" />
     <Compile Include="Storages\StorageCollection.cs" />
     <Compile Include="Generators\ConstantGenerator.cs" />
     <Compile Include="Generators\RandomGenerator.cs" />

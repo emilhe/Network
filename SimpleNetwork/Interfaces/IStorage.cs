@@ -9,7 +9,7 @@
     /// <summary>
     /// Storage abstraction.
     /// </summary>
-    public interface IStorage : IMeasureable //, ITickListener
+    public interface IStorage : IMeasureable, ITickListener
     {
         /// <summary>
         /// Name/description of the storage.

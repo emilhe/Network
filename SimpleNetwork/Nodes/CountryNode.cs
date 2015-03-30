@@ -99,7 +99,7 @@ namespace BusinessLogic.Nodes
         {
             _mLoad = Model.LoadTimeSeries.GetValue(tick);
             foreach (var generator in Generators) generator.TickChanged(tick);
-            //foreach (var storage in Storages) storage.TickChanged(tick);
+            foreach (var storage in Storages) storage.TickChanged(tick);
         }
 
     }
