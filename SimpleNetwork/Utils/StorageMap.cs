@@ -12,7 +12,7 @@ namespace BusinessLogic.Utils
     {
 
         private readonly INode[] _mNodes;
-        private readonly double _mDelta = 1e-5;
+        private const double Delta = 1e-5;
 
         public int Levels { get; private set; }
         public List<double[]> LowLims { get; private set; }
@@ -32,6 +32,10 @@ namespace BusinessLogic.Utils
             }
         }
 
+        /// <summary>
+        /// Inject the amounts specified. If not possible, an exception is thrown.
+        /// </summary>
+        /// <param name="values"> List (levels) of storage injections (array = nodes) </param>
         public void Inject(List<double[]> values)
         {
             for (int i = 0; i < Levels; i++)
@@ -39,11 +43,14 @@ namespace BusinessLogic.Utils
                 for (int j = 0; j < _mNodes.Length; j++)
                 {
                     var remainder = _mNodes[j].Storages[i].Inject(values[i][j]);
-                    if (Math.Abs(remainder) > _mDelta) throw new ArgumentException("Charge failure!");
+                    if (Math.Abs(remainder) > Delta) throw new ArgumentException("Charge failure!");
                 }
             }
         }
 
+        /// <summary>
+        /// Refresh limit vectors.
+        /// </summary>
         public void RefreshLims()
         {
             for (int i = 0; i < Levels; i++)

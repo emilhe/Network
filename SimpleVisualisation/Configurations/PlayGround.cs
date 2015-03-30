@@ -28,7 +28,7 @@ namespace Main.Configurations
             //Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
 
             var ctrl = (core.BeController as SimulationController); // new SimulationController(); 
-            //ctrl.InvalidateCache = true;
+            ctrl.InvalidateCache = true;
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("6h storage", input =>
             {
@@ -38,10 +38,11 @@ namespace Main.Configurations
             });
             ctrl.LogFlows = true;
             ctrl.LogAllNodeProperties = true;
-            //ctrl.ExportStrategies.Add(new ExportSchemeInput
-            //{
-            //    Scheme = ExportScheme.ConstrainedLocalized
-            //});
+            ctrl.ExportStrategies.Clear();
+            ctrl.ExportStrategies.Add(new ExportSchemeInput
+            {
+                Scheme = ExportScheme.UnconstrainedSynchronized
+            });
             ctrl.Sources.Clear();
             ctrl.Sources.Add(new TsSourceInput { Length = 7, Offset = 0 });
 

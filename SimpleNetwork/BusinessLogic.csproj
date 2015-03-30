@@ -124,6 +124,7 @@
     <Compile Include="Cost\CostModels\IWindCostModel.cs" />
     <Compile Include="Cost\CostModels\VariableLengthModel.cs" />
     <Compile Include="ExportStrategies\ConLocalScheme.cs" />
+    <Compile Include="ExportStrategies\ConScheme.cs" />
     <Compile Include="ExportStrategies\ConSyncScheme.cs" />
     <Compile Include="ExportStrategies\EdgeCollection.cs" />
     <Compile Include="ExportStrategies\PhaseAngleFlow.cs" />

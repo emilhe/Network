@@ -4,11 +4,14 @@ using System.Linq;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
 using BusinessLogic.TimeSeries;
+using BusinessLogic.Utils;
 using Utils;
 
 namespace BusinessLogic.ExportStrategies
 {
-
+    /// <summary>
+    /// Synchronized flow. Use when flow is unconstrained. Does NOT use gurobi.
+    /// </summary>
     public class UncSyncScheme: IExportScheme
     {
 
@@ -20,10 +23,6 @@ namespace BusinessLogic.ExportStrategies
         private double[] _mMismatches;
         private double[] _mInjections;
         private double[] _mFlows;
-
-        //private readonly double[] _mLoLims;
-        //private readonly double[] _mHiLims;
-        //private readonly double[,] _mFlows;
 
         public UncSyncScheme(INode[] nodes, EdgeCollection edges, double[] weights = null)
         {
@@ -53,11 +52,17 @@ namespace BusinessLogic.ExportStrategies
             var toBalance = _mMismatches.Sum();
             for (int i = 0; i < _mNodes.Length; i++)
             {
-                _mNodes[i].Balancing.CurrentValue = toBalance*_mWeights[i];
-                _mInjections[i] = toBalance * _mWeights[i] - _mMismatches[i];
+                var nodalBalance = toBalance*_mWeights[i];
+                _mInjections[i] = nodalBalance - _mMismatches[i];
+                // Apply storage (in levels) if any.
+                foreach (var storage in _mNodes[i].Storages)
+                {
+                    nodalBalance = storage.Inject(nodalBalance);
+                }
+                _mNodes[i].Balancing.CurrentValue = nodalBalance;
                 _mMismatches[i] = 0;
             }
-            // Calculate flows (make optional? Check performance...).
+            // Calculate flows (make optional?).
             _mFlows = _mFlow.CalculateFlows(_mInjections);
         }
 
