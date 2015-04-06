@@ -56,6 +56,12 @@ namespace Utils
             return source;
         }
 
+        public static T[] Fill<T>(this T[] source, Func<T> elem)
+        {
+            for (int i = 0; i < source.Length; i++) source[i] = elem();
+            return source;
+        }
+
         public static T[] Copy<T>(this T[] source)
         {
             var result = new T[source.Length];

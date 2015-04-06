@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Utils;
 
 namespace Optimization
 {
@@ -65,6 +66,12 @@ namespace Optimization
                     if (xc.Cost < best.Cost) simplex[n - 1] = xc;
                     else
                     {
+                        // DEBUG: WHAT HAPPENS?
+                        h.GetVectorCopy().ToJsonFile("h.txt");
+                        c.GetVectorCopy().ToJsonFile("c.txt");
+                        s.GetVectorCopy().ToJsonFile("s.txt");
+                        xc.GetVectorCopy().ToJsonFile("xc.txt");
+                        xr.GetVectorCopy().ToJsonFile("xr.txt");
                         // Shrink
                         for (int i = 0; i < n; i++)
                         {

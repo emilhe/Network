@@ -12,7 +12,7 @@ namespace BusinessLogic.Cost.Optimization
 
         public bool TerminationCondition(NodeVec[] nests, int evaluations)
         {
-            return (evaluations > 2500);
+            return (evaluations > 25000);
         }
 
         public NodeVec Centroid(NodeVec[] solutions)

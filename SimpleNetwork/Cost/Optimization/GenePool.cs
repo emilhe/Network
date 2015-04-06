@@ -141,7 +141,7 @@ namespace BusinessLogic.Cost
 
         private static double LevyStep()
         {
-            return Rnd.NextLevy(0.5, 1);
+            return Rnd.NextLevy(1.5, 0);
         }
 
         #endregion
@@ -263,7 +263,7 @@ namespace BusinessLogic.Cost
             return chromosome.Gamma/effGamma;
         }
 
-        private static double GammaRescaling(NodeChromosome chromosome)
+        public static double GammaRescaling(NodeChromosome chromosome)
         {
             var genes = chromosome.Genes;
             // Calculte new effective gamma.
@@ -308,6 +308,27 @@ namespace BusinessLogic.Cost
             }
             // Return the scaling factor (TODO: NOT ONE; SHOULD BE ALL OVER GAMMA).
             return 1 / effGamma; 
+        }
+
+        public static double Penalty(NodeVec vec)
+        {
+
+            var n = NodeVec.Labels.Count;
+            var penalty = 0.0;
+            var delta = 1e-6;
+            // Calculate alpha/gamma penalties.
+            for (int i = 0; i < n; i++)
+            {
+                if (vec[i] < GammaMax + delta) penalty -= Math.Log(GammaMax + (delta - vec[i]));
+                else penalty += 1e3;
+                if (vec[i] > GammaMin - delta) penalty -= Math.Log(vec[i] - (GammaMin - delta));
+                else penalty += 1e3;
+                if (vec[i + n] < AlphaMax + delta) penalty -= Math.Log(AlphaMax + (delta - vec[i + n]));
+                else penalty += 1e3;
+                if (vec[i + n] > AlphaMin - delta) penalty -= Math.Log(vec[i] - (AlphaMin - delta));
+                else penalty += 1e3;
+            }
+            return penalty/1000;
         }
 
         private static void ScaleGamma(double[] vec, double scaling)
