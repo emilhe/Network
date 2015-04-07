@@ -147,7 +147,7 @@ namespace Main
                 };
             }
             var opt = new SequentialOptimizer(calc);
-            var best = opt.Optimize(seed, 0.5, 0.005);
+            var best = opt.Optimize(seed);
 
             Console.WriteLine("Final cost is {0} after {1} evals", best.Cost, opt.Evals);
             best.Genes.ToJsonFile(string.Format(@"C:\proto\localK={0}{1}.txt", k, tag));
@@ -220,7 +220,13 @@ namespace Main
         class SequentialOptimizer
         {
 
+            public static double LimTol { get; set; }
+
             public double Evals { get { return _mCalc.Evaluations; } }
+
+            public double AbsTol { get; set; }
+            public double StepMin { get; set; }
+            public double StepMax { get; set; }            
 
             private readonly ParallelNodeCostCalculator _mCalc;
             private NodeChromosome[] _mClones;
@@ -230,43 +236,57 @@ namespace Main
             public SequentialOptimizer(ParallelNodeCostCalculator calc)
             {
                 _mCalc = calc;
+
+                AbsTol = 1e-2;
+                StepMin = 0.01;
+                StepMax = 1;
+
+                LimTol = 1e-3;
             }
 
-            public NodeChromosome Optimize(NodeChromosome seed, double stepStart, double stepEnd)
+            public NodeChromosome Optimize(NodeChromosome seed)
             {
                 _mBest = seed;
                 _mCalc.UpdateCost(new []{seed});
                 _mClones = new NodeChromosome[seed.Genes.Count];
-                var cost = 1000.0;
-                _mStep = stepStart;
+                _mStep = StepMax;
                 Console.WriteLine("Cost is {0} after {1} evals", _mBest.Cost, _mCalc.Evaluations);
                 if (File.Exists(@"C:\proto\seqStats.txt")) File.Move(@"C:\proto\seqStats.txt", @"C:\proto\seqStats" + DateTime.Now.ToString("dd-MM-yy hh_mm") + ".txt");
                 File.Create(@"C:\proto\seqStats.txt").Close();
 
-                while (_mStep > stepEnd)
+                while (_mStep > StepMin)
                 {
-                    while (cost-_mBest.Cost > 1e-3)
+                    bool alphaProgress = true;
+                    bool gammaProgress = true;
+                    while (alphaProgress || gammaProgress)
                     {
-                        cost = _mBest.Cost;
-                        _mBest.Genes.ToJsonFile(@"C:\proto\bestSeq.txt");
-                        File.AppendAllLines(@"C:\proto\seqStats.txt",
-                            new[] {string.Format("{0},{1}", _mBest.Cost, _mCalc.Evaluations)});
-
-                        // Take best possible alpha step.
-                        TakeBestStep((a, b) => StepAlphaDown(a, b, _mStep), (a, b) => StepAlphaUp(a, b, _mStep));
-                        Console.WriteLine("Cost is {0} after {1} evals", _mBest.Cost, _mCalc.Evaluations);
+                        if (alphaProgress)
+                        {
+                            alphaProgress = Step((a, b) => StepAlphaDown(a, b, _mStep), (a, b) => StepAlphaUp(a, b, _mStep));
+                        }
 
                         if (GenePool.GammaMin == GenePool.GammaMax) continue;
-
-                        // Take best possible gamma step.
-                        TakeBestStep((a, b) => StepGammaDown(a, b, _mStep), (a, b) => StepGammaUp(a, b, _mStep));
-                        Console.WriteLine("Cost is {0} after {1} evals", _mBest.Cost, _mCalc.Evaluations);
+                        if (!gammaProgress) continue;
+                        gammaProgress = Step((a, b) => StepGammaDown(a, b, _mStep), (a, b) => StepGammaUp(a, b, _mStep));
                     }
-                    cost = 1000.0;
                     _mStep /= 2;
+                    Console.WriteLine("Step size is now {0}", _mStep);
                 }
 
                 return _mBest;
+            }
+
+
+            private bool Step(Func<NodeChromosome, string, bool> StepDown,
+    Func<NodeChromosome, string, bool> StepUp)
+            {
+                var cost = _mBest.Cost;
+                _mBest.Genes.ToJsonFile(@"C:\proto\bestSeq.txt");
+                File.AppendAllLines(@"C:\proto\seqStats.txt", new[] { string.Format("{0},{1}", _mBest.Cost, _mCalc.Evaluations) });
+                TakeBestStep(StepDown, StepUp);
+                Console.WriteLine("Cost is {0} after {1} evals", _mBest.Cost, _mCalc.Evaluations);
+
+                return (cost - _mBest.Cost) > AbsTol;
             }
 
             private void TakeBestStep(Func<NodeChromosome, string, bool> StepDown,
@@ -281,7 +301,7 @@ namespace Main
                     // Step down FAILED: Set cost manually.
                     _mClones[i].Cost = _mBest.Cost;
                 }
-                _mCalc.UpdateCost(_mClones);
+                _mCalc.UpdateCost(_mClones.Where(item => item.InvalidCost).ToList());
                 for (int i = 0; i < n; i++)
                 {
                     // Was step-down OK? If so, just proceed.
@@ -291,14 +311,14 @@ namespace Main
                     // Step up FAILED: Set cost manually.
                     _mClones[i].Cost = _mBest.Cost;
                 }
-                _mCalc.UpdateCost(_mClones);
+                _mCalc.UpdateCost(_mClones.Where(item => item.InvalidCost).ToList());
                 _mBest = _mClones.OrderBy(item => item.Cost).First();
             }
 
             static bool StepAlphaDown(NodeChromosome chromo, string key, double delta)
             {
                 var gene = chromo.Genes[key];
-                if (gene.Alpha == GenePool.AlphaMin) return false;
+                if (Math.Abs(gene.Alpha - GenePool.AlphaMin) < LimTol) return false;
 
                 var newVal = gene.Alpha - delta;
                 if (newVal < GenePool.AlphaMin) newVal = GenePool.AlphaMin;
@@ -309,7 +329,7 @@ namespace Main
             static bool StepAlphaUp(NodeChromosome chromo, string key, double delta)
             {
                 var gene = chromo.Genes[key];
-                if (gene.Alpha == GenePool.AlphaMax) return false;
+                if (Math.Abs(gene.Alpha - GenePool.AlphaMax) < LimTol) return false;
 
                 var newVal = gene.Alpha + delta;
                 if (newVal > GenePool.AlphaMax) newVal = GenePool.AlphaMax;
@@ -320,7 +340,7 @@ namespace Main
             static bool StepGammaDown(NodeChromosome chromo, string key, double delta)
             {
                 var gene = chromo.Genes[key];
-                if (gene.Gamma == GenePool.GammaMin) return false;
+                if (Math.Abs(gene.Gamma - GenePool.GammaMin) < LimTol) return false;
 
                 var newVal = gene.Gamma - delta;
                 if (newVal < GenePool.GammaMin) newVal = GenePool.GammaMin;
@@ -332,7 +352,7 @@ namespace Main
             static bool StepGammaUp(NodeChromosome chromo, string key, double delta)
             {
                 var gene = chromo.Genes[key];
-                if (gene.Gamma == GenePool.GammaMax) return false;
+                if (Math.Abs(gene.Gamma - GenePool.GammaMax) < LimTol) return false;
 
                 var newVal = gene.Gamma + delta;
                 if (newVal > GenePool.GammaMax) newVal = GenePool.GammaMax;
