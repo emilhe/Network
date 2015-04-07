@@ -38,7 +38,7 @@ namespace Main.Figures
                 // Inject edge constraints.
                 (core.TcController as SimulationController).EdgeFuncs.Clear();
                 (core.TcController as SimulationController).EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100),
-                list => ConfigurationUtils.GetEdgeObject(list.Select(item => (INode)item).ToList(), "flow32YearCfmaxk=1Gamma1alpha1local", fraction));
+                list => ConfigurationUtils.GetEdgeObject(list, "flow32YearCfmaxk=1Gamma1alpha1local", fraction));
                 result.Add(fraction, calc.DetailedSystemCosts(new NodeGenes(1, 1), true));
             }
 
@@ -93,7 +93,7 @@ namespace Main.Figures
                 var fraction = fractions[fracIdx];
                 // Update edge functions.
                 ctrl.EdgeFuncs.Clear();
-                ctrl.EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100), list => ConfigurationUtils.GetEdgeObject(list.Select(item => (INode)item).ToList(), "flowTest", fraction)); // OK
+                ctrl.EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100), list => ConfigurationUtils.GetEdgeObject(list, "flowTest", fraction)); // OK
                 // Evaluate.    
                 var result = ctrl.EvaluateGrid(grid)[0].Grid;
                 // Find last success.

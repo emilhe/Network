@@ -13,17 +13,17 @@ namespace BusinessLogic.Utils
 
         #region Fields
 
-        public bool ApplyNodeExprConstr { get; set; }
         public bool ExtractStorageOptima { get; set; }
 
         public double[] NodeOptima { get; private set; }
         public List<double[]> StorageOptima { get; private set; }
 
+        public double Delta = 1e-6;
         public char Precision = GRB.CONTINUOUS;
         public bool DebugLog = false;
 
         public EdgeCollection Edges { get; private set; }
-        public double[] Deltas { get; private set; }
+        public double[] Mismatches { get; private set; }
         public int N { get; private set; }
         public int M { get; private set; }
 
@@ -56,6 +56,7 @@ namespace BusinessLogic.Utils
         {
             _mEnv = new GRBEnv();
             _mEnv.Set(GRB.IntParam.LogToConsole, 0);
+            //_mEnv.Set(GRB.DoubleParam.FeasibilityTol, Delta);
             _mBaseObjFunc = baseObjFunc;
 
             Edges = edges;
@@ -77,58 +78,55 @@ namespace BusinessLogic.Utils
         /// <param name="highLimits"> higher limit (charge) </param>
         public void SetNodes(double[] nodes, List<double[]> lowLimits, List<double[]> highLimits)
         {
-            var now = DateTime.Now;
             if (nodes.Length != N)
             {
                 throw new ArgumentException("Dismension mismatch between nodes and FlowOptimizer.");
             }
 
-            Deltas = nodes;
+            Mismatches = nodes;
             SetConstraints(Wrap, lowLimits, highLimits);
             PrepareObjective();
 
-            // Update model.
-            if (DebugLog) Console.WriteLine("Setup: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
-            //_mFlow.Model.Update();
-            if (DebugLog) Console.WriteLine("Flow: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
             Wrap.Model.Update();
-            if (DebugLog) Console.WriteLine("Balance: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
-
         }
 
         public void Solve()
         {
             DateTime now = DateTime.Now;
-
-            // Solve models.
-            Wrap.Model.Optimize();
-            if (DebugLog) Console.WriteLine("Solve balance: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
-
-            // Extract node optima.
-            for (int i = 0; i < N; i++)
+            try
             {
-                NodeOptima[i] = Wrap.NodeExprs[i].GrbLinExpr.Value*Math.Sign(Deltas[i]);
-            }
+                // Solve models.
+                Wrap.Model.Optimize();
+                if (DebugLog) Console.WriteLine("Solve balance: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
 
-            // Extract storage optima.
-            if (ExtractStorageOptima)
-            {
-                for (int j = 0; j < N; j++)
+                // Extract node optima.
+                for (int i = 0; i < N; i++)
                 {
-                    for (int i = 0; i < Wrap.Storages.Count; i++)
+                    NodeOptima[i] = Wrap.NodeExprs[i].Value;
+                }
+
+                // Extract storage optima.
+                if (ExtractStorageOptima)
+                {
+                    for (int j = 0; j < N; j++)
                     {
-                        StorageOptima[i][j] = Wrap.Storages[i][j].Get(GRB.DoubleAttr.X);
+                        for (int i = 0; i < Wrap.Storages.Count; i++)
+                        {
+                            StorageOptima[i][j] = Wrap.Storages[i][j].Get(GRB.DoubleAttr.X);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Wrap.Model.ComputeIIS();
+                Wrap.Model.Write(@"C:\Temp\flowModel.ilp");
+                throw;
             }
 
             // Signal solve completed.
             if (OnSolveCompleted != null) OnSolveCompleted();
             if (DebugLog) Console.WriteLine("Extract results: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
-
-            // Remove node expr constraints.
-            if(ApplyNodeExprConstr) {foreach (var constr in Wrap.NodeExprConstrs) Wrap.Model.Remove(constr);}
-            if (DebugLog) Console.WriteLine("Remove constraints: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
         }
 
         public void Dispose()
@@ -145,28 +143,21 @@ namespace BusinessLogic.Utils
         /// </summary>
         private void SetConstraints(MyModel m, List<double[]> lowLimits, List<double[]> highLimits)
         {
-            // Update nodal balancing objectives. 
             for (int i = 0; i < N; i++)
             {
-                m.NodeExprs[i] = new MyLinExpr();
-                var sign = (Deltas[i] > 0) ? 1 : -1;
-                // Add mismatch.
-                m.NodeExprs[i].AddConstant(sign*Deltas[i]);
-                // Add edges.
-                for (int j = 0; j < N; j++)
-                {
-                    if (Edges.EdgeExists(i, j)) m.NodeExprs[i].AddTerm(+sign, m.Edges[i + N*j]);
-                    if (Edges.EdgeExists(j, i)) m.NodeExprs[i].AddTerm(-sign, m.Edges[j + N*i]);
-                }
-                // Add storage.
+                // Update storage charge levels.
                 for (int k = 0; k < m.Storages.Count; k++)
                 {
-                    m.NodeExprs[i].AddTerm(sign, m.Storages[k][i]);
                     m.Storages[k][i].Set(GRB.DoubleAttr.LB, lowLimits[k][i]);
                     m.Storages[k][i].Set(GRB.DoubleAttr.UB, highLimits[k][i]);
                 }
-                if (ApplyNodeExprConstr) m.NodeExprConstrs[i] = m.Model.AddConstr(m.NodeExprs[i].GrbLinExpr, GRB.GREATER_EQUAL, 0, "const" + i);
+                // Update delta.
+                m.NodeExprConstrsPos[i].Set(GRB.DoubleAttr.RHS, Mismatches[i]);
+                m.NodeExprConstrsNeg[i].Set(GRB.DoubleAttr.RHS, -Mismatches[i]);
+                m.NodeExprs[i].AddConstant(Mismatches[i] - m.NodeExprs[i].Constant);
             }
+
+            m.Model.Update();
         }
 
         #region Setup
@@ -186,6 +177,8 @@ namespace BusinessLogic.Utils
                     m.StorageDummies[j][i] = m.Model.AddVar(-double.MaxValue, double.MaxValue, 0, Precision,
                         "storageDummy" + i + "level" + j);
                 }
+                // Add node exprs dummy.
+                m.NodeExprsDummies[i] = m.Model.AddVar(-double.MaxValue, double.MaxValue, 0, Precision, "nodeExprDummy" + i);
                 // Add edges.
                 for (int j = i; j < N; j++)
                 {
@@ -206,13 +199,44 @@ namespace BusinessLogic.Utils
                     var dummy = m.StorageDummies[j][i];
                     m.Model.AddConstr(dummy, GRB.GREATER_EQUAL, m.Storages[j][i],
                         "storageDummyConstPlus" + i + "level" + j);
-                    m.Model.AddConstr(dummy, GRB.GREATER_EQUAL, m.Storages[j][i],
+                    m.Model.AddConstr(dummy, GRB.GREATER_EQUAL, -m.Storages[j][i],
                         "storageDummyConstPlus" + i + "level" + j);
                 }
             }
 
+            // Setup nodal balancing objectives. 
+            for (int i = 0; i < N; i++)
+            {
+                m.NodeExprs[i] = NodeExpr(m, i, +1);
+                // Add node exprs constraints.
+                var pos = NodeExpr(m, i, +1);
+                var neg = NodeExpr(m, i, -1);
+                var dummy = m.NodeExprsDummies[i];
+                neg.Add(dummy);
+                m.NodeExprConstrsPos[i] = m.Model.AddConstr(neg, GRB.GREATER_EQUAL, 0, "nodeExprDummyConstPlus" + i);
+                pos.Add(dummy);
+                m.NodeExprConstrsNeg[i] = m.Model.AddConstr(pos, GRB.GREATER_EQUAL, 0, "nodeExprDummyConstMinus" + i);
+            }
+
             if (addConstrs != null) addConstrs(this);
             m.Model.Update();
+        }
+
+        private GRBLinExpr NodeExpr(MyModel model, int i, double sign)
+        {
+            var expr = new GRBLinExpr();
+            // Add edges.
+            for (int j = 0; j < N; j++)
+            {
+                if (Edges.EdgeExists(i, j)) expr.AddTerm(+sign, model.Edges[i + N * j]);
+                if (Edges.EdgeExists(j, i)) expr.AddTerm(-sign, model.Edges[j + N * i]);
+            }
+            // Add storage.
+            for (int k = 0; k < model.Storages.Count; k++)
+            {
+                expr.AddTerm(-sign, model.Storages[k][i]);
+            }
+            return expr;
         }
 
         /// <summary>
@@ -262,22 +286,34 @@ namespace BusinessLogic.Utils
 
         private GRBConstr _mSystemBalancingConstr;
         private GRBConstr[] _mNodalBalancingConstrs;
+        private List<GRBConstr> _mSystemStorageConstr;
+        private List<GRBConstr[]> _mNodalStorageConstrs;
 
         public void ApplySystemConstr()
         {
             GRBLinExpr sum = 0.0;
-            var valSum = 0.0;
-            foreach (var expr in Wrap.NodeExprs)
+            foreach (var dummy in Wrap.NodeExprsDummies)
             {
-                sum.Add(expr.GrbLinExpr);
-                valSum += expr.GrbLinExpr.Value;
+                sum.Add(dummy);
             }
-            _mSystemBalancingConstr = Wrap.Model.AddConstr(sum, GRB.EQUAL, valSum, "Optimal balance");
+            _mSystemBalancingConstr = Wrap.Model.AddConstr(sum, GRB.EQUAL, sum.Value, "Optimal balance");
+
+            _mSystemStorageConstr = new List<GRBConstr>(Wrap.Storages.Count);
+            for (int j = 0; j < Wrap.Storages.Count; j++)
+            {
+                sum = 0.0;
+                foreach (var dummy in Wrap.StorageDummies[j])
+                {
+                    sum.Add(dummy);
+                }
+                _mSystemStorageConstr.Add(Wrap.Model.AddConstr(sum, GRB.EQUAL, sum.Value, "Optimal storage balance " + j));
+            }
         }
 
         public void RemoveSystemConstr()
         {
             Wrap.Model.Remove(_mSystemBalancingConstr);
+            foreach (var constr in _mSystemStorageConstr) Wrap.Model.Remove(constr);
         }
 
         public void ApplyNodalConstrs()
@@ -285,14 +321,32 @@ namespace BusinessLogic.Utils
             _mNodalBalancingConstrs = new GRBConstr[N];
             for (int i = 0; i < Wrap.NodeExprs.Length; i++)
             {
-                _mNodalBalancingConstrs[i] = Wrap.Model.AddConstr(Wrap.NodeExprs[i].GrbLinExpr, GRB.EQUAL,
-                    Wrap.NodeExprs[i].GrbLinExpr.Value, "Optimal nodal balance " + i);
+                _mNodalBalancingConstrs[i] = Wrap.Model.AddConstr(Wrap.NodeExprs[i], GRB.EQUAL,
+                    Wrap.NodeExprs[i].Value, "Optimal nodal balance " + i);
+            }
+
+            _mNodalStorageConstrs = new List<GRBConstr[]>(Wrap.Storages.Count);
+            for (int j = 0; j < Wrap.Storages.Count; j++)
+            {
+                _mNodalStorageConstrs[j] = new GRBConstr[N];
+                for (int i = 0; i < Wrap.Storages[j].Length; i++)
+                {
+                    _mNodalStorageConstrs[j][i] = Wrap.Model.AddConstr(Wrap.Storages[j][i], GRB.EQUAL,
+                        Wrap.Storages[j][i].Get(GRB.DoubleAttr.X), "Optimal storage balance " + i + j);
+                }
             }
         }
 
         public void RemoveNodalConstrs()
         {
             foreach (var constr in _mNodalBalancingConstrs) Wrap.Model.Remove(constr);
+            foreach (var level in _mNodalStorageConstrs)
+            {
+                foreach (var constr in level)
+                {
+                    Wrap.Model.Remove(constr);
+                }   
+            }
         }
 
         #endregion
@@ -309,19 +363,25 @@ namespace BusinessLogic.Utils
         public List<GRBVar[]> Storages { get; set; }
         public List<GRBVar[]> StorageDummies { get; set; }
         // Nodal balancing expressions.
-        public MyLinExpr[] NodeExprs { get; set; }
+        //public MyLinExpr[] NodeExprs { get; set; }
+        public GRBLinExpr[] NodeExprs { get; set; }
+        public GRBVar[] NodeExprsDummies { get; set; }
         // Model constraints.
-        public GRBConstr[] NodeExprConstrs { get; set; }
+        public GRBConstr[] NodeExprConstrsPos { get; set; }
+        public GRBConstr[] NodeExprConstrsNeg { get; set; }
+
 
         public GRBModel Model { get; set; }
 
         public MyModel(GRBEnv env, int n, int m)
         {
             Model = new GRBModel(env);
-            
+
             Edges = new Dictionary<int, GRBVar>();
-            NodeExprConstrs = new GRBConstr[n];
-            NodeExprs = new MyLinExpr[n];
+            NodeExprConstrsPos = new GRBConstr[n];
+            NodeExprConstrsNeg = new GRBConstr[n];
+            NodeExprs = new GRBLinExpr[n];
+            NodeExprsDummies = new GRBVar[n]; ;
 
             Storages = new List<GRBVar[]>();
             StorageDummies = new List<GRBVar[]>();

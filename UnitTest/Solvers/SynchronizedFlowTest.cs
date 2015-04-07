@@ -68,16 +68,16 @@ namespace UnitTest
         {
             Costs.Unsafe = true;
             var nodes = SpawnNodes(ts);
-            var model = new NetworkModel(nodes, new UncSyncScheme(nodes, Edges(nodes), new double[nodes.Count].Ones()));
+            var model = new NetworkModel(nodes, new UncSyncScheme(nodes, Edges(nodes), new double[nodes.Length].Ones()));
             return new MockSimulationController(new SimulationCore(model))
             {
                 Ticks = ts[0].Count
             };
         }
 
-        private static List<INode> SpawnNodes(DenseTimeSeries[] ts)
+        private static CountryNode[] SpawnNodes(DenseTimeSeries[] ts)
         {
-            return new List<INode>
+            return new[]
             {
                 new CountryNode(new ReModel("Denmark", ts[1], ts[0], ts[0], ts[0])),
                 new CountryNode(new ReModel("Germany", ts[2], ts[0], ts[0], ts[0])),
@@ -100,7 +100,7 @@ namespace UnitTest
             };
         }
 
-        private static EdgeCollection Edges(List<INode> nodes)
+        private static EdgeCollection Edges(INode[] nodes)
         {
             var builder = new EdgeBuilder(nodes.Select(item => item.Name).ToArray());
             builder.Connect(0, 1);

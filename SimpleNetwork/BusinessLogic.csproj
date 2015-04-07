@@ -124,6 +124,7 @@
     <Compile Include="Cost\CostModels\IWindCostModel.cs" />
     <Compile Include="Cost\CostModels\VariableLengthModel.cs" />
     <Compile Include="ExportStrategies\ConLocalScheme.cs" />
+    <Compile Include="ExportStrategies\ConScheme.cs" />
     <Compile Include="ExportStrategies\ConSyncScheme.cs" />
     <Compile Include="ExportStrategies\EdgeCollection.cs" />
     <Compile Include="ExportStrategies\PhaseAngleFlow.cs" />
@@ -147,6 +148,7 @@
     <Compile Include="Storages\CompositeStorage.cs" />
     <Compile Include="Generators\HydroReservoirGenerator.cs" />
     <Compile Include="Storages\HydroReservoirStorage.cs" />
+    <Compile Include="Storages\SimpleHydroReservoirStorage.cs" />
     <Compile Include="Storages\StorageCollection.cs" />
     <Compile Include="Generators\ConstantGenerator.cs" />
     <Compile Include="Generators\RandomGenerator.cs" />
@@ -184,6 +186,7 @@
     <Compile Include="Utils\QuadFlowOptimizer.cs" />
     <Compile Include="Utils\LineEvaluator.cs" />
     <Compile Include="Utils\ParameterEvaluator.cs" />
+    <Compile Include="Utils\StorageMap.cs" />
     <Compile Include="Utils\Stuff.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -191,6 +191,10 @@ namespace BusinessLogic.Storages
 
         #endregion
 
+        public void TickChanged(int tick)
+        {
+            // Do nothing..
+        }
     }
 
 }

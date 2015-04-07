@@ -14,8 +14,9 @@ namespace BusinessLogic.Interfaces
         double Backup { get; }
 
         List<IGenerator> Generators { get; }
-        StorageCollection StorageCollection { get; }
+        List<IStorage> Storages { get; }
         Measureable Balancing { get; }
+        //StorageCollection StorageCollection { get; }
         //ITimeSeries LoadTimeSeries { get; }
     }
 }

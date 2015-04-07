@@ -33,7 +33,6 @@ namespace BusinessLogic.Utils
             _mCore = new CoreOptimizer(edges, m, BaseObjective, AddVars, AddConstrs)
             {
                 OnSolveCompleted = ExtractResultsFromModel,
-                ApplyNodeExprConstr = true
             };
 
             // So far, just track it all.
@@ -137,7 +136,7 @@ namespace BusinessLogic.Utils
 
         public double[] Deltas
         {
-            get { return _mCore.Deltas; }
+            get { return _mCore.Mismatches; }
         }
 
         public void SetNodes(double[] nodes, List<double[]> lowLimits, List<double[]> highLimits)

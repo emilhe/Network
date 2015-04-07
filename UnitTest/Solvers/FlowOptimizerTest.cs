@@ -58,7 +58,7 @@ namespace UnitTest
             var flowSum = 0.0;
             foreach (var flow in opt.Flows) flowSum += Math.Abs(flow);
             AreAlmostEqual(4, flowSum, FlowDelta*edges.NodeCount);
-            AreAlmostEqual(new double[] {2, 0, 0, 0}, opt.NodeOptima, FlowDelta);
+            AreAlmostEqual(new double[] {0, 0, 2, 0}, opt.NodeOptima, FlowDelta);
         }
 
         [Test]
@@ -91,11 +91,11 @@ namespace UnitTest
             var edges = builder.ToEdges();
             var opt = new LinearOptimizer(edges, 1);
             // Test that charging capacity limits are respected
-            opt.SetNodes(nodes, new List<double[]> {new double[] {0, -1}}, new List<double[]> {new double[] {0, 0}});
+            opt.SetNodes(nodes, new List<double[]> { new double[] { 0, 0 } }, new List<double[]> { new double[] { 0, 1 } });
             opt.Solve();
             AreAlmostEqual(new double[,] {{0, -2}, {0, 0}}, opt.Flows, FlowDelta);
             AreAlmostEqual(new double[] {0, 0}, opt.NodeOptima, FlowDelta*edges.NodeCount);
-            AreAlmostEqual(new double[] {0, -1}, opt.StorageOptima[0], FlowDelta*edges.NodeCount);
+            AreAlmostEqual(new double[] {0, 1}, opt.StorageOptima[0], FlowDelta*edges.NodeCount);
         }
 
         [Test]
@@ -108,11 +108,29 @@ namespace UnitTest
             var edges = builder.ToEdges();
             var opt = new LinearOptimizer(edges, 1);
             // Test the most basic test case.
-            opt.SetNodes(nodes, new List<double[]> {new[] {0.0, 0}}, new List<double[]> {new[] {0.0, 1}});
+            opt.SetNodes(nodes, new List<double[]> {new[] {0.0, -1}}, new List<double[]> {new[] {0.0, 0}});
             opt.Solve();
             AreAlmostEqual(new double[,] {{0, -2}, {0, 0}}, opt.Flows, FlowDelta);
             AreAlmostEqual(new double[] {0, 0}, opt.NodeOptima, FlowDelta*edges.NodeCount);
-            AreAlmostEqual(new double[] {0, 1}, opt.StorageOptima[0], FlowDelta*edges.NodeCount);
+            AreAlmostEqual(new double[] {0, -1}, opt.StorageOptima[0], FlowDelta*edges.NodeCount);
+        }
+
+        [Test]
+        public void StorageLevelTest()
+        {
+            var nodes = new double[] { 0, -3 };
+            var nodeNames = new[] { "Node1", "Node2" };
+            var builder = new EdgeBuilder(nodeNames);
+            builder.Connect(0, 1);
+            var edges = builder.ToEdges();
+            var opt = new LinearOptimizer(edges, 2);
+            // Test the most basic test case.
+            opt.SetNodes(nodes, new List<double[]> { new[] { -1.0, 0 }, new[] { -2.0, -2.0 }},new List<double[]> { new[] { 0.0, 0.0 }, new[] { 0.0, 0 }});
+            opt.Solve();
+            AreAlmostEqual(new double[,] { { 0, -1 }, { 0, 0 } }, opt.Flows, FlowDelta);
+            AreAlmostEqual(new double[] { 0, 0 }, opt.NodeOptima, FlowDelta * edges.NodeCount);
+            AreAlmostEqual(new double[] { -1, 0 }, opt.StorageOptima[0], FlowDelta * edges.NodeCount);
+            AreAlmostEqual(new double[] { 0, -2 }, opt.StorageOptima[1], FlowDelta * edges.NodeCount);
         }
 
         private static void AreAlmostEqual<T>(T expected, T result, double delta)

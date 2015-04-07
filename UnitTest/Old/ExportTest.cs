@@ -16,13 +16,13 @@ namespace UnitTest
     class ExportTest
     {
 
-        private List<CountryNode> _mNodes;
+         private CountryNode[] _mNodes;
 
         [Test]
         public void NoExportTest()
         {
             PreareNodesExcess();
-            var model = new NetworkModel(_mNodes, new NoExportScheme());
+            var model = new NetworkModel(_mNodes, new NoExportScheme(_mNodes));
             var simulation = new SimulationCore(model) {LogAllNodeProperties = true};
             simulation.Simulate(1);
             
@@ -94,12 +94,12 @@ namespace UnitTest
             var hy1 = new HydrogenStorage(1);
             var node0 = new CountryNode(new ReModel("Test0", ts0, tsDumb, tsDumb));
             var node1 = new CountryNode(new ReModel("Test1", ts1, tsDumb, tsDumb));
-            node0.StorageCollection.Add(ba0);
-            node0.StorageCollection.Add(hy0);
-            node1.StorageCollection.Add(ba1);
-            node1.StorageCollection.Add(hy1);
+            node0.Storages.Add(ba0);
+            node0.Storages.Add(hy0);
+            node1.Storages.Add(ba1);
+            node1.Storages.Add(hy1);
 
-            _mNodes = new List<CountryNode> { node0, node1 };
+            _mNodes = new[]{ node0, node1 };
         }
 
         private void PreareNodesLack()
@@ -116,12 +116,12 @@ namespace UnitTest
             var hy1 = new HydrogenStorage(1 , 1);
             var node0 = new CountryNode(new ReModel("Test0", ts0, tsDumb, tsDumb));
             var node1 = new CountryNode(new ReModel("Test1", ts1, tsDumb, tsDumb));
-            node0.StorageCollection.Add(ba0);
-            node0.StorageCollection.Add(hy0);
-            node1.StorageCollection.Add(ba1);
-            node1.StorageCollection.Add(hy1);
+            node0.Storages.Add(ba0);
+            node0.Storages.Add(hy0);
+            node1.Storages.Add(ba1);
+            node1.Storages.Add(hy1);
 
-            _mNodes = new List<CountryNode> {node0, node1};
+            _mNodes = new[] {node0, node1};
         }
 
         private double ReadParam(SimulationCore sim, string country, string type)

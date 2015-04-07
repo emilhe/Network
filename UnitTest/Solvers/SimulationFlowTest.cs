@@ -49,7 +49,7 @@ namespace UnitTest
             var node2 = new CountryNode(new ReModel("Germany", tsTwoLoad, tsDumb, tsDumb));
             node1.Generators.Add(genOne);
             node2.Generators.Add(genTwo);
-            var nodes = new List<CountryNode> { node1, node2 };
+            var nodes = new[] { node1, node2 };
             var edges = Stuff.StraightLine(nodes);
 
             // Run model.
@@ -96,7 +96,7 @@ namespace UnitTest
             RunNewModel(nodes, edges, 10, 8);
         }
 
-        private void RunModel(List<CountryNode> nodes, EdgeCollection edges, double expected, int steps)
+        private void RunModel(CountryNode[] nodes, EdgeCollection edges, double expected, int steps)
         {
             var model = new NetworkModel(nodes, new ConLocalScheme(nodes, edges));
             var simulation = new SimulationCore(model);
@@ -107,7 +107,7 @@ namespace UnitTest
             Assert.AreEqual(expected, capacity, 1e-6);
         }
 
-        private void RunNewModel(List<CountryNode> nodes, EdgeCollection edges, double expected, int steps)
+        private void RunNewModel(CountryNode[] nodes, EdgeCollection edges, double expected, int steps)
         {
             var model = new NetworkModel(nodes, new ConLocalScheme(nodes, edges));
             var simulation = new SimulationCore(model);

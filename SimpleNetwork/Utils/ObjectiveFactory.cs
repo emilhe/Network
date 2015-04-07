@@ -37,7 +37,8 @@ namespace BusinessLogic.Utils
         public static GRBLinExpr LinearBalancing(MyModel wrap)
         {
             GRBLinExpr objective = 0.0;
-            foreach (var expr in wrap.NodeExprs) objective.Add(expr.GrbLinExpr);
+            //foreach (var expr in wrap.NodeExprs) objective.Add(expr.GrbLinExpr);
+            foreach (var dummy in wrap.NodeExprsDummies) objective.Add(dummy);
 
             return objective;
         }
@@ -48,7 +49,7 @@ namespace BusinessLogic.Utils
         public static GRBQuadExpr QuadraticBalancing(MyModel wrap, double[] weights)
         {
             GRBQuadExpr objective = 0.0;
-            for (int i = 0; i < wrap.NodeExprs.Length; i++) objective.MultAdd(weights[i], wrap.NodeExprs[i].GrbQuadExpr);
+            for (int i = 0; i < wrap.NodeExprsDummies.Length; i++) objective.AddTerm(weights[i], wrap.NodeExprsDummies[i], wrap.NodeExprsDummies[i]);
 
             return objective;
         }

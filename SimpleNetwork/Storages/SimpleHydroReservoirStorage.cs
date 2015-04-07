@@ -1,25 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Utils;
 
 namespace BusinessLogic.Storages
 {
-    public class HydroReservoirStorage : IStorage
+    public class SimpleHydroReservoirStorage : IStorage
     {
 
         private readonly BasicStorage _mCore;
+        private readonly ITimeSeries _mInflowPattern;
+        private readonly double _mYearlyInflow;
 
-        public HydroReservoirStorage(BasicStorage core)
+        public SimpleHydroReservoirStorage(double resSize, ITimeSeries inflowPattern, double yearlyInflow)
         {
-            _mCore = core;
-        }
-
-        public List<ITimeSeries> CollectTimeSeries()
-        {
-            return ((IMeasureable) _mCore).CollectTimeSeries();
+            // Initial filling level is assumed = 70%
+            _mCore = new BasicStorage("Hydro reservoir", 1, resSize, 0.7*resSize);
+            _mInflowPattern = inflowPattern;
+            _mYearlyInflow = yearlyInflow;
         }
 
         public bool Measuring
@@ -29,17 +26,22 @@ namespace BusinessLogic.Storages
 
         public void Start(int ticks)
         {
-            ((IMeasureable)_mCore).Start(ticks);
+            ((IMeasureable) _mCore).Start(ticks);
         }
 
         public void Clear()
         {
-            _mCore.Clear();
+            ((IMeasureable) _mCore).Clear();
         }
 
         public void Sample(int tick)
         {
             ((IMeasureable) _mCore).Sample(tick);
+        }
+
+        public List<ITimeSeries> CollectTimeSeries()
+        {
+            return ((IMeasureable) _mCore).CollectTimeSeries();
         }
 
         public string Name
@@ -64,33 +66,27 @@ namespace BusinessLogic.Storages
 
         public double Inject(double amount)
         {
-            // It is NOT possible to discharge the reservoir; the generator is already at max.
-            if (amount < 0) return amount;
-            return ((IStorage)_mCore).Inject(amount);
+            return ((IStorage) _mCore).Inject(amount);
         }
 
         public double InjectMax(Response response)
         {
-            // It is NOT possible to discharge the reservoir; the generator is already at max.
-            if (response.Equals(Response.Discharge)) return 0;
-            return ((IStorage)_mCore).InjectMax(response);
+            return ((IStorage) _mCore).InjectMax(response);
         }
 
         public double RemainingEnergy(Response response)
         {
-            return ((IStorage)_mCore).RemainingEnergy(response);
+            return ((IStorage) _mCore).RemainingEnergy(response);
         }
 
         public double AvailableEnergy(Response response)
         {
-            // It is NOT possible to discharge the reservoir; the generator is already at max.
-            if (response.Equals(Response.Discharge)) return 0;
             return ((IStorage) _mCore).AvailableEnergy(response);
         }
 
         public void ResetEnergy()
         {
-            ((IStorage)_mCore).ResetEnergy();
+            ((IStorage) _mCore).ResetEnergy();
         }
 
         public double Capacity
@@ -101,7 +97,9 @@ namespace BusinessLogic.Storages
 
         public void TickChanged(int tick)
         {
-            ((ITickListener) _mCore).TickChanged(tick);
+            var weight = (_mInflowPattern == null)? 1.0/Stuff.HoursInYear : _mInflowPattern.GetValue(tick);
+            _mCore.Inject(weight*_mYearlyInflow);
         }
+
     }
 }

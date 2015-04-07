@@ -41,8 +41,8 @@ namespace Controls
 
         private IExportScheme MapExport(object selectedItem)
         {
-            if (selectedItem.Equals(ExportScheme.None.GetDescription())) 
-                return new NoExportScheme();
+            //if (selectedItem.Equals(ExportScheme.None.GetDescription())) 
+            //    return new NoExportScheme();
             //if (selectedItem.Equals(ExportScheme.Selfish.GetDescription()))
             //    return new SelfishExportStrategy(MapDistribution());
             //if (selectedItem.Equals(ExportScheme.Cooperative.GetDescription()))

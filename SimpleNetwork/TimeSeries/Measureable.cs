@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using BusinessLogic.Interfaces;
+using Utils;
 
 namespace BusinessLogic.TimeSeries
 {
@@ -7,10 +8,12 @@ namespace BusinessLogic.TimeSeries
     {
 
         public string Name { get; private set; }
-
+        public Dictionary<string, string> Properties { get; private set; }
+ 
         public Measureable(string name)
         {
             Name = name;
+            Properties = new Dictionary<string, string>();
         }
 
         public double CurrentValue { get; set; }
@@ -43,6 +46,7 @@ namespace BusinessLogic.TimeSeries
 
         public List<ITimeSeries> CollectTimeSeries()
         {
+            _mTimeSeries.Properties.AddAll(Properties);
             return new List<ITimeSeries> { _mTimeSeries };
         }
 
