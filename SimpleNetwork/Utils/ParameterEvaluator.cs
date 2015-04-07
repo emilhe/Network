@@ -407,7 +407,7 @@ namespace BusinessLogic.Utils
             else
             {   
                 // TODO: Make config a variable? For now, just use default...
-                var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Sync.txt");
+                var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Local.txt");
                 _mCore = new ModelYearCore(config);
             }
         }

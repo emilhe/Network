@@ -12,5 +12,7 @@ namespace Optimization
         T Add(double[] vec, double weight);
         double[] Delta(T other);
 
+        double[] GetVectorCopy();
+
     }
 }

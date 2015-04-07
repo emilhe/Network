@@ -195,7 +195,7 @@ namespace Main.Figures
             ctrl.ExportStrategies.Add(
                 new ExportSchemeInput()
                 {
-                    Scheme = ExportScheme.UnconstrainedSynchronized
+                    Scheme = ExportScheme.ConstrainedLocalized
                 });
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("Clean nodes", s =>
@@ -240,7 +240,7 @@ namespace Main.Figures
                         {"tc",CalculateTransmissionCapacity},
                     },data)
                 };
-                result.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha{0}to{1}Gamma{2}to{3}Sync.txt",aMin, aMax, gMin, gMax));
+                result.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha{0}to{1}Gamma{2}to{3}Local.txt",aMin, aMax, gMin, gMax));
             });
         }
 

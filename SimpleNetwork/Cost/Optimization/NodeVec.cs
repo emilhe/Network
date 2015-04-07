@@ -78,19 +78,17 @@ namespace BusinessLogic.Cost.Optimization
 
         public void UpdateCost(Func<ISolution, double> eval)
         {
-            if (!InvalidCost) return;
-            Cost = Validate(_mVector) ? eval(this) : 100.0;
-            InvalidCost = false;
+            throw new NotImplementedException();
         }
 
         public NodeVec Add(double[] vec, double weight)
         {
             var guess = _mVector.Copy().Add(vec, weight);
-            while (!Validate(guess))
-            {
-                weight = weight/2.0;
-                guess = _mVector.Copy().Add(vec, weight);
-            }
+            //while (!Validate(guess))
+            //{
+            //    weight = weight/2.0;
+            //    guess = _mVector.Copy().Add(vec, weight);
+            //}
             return new NodeVec(guess);
         }
 
@@ -104,18 +102,45 @@ namespace BusinessLogic.Cost.Optimization
             return _mVector.Copy();
         }
 
-        private static bool Validate(double[] vector)
+        public void Normalize()
         {
-            var n = Labels.Count;
-            // Enforce alpha constraints.
-            for (int i = n; i < 2 * n; i++)
+            var n = NodeVec.Labels.Count;
+            // Calculte new effective gamma.
+            var wind = 0.0;
+            var solar = 0.0;
+            for (int i = 0; i < n; i++)
             {
-                if (vector[i] < GenePool.AlphaMin) vector[i] = GenePool.AlphaMin;
-                if (vector[i] > GenePool.AlphaMax) vector[i] = GenePool.AlphaMax;
+                var load = CountryInfo.GetMeanLoad(NodeVec.Labels[i]);
+                wind += _mVector[i] * load * _mVector[i + n];
+                solar += _mVector[i] * load * (1 - _mVector[i + n]);
             }
-            // Try to do renormalization.
-            return GenePool.Renormalize(vector);
+            var effGamma = (wind + solar) / CountryInfo.GetMeanLoadSum();
+            _mVector.Mult(1.0/effGamma);
+            //var n = Labels.Count;
+            //for (int i = 0; i < n; i++)
+            //{
+            //    if (_mVector[i] < GenePool.GammaMin) _mVector[i] = GenePool.GammaMin;
+            //    if (_mVector[i] > GenePool.GammaMax) _mVector[i] = GenePool.GammaMax;
+            //}
+            //for (int i = n; i < 2 * n; i++)
+            //{
+            //    if (_mVector[i] < GenePool.AlphaMin) _mVector[i] = GenePool.AlphaMin;
+            //    if (_mVector[i] > GenePool.AlphaMax) _mVector[i] = GenePool.AlphaMax;
+            //}
         }
+
+        //public bool Validate()
+        //{
+        //    var n = Labels.Count;
+        //    // Enforce alpha constraints.
+        //    for (int i = n; i < 2 * n; i++)
+        //    {
+        //        if (_mVector[i] < GenePool.AlphaMin) _mVector[i] = GenePool.AlphaMin;
+        //        if (_mVector[i] > GenePool.AlphaMax) _mVector[i] = GenePool.AlphaMax;
+        //    }
+        //    // Try to do renormalization.
+        //    return GenePool.Renormalize(_mVector);
+        //}
 
     }
 }
