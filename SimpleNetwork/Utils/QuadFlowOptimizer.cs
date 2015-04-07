@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.Interfaces;
 using Gurobi;
+using Utils;
 
 namespace BusinessLogic.Utils
 {
@@ -70,7 +71,13 @@ namespace BusinessLogic.Utils
             }
             if (status == GRB.Status.NUMERIC)
             {
-                throw new ArgumentException("Gurobi had numerical difficulties...");
+                NodeOptima.Fill(i => Deltas[i]);
+                Flows.Fill(0);
+                foreach (var opt in StorageOptima) opt.Fill(0);
+                Deltas.ToJsonFile(string.Format(@"C:\proto\GUROBI_PROBLEM_{0}.txt", DateTime.Now.Millisecond));
+                Console.WriteLine("Gurobi had numerical difficulties. No flows were assumed.");
+                return;
+                //throw new ArgumentException("Gurobi had numerical difficulties...");
             }
             if (status != GRB.Status.OPTIMAL && status != GRB.Status.SUBOPTIMAL)
             {
