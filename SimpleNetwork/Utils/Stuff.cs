@@ -16,10 +16,10 @@ namespace BusinessLogic.Utils
         public static int HoursInYear = 8766;
         //public static int HoursInYear = 8760;
 
-        public static EdgeCollection StraightLine(List<CountryNode> nodes)
+        public static EdgeCollection StraightLine(CountryNode[] nodes)
         {
             var builder = new EdgeBuilder(nodes.Select(item => item.Name).ToArray());
-            for (int i = 0; i < nodes.Count - 1; i++)
+            for (int i = 0; i < nodes.Length - 1; i++)
             {
                 builder.Connect(i, i + 1);
             }
@@ -48,11 +48,11 @@ namespace BusinessLogic.Utils
         }
 
         // Delta weights - so far ONLY using one year
-        public static double[] DeltaWeights(List<CountryNode> nodes, NodeGenes genes)
+        public static double[] DeltaWeights(CountryNode[] nodes, NodeGenes genes)
         {
-            var weights = new double[nodes.Count];
+            var weights = new double[nodes.Length];
 
-            for (int j = 0; j < nodes.Count; j++)
+            for (int j = 0; j < nodes.Length; j++)
             {
                 var node = nodes[j];
                 node.Model.Gamma = genes[node.Name].Gamma;

@@ -131,12 +131,11 @@ namespace Main
             (new NodeChromosome(optimum)).Genes.ToJsonFile(@"C:\proto\simplex.txt");
         }
 
-        public static void Sequential(int k, string tag = "", ParallelNodeCostCalculator calc = null)
+        public static void Sequential(int k, string tag = "", ParallelNodeCostCalculator calc = null, NodeChromosome seed = null)
         {
 
-            //var seed = new NodeChromosome(new NodeGenes(1, 1));
-            var seed = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\localK=2solar50pct.txt")));
-            //GenePool.ApplyOffshoreFraction(seed.Genes);
+            if(seed == null) seed = new NodeChromosome(new NodeGenes(1, 1));
+            GenePool.ApplyOffshoreFraction(seed.Genes);
             GenePool.K = k;
             if (calc == null)
             {

@@ -94,9 +94,9 @@ namespace UnitTest
             return new ParameterEvaluator(new SimpleCore(ctrl, 1, nodes));
         }
 
-        private static List<CountryNode> SpawnNodes(DenseTimeSeries[] ts)
+        private static CountryNode[] SpawnNodes(DenseTimeSeries[] ts)
         {
-            return new List<CountryNode>
+            return new[]
             {
                 new CountryNode(new ReModel("Denmark", ts[1], ts[0], ts[0], ts[0])),
                 new CountryNode(new ReModel("Germany", ts[2], ts[0], ts[0], ts[0])),
@@ -119,7 +119,7 @@ namespace UnitTest
             };
         }
 
-        private static EdgeCollection Edges(List<CountryNode> nodes)
+        private static EdgeCollection Edges(CountryNode[] nodes)
         {
             var builder = new EdgeBuilder(nodes.Select(item => item.Name).ToArray());
             builder.Connect(0, 1);

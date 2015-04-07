@@ -121,6 +121,10 @@ namespace BusinessLogic.Storages
             get { return _mCompositeStorage.Capacity; }
         }
 
+        public void TickChanged(int tick)
+        {
+            _mCompositeStorage.TickChanged(tick);
+        }
     }
 
 }

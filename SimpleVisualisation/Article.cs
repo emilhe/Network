@@ -21,26 +21,29 @@ namespace Main
             //    Optimization.Sequential(k, tag);
             //}
 
-            //// Offshore fraction optimizations.
+            // Offshore fraction optimizations.
+            for (var k = 1; k < 4; k++)
+            {
+                tag = "offshore25pct";
+                var seed = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\seqK={0}localized.txt",k)));                
+                GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.25);
+                Optimization.Sequential(k, tag, null, seed);
+
+                tag = "offshore50pct";
+                seed = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\localK={0}offshore25pct.txt", k)));                                
+                GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.50);
+                Optimization.Sequential(k, tag, null, seed);
+            }
+            GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0);
+
+            //// Reduced solar cost optimizations
             //for (var k = 1; k < 4; k++)
             //{
-            //    tag = "offshore25pct";
-            //    GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.25);
-            //    Optimization.Sequential(k, tag);
-            //    tag = "offshore50pct";
-            //    GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.50);
-            //    Optimization.Sequential(k, tag);
+            //    tag = "solar50pct";
+            //    Optimization.Sequential(k, tag, new ParallelNodeCostCalculator {SolarCostModel = new ScaledSolarCostModel(0.50)});
+            //    tag = "solar25pct";
+            //    Optimization.Sequential(k, tag, new ParallelNodeCostCalculator {SolarCostModel = new ScaledSolarCostModel(0.25)});
             //}
-            //GenePool.OffshoreFractions = null;
-
-            // Reduced solar cost optimizations
-            for (var k = 3; k < 4; k++)
-            {
-                tag = "solar50pct";
-                Optimization.Sequential(k, tag, new ParallelNodeCostCalculator {SolarCostModel = new ScaledSolarCostModel(0.50)});
-                tag = "solar25pct";
-                Optimization.Sequential(k, tag, new ParallelNodeCostCalculator {SolarCostModel = new ScaledSolarCostModel(0.25)});
-            }
 
 
         }

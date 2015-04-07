@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic;
+using BusinessLogic.Cost;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
@@ -19,24 +20,40 @@ namespace Main.Configurations
 
         public static void ShowTimeSeris(MainForm main)
         {
-            var ctrl = new SimulationController { InvalidateCache = true };
-            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.ISET, Offset = 0, Length = 1 });
+            var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Local.txt");
+            var core = new ModelYearCore(config);
+            //var param = new ParameterEvaluator(core);
+            //var calc = new NodeCostCalculator(param);
+            //var mCf = new NodeGenes(1, 1);
+            //Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
+
+            var ctrl = (core.BeController as SimulationController); // new SimulationController(); 
+            ctrl.InvalidateCache = true;
+            ctrl.NodeFuncs.Clear();
+            ctrl.NodeFuncs.Add("hydro storage", input =>
+            {
+                var nodes = ConfigurationUtils.CreateNodes();
+                //ConfigurationUtils.SetupHydroStorage(nodes);
+                ConfigurationUtils.SetupHomoStuff(nodes, 1, true, true, false);
+                return nodes;
+            });
+            ctrl.LogFlows = true;
+            ctrl.LogAllNodeProperties = true;
+            ctrl.ExportStrategies.Clear();
             ctrl.ExportStrategies.Add(new ExportSchemeInput
             {
-                Scheme = ExportScheme.ConstrainedLocalized,
+                Scheme = ExportScheme.UnconstrainedSynchronized
             });
+            ctrl.Sources.Clear();
+            ctrl.Sources.Add(new TsSourceInput { Length = 8, Offset = 0 });
 
-            var data = ctrl.EvaluateTs(1.029, 0.65);
+            var param = new ParameterEvaluator(core);
+            var calc = new NodeCostCalculator(param);
+            var mCf = new NodeGenes(0.56, 1.03);
+            Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
+            ctrl.InvalidateCache = false;
 
-            foreach (var item in data)
-            {
-                foreach (var ts in item.TimeSeries)
-                {
-                    ts.Properties.Add("ExportScheme", ((ExportScheme)Byte.Parse(item.Properties["ExportScheme"])).GetDescription());
-                    ts.DisplayProperties.Add("ExportScheme");
-                }
-            }
-
+            var data = ctrl.EvaluateTs(0.56, 1.03);
             main.DisplayTimeSeries().SetData(data.SelectMany(item => item.TimeSeries).ToList());
         }
 
@@ -215,7 +232,7 @@ namespace Main.Configurations
             LineEvaluator.EvalSimulation(lineParams, simulation, 8);
         }
 
-        public static SimulationCore Optimization(List<CountryNode> nodes)
+        public static SimulationCore Optimization(CountryNode[] nodes)
         {
             //var opt = new MixOptimizer(nodes);
             //opt.OptimizeIndividually();
@@ -276,6 +293,35 @@ namespace Main.Configurations
         }
 
         #endregion
+
+        class MockSimulationController : ISimulationController
+        {
+
+            public List<SimulationOutput> Results { get; set; } 
+
+            public bool CacheEnabled
+            {
+                get { throw new NotImplementedException(); }
+                set { throw new NotImplementedException(); }
+            }
+
+            public bool InvalidateCache
+            {
+                get { throw new NotImplementedException(); }
+                set { throw new NotImplementedException(); }
+            }
+
+            public List<SimulationOutput> EvaluateTs(NodeGenes genes)
+            {
+                return Results;
+            }
+
+            public List<SimulationOutput> EvaluateTs(double penetration, double mixing)
+            {
+                return Results;
+            }
+
+        }
 
     }
 }

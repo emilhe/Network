@@ -347,6 +347,14 @@ namespace Utils
 
         #endregion
 
+        public static void AddAll<TKey,TValue>(this Dictionary<TKey, TValue> dict, Dictionary<TKey, TValue> other)
+        {
+            foreach (var pair in other)
+            {
+                dict.Add(pair.Key, pair.Value);
+            }
+        }
+
     }
 }
 

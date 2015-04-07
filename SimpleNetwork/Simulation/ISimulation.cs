@@ -6,7 +6,7 @@ namespace BusinessLogic.Simulation
     public interface ISimulation
     {
 
-        IList<INode> Nodes { get; set; }
+        INode[] Nodes { get; set; }
         IFailureStrategy FailureStrategy { get; set; }
         IExportScheme ExportScheme { get; set; }
 

@@ -17,26 +17,17 @@ namespace BusinessLogic.ExportStrategies
         private readonly LinearOptimizer _mOptimizer;
         private readonly EdgeCollection _mEdges;
         private readonly PhaseAngleFlow _mFlow;
+        private readonly INode[] _mNodes;
 
-        private IList<INode> _mNodes;
         private double[] _mMismatches;
         private double[] _mInjections;
         private double[] _mFlows;
 
-        #region REHINK THIS PART
-
-        //private Response _mSystemResponse;
         //private readonly double[] _mLoLims;
         //private readonly double[] _mHiLims;
         //private readonly double[,] _mFlows;
 
-        // TODO: Remove HACK
-        public UncLocalScheme(List<CountryNode> nodes, EdgeCollection edges)
-            : this(nodes.Select(item => (INode) item).ToList(), edges)
-        {
-        }
-
-        public UncLocalScheme(IList<INode> nodes, EdgeCollection edges)
+        public UncLocalScheme(INode[] nodes, EdgeCollection edges, double[] weights = null)
         {
             _mNodes = nodes;
             _mEdges = edges;
@@ -44,11 +35,8 @@ namespace BusinessLogic.ExportStrategies
             _mOptimizer = new LinearOptimizer(edges, 0); // HERE NO STORAGE IS ASSUMED!!
         }
 
-        #endregion
-
-        public void Bind(IList<INode> nodes, double[] mismatches)
+        public void Bind(double[] mismatches)
         {
-            _mNodes = nodes;
             _mMismatches = mismatches;
             _mInjections = new double[mismatches.Length];
         }
@@ -58,7 +46,7 @@ namespace BusinessLogic.ExportStrategies
             // Do balancing.
             _mOptimizer.SetNodes(_mMismatches, null, null);
             _mOptimizer.Solve();
-            for (int i = 0; i < _mNodes.Count; i++)
+            for (int i = 0; i < _mNodes.Length; i++)
             {
                 _mNodes[i].Balancing.CurrentValue = _mOptimizer.NodeOptima[i];
                 _mInjections[i] = _mOptimizer.NodeOptima[i] - _mMismatches[i];

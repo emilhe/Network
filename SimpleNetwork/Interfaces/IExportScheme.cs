@@ -7,7 +7,7 @@ namespace BusinessLogic.Interfaces
     public interface IExportScheme : IMeasureable
     {
 
-        void Bind(IList<INode> nodes, double[] mismatches);
+        void Bind(double[] mismatches);
         void BalanceSystem();
 
     }
