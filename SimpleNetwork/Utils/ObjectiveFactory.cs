@@ -8,7 +8,7 @@ using Gurobi;
 
 namespace BusinessLogic.Utils
 {
-    static class ObjectiveFactory
+    public static class ObjectiveFactory
     {
 
         /// <summary>

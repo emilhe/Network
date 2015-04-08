@@ -12,18 +12,10 @@ namespace BusinessLogic.ExportStrategies
     {
 
         private readonly IExportScheme _mCore;
-        private const double BalanceWeight = 1e6;
 
         public ConLocalScheme(INode[] nodes, EdgeCollection edges)
         {
-            var core = new CoreOptimizer(edges, nodes[0].Storages.Count, item =>
-            {
-                var obj = new GRBLinExpr();
-                obj.MultAdd(BalanceWeight, ObjectiveFactory.LinearBalancing(item));
-                return obj;
-            });
-            var optimizer = new QuadFlowOptimizer(core, core.ApplySystemConstr, core.RemoveSystemConstr);
-            _mCore = new ConScheme(nodes, edges, optimizer);
+            _mCore = new ConScheme(nodes, edges, new ConLocalOptimizer(edges, nodes[0].Storages.Count));
         }
 
         #region Delegation

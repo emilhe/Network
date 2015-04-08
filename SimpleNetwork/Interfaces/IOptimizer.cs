@@ -12,6 +12,7 @@ namespace BusinessLogic.Interfaces
     {
 
         double[] NodeOptima { get; }
+        double[,] Flows { get; }
         List<double[]> StorageOptima { get; }
 
         void SetNodes(double[] nodes, List<double[]> lowLimits, List<double[]> highLimits);

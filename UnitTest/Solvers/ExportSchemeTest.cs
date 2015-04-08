@@ -89,24 +89,24 @@ namespace UnitTest
             Assert.AreEqual(cost["Fuel"], 10.3439799184806, delta);
         }
 
-        [Test]
-        public void UnconstrainedLocalized()
-        {
-            var uncLocal = new SimulationController();
-            uncLocal.ExportStrategies.Add(new ExportSchemeInput
-            {
-                Scheme = ExportScheme.UnconstrainedLocalized
-            });
-            var ctrls = new[] { uncLocal };
-            // Common setup.
-            var nodes = ConfigurationUtils.CreateNodes(TsSource.ISET, 0);
-            CommonSetup(ctrls, nodes);
-            var cost = GetDetailedSystemCosts(ctrls[0], nodes);
-            // Assertions.
-            Assert.AreEqual(cost["Transmission"], 5.46017035325324, delta);
-            Assert.AreEqual(cost["Backup"], 7.20753402651722, delta);
-            Assert.AreEqual(cost["Fuel"], 10.3439799184806, delta);
-        }
+        //[Test]
+        //public void UnconstrainedLocalized()
+        //{
+        //    var uncLocal = new SimulationController();
+        //    uncLocal.ExportStrategies.Add(new ExportSchemeInput
+        //    {
+        //        Scheme = ExportScheme.UnconstrainedLocalized
+        //    });
+        //    var ctrls = new[] { uncLocal };
+        //    // Common setup.
+        //    var nodes = ConfigurationUtils.CreateNodes(TsSource.ISET, 0);
+        //    CommonSetup(ctrls, nodes);
+        //    var cost = GetDetailedSystemCosts(ctrls[0], nodes);
+        //    // Assertions.
+        //    Assert.AreEqual(cost["Transmission"], 5.46017035325324, delta);
+        //    Assert.AreEqual(cost["Backup"], 7.20753402651722, delta);
+        //    Assert.AreEqual(cost["Fuel"], 10.3439799184806, delta);
+        //}
 
         [Test]
         public void ConstrainedLocalized()

@@ -11,7 +11,7 @@ using Utils;
 
 namespace BusinessLogic.Utils
 {
-    class QuadFlowOptimizer : IOptimizer
+    public class QuadFlowOptimizer : IOptimizer
     {
 
         public bool ExtractFlows { get; set; }
@@ -23,16 +23,16 @@ namespace BusinessLogic.Utils
 
         private readonly CoreOptimizer _mCore;
         private readonly GRBQuadExpr _mFlowObjective;
-        private readonly Action _mApplyConstr;
-        private readonly Action _mRemoveConstr; 
 
-        public QuadFlowOptimizer(CoreOptimizer core, Action applyConstr, Action removeConstr)
+        public Action ApplyConstr;
+        public Action RemoveConstr;
+        public Action SetTmpTol; 
+
+        public QuadFlowOptimizer(CoreOptimizer core)
         {
             _mCore = core;
             core.OnSolveCompleted = SolveQuadratic;
             _mFlowObjective = ObjectiveFactory.SquaredFlow(_mCore.Edges, Wrap);
-            _mRemoveConstr = removeConstr;
-            _mApplyConstr = applyConstr;
 
             // Setup data structures.
             Flows = new double[N, N];
@@ -48,7 +48,7 @@ namespace BusinessLogic.Utils
         private void SolveQuadratic()
         {
             // Add new constraints.
-            _mApplyConstr();
+            if(ApplyConstr != null) ApplyConstr();
             // Set new balancing objective and optimize.
             _mCore.Wrap.Model.SetObjective(_mFlowObjective);
             _mCore.Wrap.Model.Update();
@@ -56,14 +56,14 @@ namespace BusinessLogic.Utils
             // Extract results.
             ExtractResultsFromModel();
             // Remove new constraints.
-            _mRemoveConstr();
+            if (RemoveConstr != null) RemoveConstr();
 
             if (OnSolveCompleted != null) OnSolveCompleted();
         }
 
         private void ExtractResultsFromModel()
         {
-            int status = _mCore.Wrap.Model.Get(GRB.IntAttr.Status);
+            var status = _mCore.Wrap.Model.Get(GRB.IntAttr.Status);
             if (status == GRB.Status.INFEASIBLE)
             {
                 _mCore.Wrap.Model.ComputeIIS();
@@ -71,9 +71,14 @@ namespace BusinessLogic.Utils
             }
             if (status == GRB.Status.NUMERIC)
             {
-                _mCore.SetTmpTol(1);
-                _mCore.Wrap.Model.Optimize();
-                status = _mCore.Wrap.Model.Get(GRB.IntAttr.Status);
+                // Try increasing the tolerance if possible.
+                if (SetTmpTol != null)
+                {
+                    SetTmpTol();
+                    _mCore.Wrap.Model.Optimize();
+                    status = _mCore.Wrap.Model.Get(GRB.IntAttr.Status);   
+                }
+                // In cause of failure, no flows are assumed.
                 if (status == GRB.Status.NUMERIC)
                 {
                     Console.WriteLine("Gurobi had numerical difficulties. Untable to fix. No flows were assumed.");

@@ -19,7 +19,6 @@ namespace BusinessLogic.ExportStrategies
     {
 
         private readonly IExportScheme _mCore;
-        private const double BalanceWeight = 1e6;
 
         public ConSyncScheme(INode[] nodes, EdgeCollection edges)
         {
@@ -27,14 +26,7 @@ namespace BusinessLogic.ExportStrategies
             var weights = nodes.Select(node => 1.0 / CountryInfo.GetMeanLoad(node.Name)).ToArray();
             weights.Mult(1.0 / weights.Sum());
 
-            var core = new CoreOptimizer(edges, nodes[0].Storages.Count, item =>
-            {
-                var obj = new GRBQuadExpr();
-                obj.MultAdd(BalanceWeight, ObjectiveFactory.QuadraticBalancing(item, weights));
-                return obj;
-            });
-            var optimizer = new QuadFlowOptimizer(core, core.ApplyNodalConstrs, core.RemoveNodalConstrs);
-            _mCore = new ConScheme(nodes, edges, optimizer);
+            _mCore = new ConScheme(nodes, edges, new ConSyncOptimizer(edges, nodes[0].Storages.Count, weights));
         }
 
         #region Delegation

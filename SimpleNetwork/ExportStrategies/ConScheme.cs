@@ -13,14 +13,14 @@ namespace BusinessLogic.ExportStrategies
     class ConScheme : IExportScheme
     {
 
-        private readonly QuadFlowOptimizer _mOptimizer;
+        private readonly IOptimizer _mOptimizer;
         private readonly EdgeCollection _mEdges;
         private readonly INode[] _mNodes;
         private readonly StorageMap _mMap;
 
         private double[] _mMismatches;
 
-        public ConScheme(INode[] nodes, EdgeCollection edges, QuadFlowOptimizer optimizer)
+        public ConScheme(INode[] nodes, EdgeCollection edges, IOptimizer optimizer)
         {
             _mNodes = nodes;
             _mEdges = edges;

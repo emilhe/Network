@@ -11,7 +11,7 @@ namespace UnitTest
     public class FlowOptimizerTest
     {
 
-        private const double FlowDelta = 1e-4;
+        private const double FlowDelta = 1e-3;
 
         [Test]
         public void TwoNodeTest()
@@ -21,7 +21,7 @@ namespace UnitTest
             var builder = new EdgeBuilder(nodeNames);
             builder.Connect(0, 1);
             var edges = builder.ToEdges();
-            var opt = new LinearOptimizer(edges, 0);
+            var opt = new ConLocalOptimizer(edges, 0);
             // Test the most basic test case.
             opt.SetNodes(nodes, new List<double[]>(), new List<double[]>());
             opt.Solve();
@@ -51,13 +51,13 @@ namespace UnitTest
             builder.Connect(1, 3);
             builder.Connect(2, 3);
             var edges = builder.ToEdges();
-            var opt = new LinearOptimizer(edges, 0);
+            var opt = new ConLocalOptimizer(edges, 0);
             // Test that the minimum flow is realised.
             opt.SetNodes(nodes, null, null);
             opt.Solve();
             var flowSum = 0.0;
             foreach (var flow in opt.Flows) flowSum += Math.Abs(flow);
-            AreAlmostEqual(4, flowSum, FlowDelta*edges.NodeCount);
+            AreAlmostEqual(4.5, flowSum, FlowDelta*edges.NodeCount);
             AreAlmostEqual(new double[] {0, 0, 2, 0}, opt.NodeOptima, FlowDelta);
         }
 
@@ -71,7 +71,7 @@ namespace UnitTest
             builder.Connect(0, 2);
             builder.Connect(2, 3);
             var edges = builder.ToEdges();
-            var opt = new LinearOptimizer(edges, 0);
+            var opt = new ConLocalOptimizer(edges, 0);
             // Test that the minimum flow is realised.
             opt.SetNodes(nodes, null, null);
             opt.Solve();
@@ -89,7 +89,7 @@ namespace UnitTest
             var builder = new EdgeBuilder(nodeNames);
             builder.Connect(0, 1);
             var edges = builder.ToEdges();
-            var opt = new LinearOptimizer(edges, 1);
+            var opt = new ConLocalOptimizer(edges, 1);
             // Test that charging capacity limits are respected
             opt.SetNodes(nodes, new List<double[]> { new double[] { 0, 0 } }, new List<double[]> { new double[] { 0, 1 } });
             opt.Solve();
@@ -106,7 +106,7 @@ namespace UnitTest
             var builder = new EdgeBuilder(nodeNames);
             builder.Connect(0, 1);
             var edges = builder.ToEdges();
-            var opt = new LinearOptimizer(edges, 1);
+            var opt = new ConLocalOptimizer(edges, 1);
             // Test the most basic test case.
             opt.SetNodes(nodes, new List<double[]> {new[] {0.0, -1}}, new List<double[]> {new[] {0.0, 0}});
             opt.Solve();
@@ -123,7 +123,7 @@ namespace UnitTest
             var builder = new EdgeBuilder(nodeNames);
             builder.Connect(0, 1);
             var edges = builder.ToEdges();
-            var opt = new LinearOptimizer(edges, 2);
+            var opt = new ConLocalOptimizer(edges, 2);
             // Test the most basic test case.
             opt.SetNodes(nodes, new List<double[]> { new[] { -1.0, 0 }, new[] { -2.0, -2.0 }},new List<double[]> { new[] { 0.0, 0.0 }, new[] { 0.0, 0 }});
             opt.Solve();

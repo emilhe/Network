@@ -30,7 +30,7 @@ namespace SimpleImporter
     {
         [Description("No Export")] None = 0,
         [Description("Unconstrained synchronized")] UnconstrainedSynchronized = 1,
-        [Description("Unconstrained localized")] UnconstrainedLocalized = 2,
+        //[Description("Unconstrained localized")] UnconstrainedLocalized = 2,
         [Description("Constrained synchronized")] ConstrainedSynchronized = 3,
         [Description("Constrained localized")] ConstrainedLocalized = 4,
     }

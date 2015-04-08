@@ -16,6 +16,12 @@ namespace BusinessLogic.Utils
         public bool ExtractStorageOptima { get; set; }
 
         public double[] NodeOptima { get; private set; }
+
+        public double[,] Flows
+        {
+            get { throw new NotImplementedException(); }
+        }
+
         public List<double[]> StorageOptima { get; private set; }
 
         public char Precision = GRB.CONTINUOUS;
@@ -32,8 +38,6 @@ namespace BusinessLogic.Utils
 
         #endregion
 
-
-
         #region Delegation
 
         public Action OnSolveCompleted { private get; set; }
@@ -43,7 +47,8 @@ namespace BusinessLogic.Utils
 
         #region Objective weights
 
-        private readonly double _mStorageWeight = 10;
+        private const double BalanceWeight = 1e6;
+        private const double StorageWeight = 10;
 
         #endregion
 
@@ -54,18 +59,17 @@ namespace BusinessLogic.Utils
         /// </summary>
         /// <param name="n"> problem size (number of nodes) </param>
         /// <param name="m"> number of storage levels </param>
-        public CoreOptimizer(EdgeCollection edges, int m, Func<MyModel, GRBExpr> baseObjFunc, Action<CoreOptimizer> addVars = null, Action<CoreOptimizer> addConstrs = null)
+        public CoreOptimizer(EdgeCollection edges, int m, Func<MyModel, GRBExpr> baseObjFunc)
         {
             _mEnv = new GRBEnv();
             _mEnv.Set(GRB.IntParam.LogToConsole, 0);
-            //_mEnv.Set(GRB.DoubleParam.FeasibilityTol, Delta);
             _mBaseObjFunc = baseObjFunc;
 
             Edges = edges;
             N = edges.NodeCount;
             M = m;
             Wrap = new MyModel(_mEnv, N, m);
-            SetupVariables(Wrap, addVars, addConstrs);
+            SetupVariables(Wrap);
 
             NodeOptima = new double[N];
             StorageOptima = new List<double[]>();
@@ -167,7 +171,7 @@ namespace BusinessLogic.Utils
         /// <summary>
         /// Set variables (when edges change).
         /// </summary>
-        private void SetupVariables(MyModel m, Action<CoreOptimizer> addVars, Action<CoreOptimizer> addConstrs)
+        private void SetupVariables(MyModel m)
         {
             for (int i = 0; i < N; i++)
             {
@@ -189,8 +193,6 @@ namespace BusinessLogic.Utils
                     m.Edges.Add(i + j*N, m.Model.AddVar(-cap, cap, 0, Precision, "edge" + i + j));
                 }
             }
-
-            if (addVars != null) addVars(this);
             m.Model.Update();
 
             // Add storage dummy varaible constraints.
@@ -219,8 +221,6 @@ namespace BusinessLogic.Utils
                 pos.Add(dummy);
                 m.NodeExprConstrsNeg[i] = m.Model.AddConstr(pos, GRB.GREATER_EQUAL, 0, "nodeExprDummyConstMinus" + i);
             }
-
-            if (addConstrs != null) addConstrs(this);
             m.Model.Update();
         }
 
@@ -247,10 +247,11 @@ namespace BusinessLogic.Utils
         private void PrepareObjective()
         {
             var baseObj = _mBaseObjFunc(Wrap);
-
+            
             if (baseObj is GRBLinExpr)
             {
-                var linObj = baseObj as GRBLinExpr;
+                var linObj = new GRBLinExpr();
+                linObj.MultAdd(BalanceWeight, baseObj as GRBLinExpr);
                 linObj.Add(StorageObjective());
                 Wrap.Model.SetObjective(linObj, GRB.MINIMIZE);
                 return;
@@ -258,7 +259,8 @@ namespace BusinessLogic.Utils
 
             if (baseObj is GRBQuadExpr)
             {
-                var quadObj = baseObj as GRBQuadExpr;
+                var quadObj = new GRBQuadExpr();
+                quadObj.MultAdd(BalanceWeight, baseObj as GRBQuadExpr);
                 quadObj.Add(StorageObjective());
                 Wrap.Model.SetObjective(quadObj, GRB.MINIMIZE);
                 return;
@@ -277,90 +279,9 @@ namespace BusinessLogic.Utils
             for (int i = 0; i < Wrap.StorageDummies.Count; i++)
             {
                 var level = Wrap.StorageDummies[i];
-                foreach (var dummy in level) linExpr.AddTerm((i + 1)*_mStorageWeight, dummy);
+                foreach (var dummy in level) linExpr.AddTerm((i + 1)*StorageWeight, dummy);
             }
             return linExpr.GrbLinExpr;
-        }
-
-        #endregion
-
-        #region Balancing constraints
-
-        private GRBConstr _mSystemBalancingConstr;
-        private GRBConstr[] _mNodalBalancingConstrs;
-        private List<GRBConstr> _mSystemStorageConstr;
-        private List<GRBConstr[]> _mNodalStorageConstrs;
-
-
-        public void ApplySystemConstr()
-        {
-            GRBLinExpr sum = 0.0;
-            foreach (var dummy in Wrap.NodeExprsDummies)
-            {
-                sum.Add(dummy);
-            }
-            _mSystemBalancingConstr = Wrap.Model.AddConstr(sum, GRB.LESS_EQUAL, sum.Value + Tol, "Optimal balance");
-
-            _mSystemStorageConstr = new List<GRBConstr>(Wrap.Storages.Count);
-            for (int j = 0; j < Wrap.Storages.Count; j++)
-            {
-                sum = 0.0;
-                foreach (var dummy in Wrap.StorageDummies[j])
-                {
-                    sum.Add(dummy);
-                }
-                _mSystemStorageConstr.Add(Wrap.Model.AddConstr(sum, GRB.LESS_EQUAL, sum.Value + Tol,
-                    "Optimal storage balance " + j));
-            }
-        }
-
-        public void RemoveSystemConstr()
-        {
-            Wrap.Model.Remove(_mSystemBalancingConstr);
-            foreach (var constr in _mSystemStorageConstr) Wrap.Model.Remove(constr);
-        }
-
-        public void SetTmpTol(double tmpTol)
-        {
-            var rhs = _mSystemBalancingConstr.Get(GRB.DoubleAttr.RHS) - Tol + tmpTol;
-            Wrap.Model.Remove(_mSystemBalancingConstr);
-            GRBLinExpr sum = 0.0;
-            foreach (var dummy in Wrap.NodeExprsDummies) sum.Add(dummy);
-            _mSystemBalancingConstr = Wrap.Model.AddConstr(sum, GRB.LESS_EQUAL, rhs, "Optimal balance");
-            Wrap.Model.Update();
-        }
-
-        public void ApplyNodalConstrs()
-        {
-            _mNodalBalancingConstrs = new GRBConstr[N];
-            for (int i = 0; i < Wrap.NodeExprs.Length; i++)
-            {
-                _mNodalBalancingConstrs[i] = Wrap.Model.AddConstr(Wrap.NodeExprs[i], GRB.EQUAL,
-                    Wrap.NodeExprs[i].Value, "Optimal nodal balance " + i);
-            }
-
-            _mNodalStorageConstrs = new List<GRBConstr[]>(Wrap.Storages.Count);
-            for (int j = 0; j < Wrap.Storages.Count; j++)
-            {
-                _mNodalStorageConstrs[j] = new GRBConstr[N];
-                for (int i = 0; i < Wrap.Storages[j].Length; i++)
-                {
-                    _mNodalStorageConstrs[j][i] = Wrap.Model.AddConstr(Wrap.Storages[j][i], GRB.EQUAL,
-                        Wrap.Storages[j][i].Get(GRB.DoubleAttr.X), "Optimal storage balance " + i + j);
-                }
-            }
-        }
-
-        public void RemoveNodalConstrs()
-        {
-            foreach (var constr in _mNodalBalancingConstrs) Wrap.Model.Remove(constr);
-            foreach (var level in _mNodalStorageConstrs)
-            {
-                foreach (var constr in level)
-                {
-                    Wrap.Model.Remove(constr);
-                }   
-            }
         }
 
         #endregion
