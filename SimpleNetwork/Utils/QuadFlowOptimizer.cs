@@ -71,13 +71,19 @@ namespace BusinessLogic.Utils
             }
             if (status == GRB.Status.NUMERIC)
             {
-                NodeOptima.Fill(i => Deltas[i]);
-                Flows.Fill(0);
-                foreach (var opt in StorageOptima) opt.Fill(0);
-                Deltas.ToJsonFile(string.Format(@"C:\proto\GUROBI_PROBLEM_{0}.txt", DateTime.Now.Millisecond));
-                Console.WriteLine("Gurobi had numerical difficulties. No flows were assumed.");
-                return;
-                //throw new ArgumentException("Gurobi had numerical difficulties...");
+                _mCore.SetTmpTol(1);
+                _mCore.Wrap.Model.Optimize();
+                status = _mCore.Wrap.Model.Get(GRB.IntAttr.Status);
+                if (status == GRB.Status.NUMERIC)
+                {
+                    Console.WriteLine("Gurobi had numerical difficulties. Untable to fix. No flows were assumed.");
+                    NodeOptima.Fill(i => Deltas[i]);
+                    Flows.Fill(0);
+                    foreach (var opt in StorageOptima) opt.Fill(0);
+                    Deltas.ToJsonFile(string.Format(@"C:\proto\GUROBI_PROBLEM_{0}.txt", DateTime.Now.Millisecond));
+                    return;
+                }
+                Console.WriteLine("Gurobi had numerical difficulties. Fixed by increased tolerance.");
             }
             if (status != GRB.Status.OPTIMAL && status != GRB.Status.SUBOPTIMAL)
             {

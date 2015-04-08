@@ -18,9 +18,9 @@ namespace BusinessLogic.Utils
         public double[] NodeOptima { get; private set; }
         public List<double[]> StorageOptima { get; private set; }
 
-        public double Delta = 1e-6;
         public char Precision = GRB.CONTINUOUS;
         public bool DebugLog = false;
+        public double Tol { get; set; }
 
         public EdgeCollection Edges { get; private set; }
         public double[] Mismatches { get; private set; }
@@ -31,6 +31,8 @@ namespace BusinessLogic.Utils
         public MyModel Wrap { get; private set; }
 
         #endregion
+
+
 
         #region Delegation
 
@@ -289,6 +291,7 @@ namespace BusinessLogic.Utils
         private List<GRBConstr> _mSystemStorageConstr;
         private List<GRBConstr[]> _mNodalStorageConstrs;
 
+
         public void ApplySystemConstr()
         {
             GRBLinExpr sum = 0.0;
@@ -296,7 +299,7 @@ namespace BusinessLogic.Utils
             {
                 sum.Add(dummy);
             }
-            _mSystemBalancingConstr = Wrap.Model.AddConstr(sum, GRB.EQUAL, sum.Value, "Optimal balance");
+            _mSystemBalancingConstr = Wrap.Model.AddConstr(sum, GRB.LESS_EQUAL, sum.Value + Tol, "Optimal balance");
 
             _mSystemStorageConstr = new List<GRBConstr>(Wrap.Storages.Count);
             for (int j = 0; j < Wrap.Storages.Count; j++)
@@ -306,7 +309,8 @@ namespace BusinessLogic.Utils
                 {
                     sum.Add(dummy);
                 }
-                _mSystemStorageConstr.Add(Wrap.Model.AddConstr(sum, GRB.EQUAL, sum.Value, "Optimal storage balance " + j));
+                _mSystemStorageConstr.Add(Wrap.Model.AddConstr(sum, GRB.LESS_EQUAL, sum.Value + Tol,
+                    "Optimal storage balance " + j));
             }
         }
 
@@ -314,6 +318,16 @@ namespace BusinessLogic.Utils
         {
             Wrap.Model.Remove(_mSystemBalancingConstr);
             foreach (var constr in _mSystemStorageConstr) Wrap.Model.Remove(constr);
+        }
+
+        public void SetTmpTol(double tmpTol)
+        {
+            var rhs = _mSystemBalancingConstr.Get(GRB.DoubleAttr.RHS) - Tol + tmpTol;
+            Wrap.Model.Remove(_mSystemBalancingConstr);
+            GRBLinExpr sum = 0.0;
+            foreach (var dummy in Wrap.NodeExprsDummies) sum.Add(dummy);
+            _mSystemBalancingConstr = Wrap.Model.AddConstr(sum, GRB.LESS_EQUAL, rhs, "Optimal balance");
+            Wrap.Model.Update();
         }
 
         public void ApplyNodalConstrs()

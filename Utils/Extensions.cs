@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
-using MathNet.Numerics.LinearAlgebra.Generic;
 using Newtonsoft.Json;
 
 namespace Utils
@@ -111,13 +111,13 @@ namespace Utils
         public static Matrix<double> PseudoInverse(this Matrix<double> A)
         {
             var evd = A.Evd();
-            var D = evd.D();
+            var D = evd.D;
             var Dplus = new DenseMatrix(D.RowCount, D.ColumnCount);
             for (int i = 0; i < D.RowCount; i++)
             {
                 Dplus[i, i] = (D[i, i] < 1e-6) ? 0 : 1.0/D[i, i];
             }
-            var V = evd.EigenVectors();
+            var V = evd.EigenVectors;
             return V.Multiply(Dplus.Multiply(V.Transpose()));
         }
 

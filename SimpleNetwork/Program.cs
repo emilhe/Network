@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.Utils;
-using MathNet.Numerics.Distributions;
-using SimpleImporter;
-using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.LinearAlgebra.Complex;
-using MathNet.Numerics.LinearAlgebra.Generic;
-using Utils;
-using DenseMatrix = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix;
 
 namespace BusinessLogic
 {

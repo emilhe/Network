@@ -58,8 +58,6 @@ namespace Main
             Console.WriteLine("Overview done...");
             //Figures.PlayGround.ExportCostDetailsData(ks);
             Console.WriteLine("Cost done...");
-            Figures.PlayGround.ExportCostNoTransDetailsData(ks);
-            Console.WriteLine("Cost no trans done...");
             Figures.PlayGround.ExportSolarCostAnalysisData(ks);
             Console.WriteLine("Solar done...");
             Figures.PlayGround.ExportOffshoreCostAnalysisData(ks);
