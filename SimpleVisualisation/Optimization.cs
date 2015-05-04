@@ -237,8 +237,8 @@ namespace Main
             {
                 _mCalc = calc;
 
-                AbsTol = 1e-2;
-                StepMin = 0.01;
+                AbsTol = 5e-3;
+                StepMin = 0.005;
                 StepMax = 1;
 
                 LimTol = 1e-3;
@@ -265,7 +265,11 @@ namespace Main
                             alphaProgress = Step((a, b) => StepAlphaDown(a, b, _mStep), (a, b) => StepAlphaUp(a, b, _mStep));
                         }
 
-                        if (GenePool.GammaMin == GenePool.GammaMax) continue;
+                        if (GenePool.GammaMin == GenePool.GammaMax)
+                        {
+                            gammaProgress = false;
+                            continue;
+                        }
                         if (!gammaProgress) continue;
                         gammaProgress = Step((a, b) => StepGammaDown(a, b, _mStep), (a, b) => StepGammaUp(a, b, _mStep));
                     }
