@@ -465,4 +465,16 @@ namespace Utils
             return MeanLoad;
         }
     }
+
+    public class HydroInfo
+    {
+        // Reservoir capacity in TWh
+        public double ReservoirCapacity { get; set; }
+        // Total hydro capacity in GW
+        public double Capacity { get; set; }
+        // Pumped hydro capacity in GW
+        public double PumpCapacity { get; set; }
+        // Inflow pattern; average daily inflow in GWh
+        public double[] InflowPattern { get; set; }
+    }
 }
