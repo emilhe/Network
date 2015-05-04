@@ -36,7 +36,7 @@ namespace BusinessLogic.Cost
         {
             // Calculate cost elements.
             var costs = new Dictionary<string, double>();
-            if (includeTransmission) costs.Add("Transmission", TransmissionCapacityCost(nodeGenes));
+            if (includeTransmission) costs.Add("Transmission", TcCostModel.Eval(Evaluator.LinkCapacities(nodeGenes)));
             foreach (var cost in BaseCosts(nodeGenes)) costs.Add(cost.Key, cost.Value);
             foreach (var cost in BackupCosts(nodeGenes)) costs.Add(cost.Key, cost.Value);
             // Scale costs to get LCOE.
@@ -56,15 +56,15 @@ namespace BusinessLogic.Cost
 
             if (includeTransmission)
             {
-                var tc = TransmissionCapacityCost(nodeGenes);
-                parameterOverview.Add("TC", tc / avgLoad);
-                costs += tc;
+                var tc = Evaluator.LinkCapacities(nodeGenes);
+                parameterOverview.Add("TC", tc.Select(item => Costs.LinkLength[item.Key]*item.Value).Sum()/avgLoad);
+                costs += TcCostModel.Eval(tc);
             }
             var be = Evaluator.BackupEnergy(nodeGenes);
             costs += BcCostModel.BackupEnergyCost(be);
             var bc = Evaluator.BackupCapacity(nodeGenes);
             costs += BcCostModel.BackupCapacityCost(bc);
-            parameterOverview.Add("BE", be / (avgLoad * Utils.Stuff.HoursInYear));
+            parameterOverview.Add("BE", be / (avgLoad * Stuff.HoursInYear));
             parameterOverview.Add("BC", bc / avgLoad);
             parameterOverview.Add("CF", Evaluator.CapacityFactor(nodeGenes));
             var scaling = Evaluator.Nodes.Select(item => item.Model.AvgLoad).Sum() * Utils.Stuff.HoursInYear * Costs.AnnualizationFactor(Lifetime);
@@ -80,7 +80,7 @@ namespace BusinessLogic.Cost
         {
             // Calculate cost elements.
             var cost = BaseCosts(nodeGenes).Values.Sum() + BackupCosts(nodeGenes).Values.Sum();
-            if (includeTransmission) cost += TransmissionCapacityCost(nodeGenes);
+            if (includeTransmission) cost += TcCostModel.Eval(Evaluator.LinkCapacities(nodeGenes));
             // Scale costs to get LCOE.
             var scaling = Evaluator.Nodes.Select(item => item.Model.AvgLoad).Sum() * Stuff.HoursInYear * Costs.AnnualizationFactor(Lifetime);
 
@@ -90,12 +90,6 @@ namespace BusinessLogic.Cost
         #endregion
 
         #region Cost calculations
-
-        // Cost of transmission network.
-        private double TransmissionCapacityCost(NodeGenes nodeGenes)
-        {
-            return TcCostModel.Eval(Evaluator.LinkCapacities(nodeGenes));
-        }
 
         // Cost of wind/solar facilities.
         private Dictionary<string, double> BaseCosts(NodeGenes nodeGenes)

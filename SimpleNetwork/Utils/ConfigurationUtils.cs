@@ -117,19 +117,20 @@ namespace BusinessLogic.Utils
 
         #region Storage/backup - scaled distributions
 
-        public static void SetupHomoStuff(CountryNode[] nodes, int years, bool bat, bool storage, bool backup)
+        public static void SetupHomoStuff(CountryNode[] nodes, int years, bool bat, bool storage, bool backup, double batCap = 5)
         {
-            SetupStuff(nodes, years, bat, storage, backup, LoadScaling(nodes));
+            SetupStuff(nodes, years, bat, storage, backup, LoadScaling(nodes), batCap);
         }
 
-        public static void SetupStuff(CountryNode[] nodes, int years, bool bat, bool storage, bool backup, Dictionary<string, double> scaling)
+        public static void SetupStuff(CountryNode[] nodes, int years, bool bat, bool storage, bool backup, Dictionary<string, double> scaling, double batCap = 5)
         {
             foreach (var node in nodes)
             {
                 var scale = scaling[node.Name];
+                var hour = nodes.Select(item => item.Model.AvgLoad).Sum();
 
-                if (bat) node.Storages.Add(new BatteryStorage(2200 * scale, 2200 * scale));
-                if (storage) node.Storages.Add(new HydrogenStorage(25000 * scale, 25000 * scale));
+                if (bat) node.Storages.Add(new BatteryStorage(batCap * hour * scale, batCap * hour * scale));
+                if (storage) node.Storages.Add(new HydrogenStorage(35 * hour * scale, 35* hour * scale));
                 if (backup) node.Storages.Add(new BasicBackup("Hydro-bio backup", (150000 * years) * scale));
             }
         }
@@ -156,6 +157,23 @@ namespace BusinessLogic.Utils
         public static void SetupHeterogeneousStorage(CountryNode[] nodes, int years)
         {
             SetupHydrogenStorage(nodes, years, HeterogeneousStorageScaling(nodes));
+        }
+
+         public static void SetupTradeWindHydro(CountryNode[] nodes)
+        {
+            // Create storages.
+            foreach (var node in nodes)
+            {
+                var found = CountryInfo.Inflow.ContainsKey(node.Name);
+                if(!found) Console.WriteLine(node.Name);
+                var res = found ? CountryInfo.ReservoirCapacities[node.Name] : 0;
+                var cap = found? CountryInfo.HydroCapacities[node.Name] : 0;
+                var pump = found? CountryInfo.PumpCapacities[node.Name] : 0;
+                var inflow = found? CountryInfo.Inflow[node.Name] : 0;
+                var hydro = new HydroReservoirGenerator(res, cap, pump, inflow, null);
+                node.Storages.Add(hydro.InverseGenerator);
+                node.Storages.Add(hydro.Pump);
+            }
         }
 
         #region Scalings
@@ -283,7 +301,7 @@ namespace BusinessLogic.Utils
             //{
             //    Capacity = generatorCapacity
             //};
-            //countryNode.Storages.Add(new HydroReservoirStorage(internalReservoir));
+            //countryNode.Storages.Add(new VirtualStorage(internalReservoir));
             //countryNode.Generators.Add(new HydroReservoirGenerator(yearlyInflow, inflowPattern, internalReservoir));
         }
 

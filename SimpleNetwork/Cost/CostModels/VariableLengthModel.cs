@@ -8,9 +8,18 @@ namespace BusinessLogic.Cost.Transmission
 
     public class VariableLengthModel : ITransmissionCostModel
     {
+
+        public double Scale { get; set; }
+
+        public VariableLengthModel()
+        {
+            Scale = 0.5;
+            //Scale = 1;
+        }
+
         public double Eval(Dictionary<string, double> transmissionMap)
         {
-            return transmissionMap.Sum(link => link.Value * GetLinkCost(link.Key));
+            return transmissionMap.Sum(link => link.Value * GetLinkCost(link.Key) * Scale);
         }
 
         /// <summary>

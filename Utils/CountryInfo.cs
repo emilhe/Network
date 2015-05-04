@@ -245,6 +245,126 @@ namespace Utils
 
         #endregion
 
+        #region Tradewind hydro mappings
+
+        public static Dictionary<string, double> ReservoirCapacities = new Dictionary<string, double>
+        {
+            // Data source: Tradewind (total reservoir capacity in TWh, 2005)
+            {"Germany", 0.30},
+            {"Belgium", 0.03},
+            {"Luxemborg", 0.03},
+            {"France", 9.80},
+            {"Switzerland", 8.60},
+            {"Italy", 7.90},
+            {"Austria", 3.20},
+            {"Spain", 18.40},
+            {"Norway", 82.00},
+            {"Sweden", 28.00},
+            {"Czech Republic", 0.54},
+            {"Slovenia", 0},
+            {"Greece", 2.40},
+            {"Great Britain", 1.20},
+            {"Portugal", 2.60},
+            {"Croatia", 1.44},
+            {"Serbia", 2.00},
+            {"Romania", 4.30},
+            {"Bulgaria", 0.98},
+            {"Bosnia", 1.44},
+            {"Slovakia", 0.63},
+            {"Poland", 0.41},
+            {"Finland", 5.00},
+            {"Ireland", 0.24}
+        };
+
+        public static Dictionary<string, double> PumpCapacities = new Dictionary<string, double>
+        {
+            // Data source: Tradewind (pump capacity in GW, 2005)
+            {"Germany", 3.8},
+            {"Belgium", 1.3},
+            {"Luxemborg", 1.1},
+            {"France", 4.3},
+            {"Switzerland", 1.6},
+            {"Italy", 4.2},
+            {"Austria", 2.9},
+            {"Spain", 3.3},
+            {"Norway", 0},
+            {"Sweden", 0},
+            {"Czech Republic", 1.1},
+            {"Slovenia", 0},
+            {"Greece", 0.7},
+            {"Great Britain", 2.8},
+            {"Portugal", 0.8},
+            {"Croatia", 0},
+            {"Serbia", 0},
+            {"Romania", 0},
+            {"Bulgaria", 0.6},
+            {"Bosnia", 0},
+            {"Slovakia", 0.9},
+            {"Poland", 1.70},
+            {"Finland", 0},
+            {"Ireland", 0.30}
+        };
+
+        public static Dictionary<string, double> HydroCapacities = new Dictionary<string, double>
+        {
+            // Data source: Tradewind (output capacity in GW, 2005)
+            {"Germany", 8.7},
+            {"Belgium", 1.4},
+            {"Luxemborg", 1.1},
+            {"France", 25.5},
+            {"Switzerland", 13.3},
+            {"Italy", 21},
+            {"Austria", 12},
+            {"Spain", 18},
+            {"Norway", 28},
+            {"Sweden", 16},
+            {"Czech Republic", 2.1},
+            {"Slovenia", 0.9},
+            {"Greece", 3},
+            {"Great Britain", 4.3},
+            {"Portugal", 5},
+            {"Croatia", 2},
+            {"Serbia", 3.5},
+            {"Romania", 6},
+            {"Bulgaria", 2.8},
+            {"Bosnia", 2},
+            {"Slovakia", 2.4},
+            {"Poland", 2.23},
+            {"Finland", 3},
+            {"Ireland", 0.5}
+        };
+
+        public static Dictionary<string, double> Inflow = new Dictionary<string, double>
+        {
+            // Data source: Tradewind (inflow in TWh/year, 2005)
+            {"Germany", 16.8},
+            {"Belgium", 0},
+            {"Luxemborg", 0},
+            {"France", 55},
+            {"Switzerland", 30.4},
+            {"Italy", 35.5},
+            {"Austria", 31.5},
+            {"Spain", 24.8},
+            {"Norway", 136},
+            {"Sweden", 72.6},
+            {"Czech Republic", 2.5},
+            {"Slovenia", 3.1},
+            {"Greece", 6},
+            {"Great Britain", 5},
+            {"Portugal", 10.6},
+            {"Croatia", 6},
+            {"Serbia", 11.8},
+            {"Romania", 17.9},
+            {"Bulgaria", 4.1},
+            {"Bosnia", 6},
+            {"Slovakia", 4.2},
+            {"Poland", 1.7},
+            {"Finland", 13.6},
+            {"Ireland", 1}
+        };
+
+        #endregion
+
         public static List<string> GetCountries()
         {
             return CountryCodeMapName.Keys.ToList();

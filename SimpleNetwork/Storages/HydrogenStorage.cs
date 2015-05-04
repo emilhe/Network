@@ -14,7 +14,7 @@ namespace BusinessLogic.Storages
 
         public HydrogenStorage(double capacity, double initalCapacity = 0)
         {
-            _mCore = new BasicStorage("Hydrogen storage", 0.6, capacity, initalCapacity);
+            _mCore = new BasicStorage("Hydrogen storage", 0.7071067811865475, capacity, initalCapacity); // Eff = sqrt(0.5)
         }
 
         public void Sample(int tick)

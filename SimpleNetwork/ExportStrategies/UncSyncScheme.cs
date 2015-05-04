@@ -5,6 +5,8 @@ using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
 using BusinessLogic.TimeSeries;
 using BusinessLogic.Utils;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
 using Utils;
 
 namespace BusinessLogic.ExportStrategies
@@ -14,6 +16,9 @@ namespace BusinessLogic.ExportStrategies
     /// </summary>
     public class UncSyncScheme: IExportScheme
     {
+
+        private int N;
+        private int I;
 
         private readonly EdgeCollection _mEdges;
         private readonly PhaseAngleFlow _mFlow;
@@ -25,25 +30,26 @@ namespace BusinessLogic.ExportStrategies
         private double[] _mInjections;
         private double[] _mFlows;
 
+        private DiagonalMatrix a;
+        private DenseMatrix w;
+
         public UncSyncScheme(INode[] nodes, EdgeCollection edges, double[] weights = null)
         {
             _mNodes = nodes;
             _mEdges = edges;
             _mFlow = new PhaseAngleFlow(_mEdges.IncidenceMatrix);
-
-            if (weights != null)
-            {
-                _mBalProjVec = weights;
-                return;
-            }
+            N = _mNodes.Length;
+            I = _mNodes[0].Storages.Count;
 
             // Balancing projection vector.
-            _mBalProjVec = _mNodes.Select(node => CountryInfo.GetMeanLoad(node.Name)).ToArray().Norm();
-            // Storage projection vector(s).
-            _mStoProjVec = new List<double[]>(_mNodes[0].Storages.Count);
-            for (int i = 0; i < _mNodes[0].Storages.Count; i++)
+            _mBalProjVec = weights ?? _mNodes.Select(node => CountryInfo.GetMeanLoad(node.Name)).ToArray().Norm();
+            // Storage projection matrix.
+            if (I == 0) return;
+            a = new DiagonalMatrix(I, I);
+            w = new DenseMatrix(N, I);
+            for (int i = 0; i < I; i++)
             {
-                _mStoProjVec.Add(_mNodes.Select(node => node.Storages[i].NominalEnergy).ToArray().Norm());
+                w.SetColumn(i, _mNodes.Select(node => node.Storages[i].NominalEnergy).ToArray().Norm());
             }
         }
 
@@ -55,29 +61,48 @@ namespace BusinessLogic.ExportStrategies
 
         public void BalanceSystem()
         {
-            // Consider storage.
-            var toBalance = _mMismatches.Sum();
-            _mInjections.Fill(0);
-            for (int i = 0; i < _mNodes[0].Storages.Count; i++)
-            {
-                var proj = _mStoProjVec[i];
-                for (int j = 0; j < _mNodes.Length; j++)
-                {
-                    var balanced = (proj[j]*toBalance - _mNodes[j].Storages[i].Inject(proj[j]*toBalance));
-                    _mInjections[j] += balanced;
-                }
-                toBalance = _mMismatches.Sum() - _mInjections.Sum();
-            }
+            var remaining = _mMismatches.Sum();
+            if (I > 0) remaining = ApplyStorage(remaining);     
             // Dump the rest in the balancing vector.
             for (int i = 0; i < _mNodes.Length; i++)
             {
-                var nodalBalance = toBalance*_mBalProjVec[i];
-                _mInjections[i] += nodalBalance - _mMismatches[i];
+                var nodalBalance = remaining*_mBalProjVec[i];
+                _mMismatches[i] -= nodalBalance;
                 _mNodes[i].Balancing.CurrentValue = nodalBalance;
-                _mMismatches[i] = 0;
             }
             // Calculate flows (make optional?).
-            _mFlows = _mFlow.CalculateFlows(_mInjections);
+            _mFlows = _mFlow.CalculateFlows(_mMismatches);
+            //_mMismatches.Fill(0);
+        }
+
+        private double ApplyStorage(double remaining)
+        {
+            var resp = (remaining > 0) ? Response.Charge : Response.Discharge;
+            // Update a(t) vector.
+            for (int i = 0; i < I; i++)
+            {
+                // Are we done?
+                if (Math.Abs(remaining) < 1e-6)
+                {
+                    a[i, i] = 0;
+                    continue;
+                }
+                // Determine coefficient.
+                var capacity = _mNodes.Select(item => item.Storages[i].AvailableEnergy(resp)).Sum();
+                a[i, i] = (remaining > 0) ? Math.Min(remaining, capacity) : Math.Max(remaining, capacity);
+                remaining -= a[i, i];
+            }
+            // Calculate S and inject.
+            var s = w * a;
+            for (int i = 0; i < N; i++)
+            {
+                for (int j = 0; j < I; j++)
+                {
+                    _mMismatches[i] -= s[i, j];
+                    _mNodes[i].Storages[j].Inject(s[i, j]);
+                }
+            }
+            return remaining;
         }
 
         #region Measurement

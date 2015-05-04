@@ -5,6 +5,7 @@ using System.Linq;
 using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
 using BusinessLogic.Cost.Transmission;
+using BusinessLogic.Simulation;
 using BusinessLogic.Utils;
 using Controls;
 using Controls.Article;
@@ -24,8 +25,8 @@ namespace Main.Figures
         public const string SolarCost25PctOptimumPath = @"C:\proto\localK={0}solar25pct.txt";
         public const string SolarCost50PctOptimumPath = @"C:\proto\localK={0}solar50pct.txt";
 
-        public const string Offshore25PctOptimumPath = @"C:\proto\VE50cukooK={0}@offshore25pct.txt";
-        public const string Offshore50PctOptimumPath = @"C:\proto\VE50cukooK={0}@offshore50pct.txt";
+        public const string Offshore25PctOptimumPath = @"C:\proto\localK={0}offshore25pct.txt";
+        public const string Offshore50PctOptimumPath = @"C:\proto\localK={0}offshore50pct.txt";
 
         #region Data export to JSON for external rendering
 
@@ -84,11 +85,12 @@ namespace Main.Figures
         public static void ExportParameterOverviewData(List<double> kValues)
         {
             var costCalc = new ParallelNodeCostCalculator { CacheEnabled = true, Full = true };
+
             var data = CalcBetaCurves(kValues, 0.0,
                 genes => genes.Select(item => item.Alpha).ToArray(),
-                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes, true)));
+                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes, true)),  @"C:\proto\localK={0}sync.txt");
 
-            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\data.txt");
+            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\dataSync.txt");
         }
 
         public static void ExportCostDetailsData(List<double> kValues)
@@ -264,9 +266,54 @@ namespace Main.Figures
 
         #endregion
 
+        #region New data
+
+        public static void ExportParameterOverviewData6hStorage(List<double> kValues)
+        {
+            var costCalc = new ParallelNodeCostCalculator();
+            // Build custom core to use storage.
+            costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupHomoStuff(nodes, 32, true, false, false);
+                return nodes;
+            }, "10h storage sync")));
+            // Evaluate data.
+            var data = CalcBetaCurves(kValues, 0.0,
+                genes => genes.Select(item => item.Alpha).ToArray(),
+                genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes, true)), @"C:\proto\localK={0}sync10h.txt");
+
+            data.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\data10hStorageSync.txt");
+        }
+
+        /// <summary>
+        /// Transmission sensitivity analysis.
+        /// </summary>
+        public static void ExportTcCalcAnalysisData6hStorage()
+        {
+            var evaluator = new ParameterEvaluator(new FullCore(32, () =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupHomoStuff(nodes, 32, true, false, false);
+                return nodes;
+            }, "6h storage")) {CacheEnabled = true};
+
+            for (int k = 1; k < 4; k++)
+            {
+                // What genes?
+                var genes = NodeGenesFactory.SpawnCfMax(0, 1, k);
+                var capacities = evaluator.LinkCapacities(genes);
+                var links = capacities.Select(MapLink);
+                links.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\Python\transmission\cfMaxK={0}6hLINKSalpha0.txt", k));
+            }
+
+        }
+
         #endregion
 
-        private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes[], double[]> evalX, Func<NodeGenes[], Dictionary<string, double>[]> evalY, string optPath = DefaultOptimumPath)
+        #endregion
+
+        private static Dictionary<string, Dictionary<double, BetaWrapper>> CalcBetaCurves(List<double> kValues, double alphaStart, Func<NodeGenes[], double[]> evalX, Func<NodeGenes[], Dictionary<string, double>[]> evalY, string optPath = DefaultOptimumPath, bool skipPoints = false)
         {
             // Prepare the data structures.
             var alphaRes = 15;
@@ -293,13 +340,12 @@ namespace Main.Figures
                     betaGenes[i + j * (alphaRes + 1)] = NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]);
                     cfMaxGenes[i + j * (alphaRes + 1)] = NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]);
                 }
+                if (skipPoints) continue;
                 optGenes[j] = FileUtils.FromJsonFile<NodeGenes>(
                     string.Format(optPath,
                         kValues[j]));
             }
             // Do evaluation.
-            var optXValues = evalX(optGenes);
-            var optYValues = evalY(optGenes);
             var xValues = evalX(betaGenes);
             var betaValues = evalY(betaGenes);
             var cfMaxValues = evalY(cfMaxGenes);
@@ -332,12 +378,18 @@ namespace Main.Figures
                         data[pair.Key][kValues[j]].MaxCfX[i] = xValue;
                     }
                 }
-                var optXValue = optXValues[j];
-                var optYValue = optYValues[j];
-                foreach (var pair in optYValue)
+                // Should the optimum point be included?
+                if (!skipPoints)
                 {
-                    data[pair.Key][kValues[j]].GeneticX = optXValue;
-                    data[pair.Key][kValues[j]].GeneticY = pair.Value;
+                    var optXValues = evalX(optGenes);
+                    var optYValues = evalY(optGenes);
+                    var optXValue = optXValues[j];
+                    var optYValue = optYValues[j];
+                    foreach (var pair in optYValue)
+                    {
+                        data[pair.Key][kValues[j]].GeneticX = optXValue;
+                        data[pair.Key][kValues[j]].GeneticY = pair.Value;
+                    }   
                 }
 
                 Console.WriteLine("Beta {0} done", betas[j]);

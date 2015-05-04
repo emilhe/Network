@@ -4,6 +4,7 @@ using System.Windows.Input;
 using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
 using BusinessLogic.Cost.Transmission;
+using BusinessLogic.Utils;
 using Utils;
 
 namespace Main
@@ -13,28 +14,36 @@ namespace Main
 
         public static void DoOptimizations()
         {
+            var costCalc = new ParallelNodeCostCalculator();
+            // Build custom core to use storage.
+            costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupHomoStuff(nodes, 32, true, false, false);
+                return nodes;
+            }, "5h storage sync")));
 
-            //// Default optimizations.
-            var tag = "default";
-            //for (var k = 1; k < 4; k++)
-            //{
-            //    Optimization.Sequential(k, tag);
-            //}
-
-            // Offshore fraction optimizations.
+            // Default optimizations.
+            var tag = "sync5h";
             for (var k = 1; k < 4; k++)
             {
-                tag = "offshore25pct";
-                var seed = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\seqK={0}localized.txt",k)));                
-                GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.25);
-                Optimization.Sequential(k, tag, null, seed);
-
-                tag = "offshore50pct";
-                seed = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\localK={0}offshore25pct.txt", k)));                                
-                GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.50);
-                Optimization.Sequential(k, tag, null, seed);
+                Optimization.Sequential(k, tag, costCalc);
             }
-            GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0);
+
+            //// Offshore fraction optimizations.
+            //for (var k = 1; k < 4; k++)
+            //{
+            //    tag = "offshore25pct";
+            //    var seed = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\seqK={0}localized.txt",k)));                
+            //    GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.25);
+            //    Optimization.Sequential(k, tag, null, seed);
+
+            //    tag = "offshore50pct";
+            //    seed = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(string.Format(@"C:\proto\localK={0}offshore25pct.txt", k)));                                
+            //    GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.50);
+            //    Optimization.Sequential(k, tag, null, seed);
+            //}
+            //GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0);
 
             //// Reduced solar cost optimizations
             //for (var k = 1; k < 4; k++)

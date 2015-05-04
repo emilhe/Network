@@ -53,7 +53,7 @@ namespace BusinessLogic.Utils
                 };
             }
             _mConfig = config;
-
+                
             if (nodes == null) nodes = ConfigurationUtils.CreateNodesNew();
             Nodes = nodes;
         }
@@ -67,20 +67,17 @@ namespace BusinessLogic.Utils
     public class FullCore : IParameterEvaluatorCore
     {
 
-        public FullCore(int length = 32, CountryNode[] nodes = null)
+        public FullCore(int length = 32, Func<CountryNode[]> spawnFunc = null, string tag = "No storage", ExportScheme scheme = ExportScheme.UnconstrainedSynchronized)
         {
-            if (nodes == null) nodes = ConfigurationUtils.CreateNodesNew();
+            var nodes = (spawnFunc == null)? ConfigurationUtils.CreateNodesNew() : spawnFunc();
 
             // Transmission eval.
             var ctrl = new SimulationController();
-            ctrl.ExportStrategies.Add(new ExportSchemeInput
-            {
-                Scheme = ExportScheme.ConstrainedLocalized
-            });
+            ctrl.ExportStrategies.Add(new ExportSchemeInput {Scheme = scheme});
             ctrl.LogFlows = true;
             ctrl.Sources.Add(new TsSourceInput { Length = length, Offset = 0 });
             ctrl.NodeFuncs.Clear();
-            ctrl.NodeFuncs.Add("No storage", input => nodes);
+            ctrl.NodeFuncs.Add(tag, input => nodes);
 
             _mCore = new SimpleCore(ctrl, length, nodes);
         }
@@ -292,10 +289,69 @@ namespace BusinessLogic.Utils
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("No storage", input => nodes);
 
-            _mCore = new SimpleCore(ctrl, 1, nodes);
+            _mCore = new SimpleCore(ctrl, 1, nodes, config);
         }
 
     }
+
+    public class StorageModelYearCore : IParameterEvaluatorCore
+    {
+
+        #region Delegation
+
+        private readonly SimpleCore _mCore;
+
+        public CountryNode[] Nodes
+        {
+            get { return _mCore.Nodes; }
+        }
+
+        public ModelYearConfig Config
+        {
+            get { return _mCore.Config; }
+        }
+
+        public ISimulationController BeController
+        {
+            get { return _mCore.BeController; }
+        }
+
+        public ISimulationController BcController
+        {
+            get { return _mCore.BcController; }
+        }
+
+        public ISimulationController TcController
+        {
+            get { return _mCore.TcController; }
+        }
+
+        #endregion
+
+        public StorageModelYearCore()
+        {
+            var syncConfig =
+                FileUtils.FromJsonFile<ModelYearConfig>(
+                    @"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Sync.txt");
+            var nodes = ConfigurationUtils.CreateNodesNew();
+            ConfigurationUtils.SetupHomoStuff(nodes, 32, true, false, false);
+
+            // Transmission eval.
+            var ctrl = new SimulationController();
+            ctrl.ExportStrategies.Add(new ExportSchemeInput
+            {
+                Scheme = ExportScheme.UnconstrainedSynchronized
+            });
+            ctrl.LogFlows = true;
+            ctrl.Sources.Add(new TsSourceInput {Length = 1, Offset = syncConfig.Parameters["be"].Key}); // SAME OFFSET: CRUTIAL!!
+            ctrl.NodeFuncs.Clear();
+            ctrl.NodeFuncs.Add("6h storage sync", input => nodes);
+
+            _mCore = new SimpleCore(ctrl, 1, nodes, syncConfig);
+        }
+
+    }
+
 
     /// <summary>
     /// Do THREE simulations, one for Kb, Kc and Tc,
@@ -476,9 +532,14 @@ namespace BusinessLogic.Utils
         }
 
         // Total capacity weighted by lengths.
+        public double TransmissionCapacity(Dictionary<string,double> capacities)
+        {
+            return capacities.Select(item => Costs.LinkLength[item.Key] * item.Value).Sum();
+        }
+
         public double TransmissionCapacity(NodeGenes nodeGenes)
         {
-            return LinkCapacities(nodeGenes).Select(item => Costs.LinkLength[item.Key]*item.Value).Sum();
+            return LinkCapacities(nodeGenes).Select(item => Costs.LinkLength[item.Key] * item.Value).Sum();
         }
 
         public static double TransmissionCapacity(SimulationOutput data, double scale = 1, int from = 0, int to = -1)
