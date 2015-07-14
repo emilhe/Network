@@ -149,7 +149,7 @@ namespace UnitTest
         {
             var simpleCore = new SimpleCore(ctrl, 1, nodes);
             var now = DateTime.Now;
-            simpleCore.TcController.EvaluateTs(new NodeGenes(1, 1));
+            simpleCore.Controller.EvaluateTs(new NodeGenes(1, 1));
             return DateTime.Now.Subtract(now).TotalMilliseconds;
         }
 

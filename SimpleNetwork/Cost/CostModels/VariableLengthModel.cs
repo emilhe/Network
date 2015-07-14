@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BusinessLogic.Cost.Transmission;
 using Utils;
 
-namespace BusinessLogic.Cost.Transmission
+namespace BusinessLogic.Cost.CostModels
 {
 
     public class VariableLengthModel : ITransmissionCostModel
@@ -19,7 +20,7 @@ namespace BusinessLogic.Cost.Transmission
 
         public double Eval(Dictionary<string, double> transmissionMap)
         {
-            return transmissionMap.Sum(link => link.Value * GetLinkCost(link.Key) * Scale);
+            return transmissionMap.Sum(link => link.Value*GetLinkCost(link.Key)*Scale);
         }
 
         /// <summary>

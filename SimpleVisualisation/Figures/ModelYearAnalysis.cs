@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,14 +21,16 @@ namespace Main.Figures
     class ModelYearAnalysis
     {
 
+        private const string basePath = @"C:\Users\Emil\Dropbox\BACKUP\Python\modelYear";
+
         #region Error analysis
 
         // Check the error depends on alpha/gamma.
-        public static void ErrorAnalysis(MainForm main, bool inclTrans = false)
+        public static void ErrorAnalysis(MainForm main)
         {
 
             // Read year config.
-            var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Sync.txt");
+            var config = FileUtils.FromJsonFile<ModelYearConfig>(Path.Combine(basePath, @"Alpha0.5to1Gamma0.5to2Sync.txt"));
             var gammaRes = 10;
             var alphaRes = 10;
 
@@ -49,11 +52,11 @@ namespace Main.Figures
                 //ConfigurationUtils.SetupMegaStorage(nodes);
                 return nodes;
             });
-            ctrl.LogFlows = inclTrans;
+            ctrl.LogFlows = true;
 
             // Setup ESTIMATION control.
             var estCtrl = new SimulationController { InvalidateCache = false };
-            estCtrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = config.Parameters["bc"].Key, Length = 1 });
+            estCtrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = config.Offset, Length = 1 });
             estCtrl.ExportStrategies.Add(
                  new ExportSchemeInput()
                  {
@@ -139,23 +142,23 @@ namespace Main.Figures
                     var estBackupCapacity = ParameterEvaluator.BackupCapacity(estData[0]);
                     var estEnergy = ParameterEvaluator.BackupEnergy(estData[0]);
                     // Record result in matrix (to be plotted); scaling applied.
-                    beMatrix[i, j] = (estEnergy*config.Parameters["be"].Value - energy)/energy;
-                    bcMatrix[i, j] = (estBackupCapacity*config.Parameters["bc"].Value - backupCapacity)/backupCapacity;
+                    beMatrix[i, j] = (estEnergy*config.Parameters["be"] - energy)/energy;
+                    bcMatrix[i, j] = (estBackupCapacity*config.Parameters["bc"] - backupCapacity)/backupCapacity;
                     gammaMatrix[i, j] = gamma;
                     alphaMatrix[i, j] = alpha;
                     // Do transmission only if necessary.
                     var estTransmissionCapacity = ParameterEvaluator.TransmissionCapacity(estData[0]);
-                    tcMatrix[i, j] = (estTransmissionCapacity*config.Parameters["tc"].Value - transmissionCapacity)/
+                    tcMatrix[i, j] = (estTransmissionCapacity*config.Parameters["tc"] - transmissionCapacity)/
                                      transmissionCapacity;
                 }
             }
 
-            // Save results.
-            beMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\beMatrixIIHD.txt");
-            bcMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\bcMatrixIIHD.txt");
-            tcMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\tcMatrixIIHD.txt");
-            gammaMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\gammaMatrixIIHD.txt");
-            alphaMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\alphaMatrixIIHD.txt");
+            //// Save results.
+            //beMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\beMatrixIIHD.txt");
+            //bcMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\bcMatrixIIHD.txt");
+            //tcMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\tcMatrixIIHD.txt");
+            //gammaMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\gammaMatrixIIHD.txt");
+            //alphaMatrix.ToFile(@"C:\Users\Emil\Dropbox\Master Thesis\Matlab\alphaMatrixIIHD.txt");
 
             // Save in dict too.
             var dict = new Dictionary<string, double[,]>
@@ -166,7 +169,7 @@ namespace Main.Figures
                 {"Alpha", alphaMatrix},
                 {"Gamma", gammaMatrix},
             };
-            dict.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\modelYear\errorAnalysis.txt");
+            dict.ToJsonFile(Path.Combine(basePath, @"errorAnalysis.txt"));
         }
 
         #endregion
@@ -178,7 +181,7 @@ namespace Main.Figures
             var aMin = 0.5;
             var aMax = 1;
             var gMin = 0.5;
-            var gMax = 1;
+            var gMax = 2;
             ModelYearStuff(aMin, aMax, gMin, gMax, data =>
             {
                 PrintData(CalculateBackupEnergy, data, "be.txt");
@@ -195,7 +198,7 @@ namespace Main.Figures
             ctrl.ExportStrategies.Add(
                 new ExportSchemeInput()
                 {
-                    Scheme = ExportScheme.ConstrainedLocalized
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("Clean nodes", s =>
@@ -207,7 +210,8 @@ namespace Main.Figures
             ctrl.LogFlows = true;
 
             var alpha = (aMax + aMin) / 2;
-            var gamma = (gMax + gMin) / 2;
+            //var gamma = (gMax + gMin) / 2;
+            var gamma = (gMax/2 + gMin*2) / 2;            
             // Create data.
             var centerData = ctrl.EvaluateTs(gamma, alpha);
             var aMinData = ctrl.EvaluateTs(gamma, aMin);
@@ -227,24 +231,26 @@ namespace Main.Figures
             var gMax = 2;
             ModelYearStuff(aMin, aMax, gMin, gMax, data =>
             {
+                var pair = FindBestYear(new Dictionary<string, Action<SimulationOutput, Dictionary<int, double>>>
+                {
+                    {"be", CalculateBackupEnergy},
+                    {"bc", CalculateBackupCapacity},
+                    {"tc", CalculateTransmissionCapacity},
+                }, data);
                 var result = new ModelYearConfig
                 {
                     AlphaMin = aMin,
                     AlphaMax = aMax,
                     GammaMin = gMin,
                     GammaMax = gMax,
-                    Parameters = FindBestYear(new Dictionary<string, Action<SimulationOutput, Dictionary<int, double>>>
-                    {
-                        {"be",CalculateBackupEnergy},
-                        {"bc",CalculateBackupCapacity},
-                        {"tc",CalculateTransmissionCapacity},
-                    },data)
+                    Offset = pair.Key,
+                    Parameters = pair.Value
                 };
-                result.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha{0}to{1}Gamma{2}to{3}Local.txt",aMin, aMax, gMin, gMax));
+                result.ToJsonFile(Path.Combine(basePath,string.Format("Alpha{0}to{1}Gamma{2}to{3}Sync.txt",aMin, aMax, gMin, gMax)));
             });
         }
 
-        private static Dictionary<string, KeyValuePair<int, double>> FindBestYear(Dictionary<string,Action<SimulationOutput, Dictionary<int, double>>> fill, List<SimulationOutput> data)
+        private static KeyValuePair<int,Dictionary<string, double>> FindBestYear(Dictionary<string,Action<SimulationOutput, Dictionary<int, double>>> fill, List<SimulationOutput> data)
         {
             var dTot = new Dictionary<int, double>();
             var cenYearsDict = fill.Keys.ToDictionary(item => item, item => new Dictionary<int, double>());
@@ -269,7 +275,7 @@ namespace Main.Figures
                 }
             }
             var year = dTot.Where(item0 => item0.Value == dTot.Select(item1 => item1.Value).Min()).Select(item => item.Key).First();
-            return fill.Keys.ToDictionary(key => key, key => new KeyValuePair<int, double>(year, 1.0/cenYearsDict[key][year]));
+            return new KeyValuePair<int, Dictionary<string, double>>(year,fill.Keys.ToDictionary(key => key, key => 1.0/cenYearsDict[key][year]));
         }
 
         //private static KeyValuePair<int, double> FindBcYear(Action<SimulationOutput, Dictionary<int, double>> fill, List<SimulationOutput> data)
@@ -305,7 +311,7 @@ namespace Main.Figures
                 {"gMin", gMinYears},
                 {"gMax", gMaxYears},
             };
-            all.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\modelYear\" + name);
+            all.ToJsonFile(Path.Combine(basePath, name));
         }
 
         #endregion

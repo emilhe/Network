@@ -93,6 +93,11 @@ namespace BusinessLogic.Storages
             set { _mCore.Capacity = value; }
         }
 
+        public double ChargeLevel
+        {
+            get { return _mCore.ChargeLevel; }
+        }
+
         public void TickChanged(int tick)
         {
             ((ITickListener) _mCore).TickChanged(tick);

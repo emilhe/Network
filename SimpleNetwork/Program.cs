@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.Utils;
+using SimpleImporter;
 
 namespace BusinessLogic
 {
@@ -15,13 +16,13 @@ namespace BusinessLogic
         {
             //SimpleData.CalculateMeanLoad();
             //EcnImporter.Parse();
-            //CsvImporter.Parse(TsSource.VE50PCT);
+            CsvImporter.Parse(TsSource.VE50PCT);
             //NtcImporter.Parse();
 
-            var nodes = new double[] { 2, -1 };
-            var nodeNames = new[] { "Node1", "Node2" };
-            var builder = new EdgeBuilder(nodeNames);
-            builder.Connect(0, 1);
+            //var nodes = new double[] { 2, -1 };
+            //var nodeNames = new[] { "Node1", "Node2" };
+            //var builder = new EdgeBuilder(nodeNames);
+            //builder.Connect(0, 1);
         }
 
     }

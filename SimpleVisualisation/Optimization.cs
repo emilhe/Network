@@ -20,6 +20,7 @@ namespace Main
 
         public static void Genetic(int k, int n, string key = "")
         {
+            var name = string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50geneticK={0}@{1}", k, key);
             // Adjust gene pool.
             GenePool.K = k;
             // Setup stuff.
@@ -27,17 +28,21 @@ namespace Main
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
             //population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
-            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelNodeCostCalculator {Full = false, Transmission = false});
+            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelNodeCostCalculator {Full = false, CacheEnabled = false});
             // Do stuff.
             var optimum = optimizer.Optimize(population);
-            optimum.Genes.ToJsonFile(string.Format(@"C:\proto\onshoreVEgeneticConstraintTransK={0}{1}.txt", k, key));
+            optimizer.Steps.ToJsonFile(name + "@steps.txt");
+            optimum.Genes.ToJsonFile(name + ".txt");
+            Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
         }
 
         public static void Cukoo(int k, int n = 500, string key = "", NodeChromosome seed = null, ParallelNodeCostCalculator calc = null)
         {
-            var name = string.Format(@"C:\proto\VE50cukooK={0}@{1}", k, key);
+            var name = string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50cukooK={0}@{1}", k, key);
             // Adjust gene pool.
             GenePool.K = k;
+            GenePool.LevyAlpha = 1.5;
+            GenePool.LevyBeta = 0;
             // Setup stuff.
             var strategy = new CukooNodeOptimizationStrategy();
             var population = new NodeChromosome[n];
@@ -49,14 +54,43 @@ namespace Main
                 calc = new ParallelNodeCostCalculator
                 {
                     Full = false,
-                    Transmission = true,
+                    CacheEnabled = false
                 };
             }
             var optimizer = new CukooOptimizer<NodeChromosome>(strategy, calc);
             // Do stuff.
             var optimum = optimizer.Optimize(population);
-            //optimizer.Steps.ToJsonFile(name + ".tex");
-            optimum.Genes.ToJsonFile(name + "@steps.tex");
+            optimizer.Steps.ToJsonFile(name + "@steps.txt");
+            optimum.Genes.ToJsonFile(name + ".txt");
+            Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
+        }
+
+        public static void PureCukoo(int k, int n = 500, string key = "", NodeChromosome seed = null, ParallelNodeCostCalculator calc = null)
+        {
+            var name = string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50pureCukooK={0}@{1}", k, key);
+            // Adjust gene pool.
+            GenePool.K = k;
+            GenePool.LevyAlpha = 0.5;
+            GenePool.LevyBeta = 1;
+            // Setup stuff.
+            var strategy = new CukooNodeOptimizationStrategy();
+            var population = new NodeChromosome[n];
+            for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
+            if (seed != null) population[0] = seed;
+            //population[1] = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(name));
+            if (calc == null)
+            {
+                calc = new ParallelNodeCostCalculator
+                {
+                    Full = false,
+                    CacheEnabled = false
+                };
+            }
+            var optimizer = new PureCukooOptimizer<NodeChromosome>(strategy, calc);
+            // Do stuff.
+            var optimum = optimizer.Optimize(population);
+            optimizer.Steps.ToJsonFile(name + "@steps.txt");
+            optimum.Genes.ToJsonFile(name + ".txt");
             Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
         }
 
@@ -133,8 +167,10 @@ namespace Main
 
         public static void Sequential(int k, string tag = "", ParallelNodeCostCalculator calc = null, NodeChromosome seed = null)
         {
+            var name = string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50gadK={0}@{1}", k, tag);
 
-            if(seed == null) seed = new NodeChromosome(new NodeGenes(1, 1));
+            // seed = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50gadK=1@1.txt")
+            if (seed == null) seed = GenePool.SpawnChromosome();  //new NodeChromosome(new NodeGenes(1, 1));
             GenePool.ApplyOffshoreFraction(seed.Genes);
             GenePool.K = k;
             if (calc == null)
@@ -143,14 +179,14 @@ namespace Main
                 {
                     Full = false,
                     CacheEnabled = false,
-                    Transmission = true
                 };
             }
             var opt = new SequentialOptimizer(calc);
             var best = opt.Optimize(seed);
 
             Console.WriteLine("Final cost is {0} after {1} evals", best.Cost, opt.Evals);
-            best.Genes.ToJsonFile(string.Format(@"C:\proto\localK={0}{1}.txt", k, tag));
+            opt.Steps.ToJsonFile(name + "@steps.txt");
+            best.Genes.ToJsonFile(name + ".txt");
         }
 
         private static List<string> GammaRescaling(NodeChromosome chromosome, List<string> fixedKeys)
@@ -212,8 +248,6 @@ namespace Main
                 chromosome.Genes[key].Gamma /= effGamma;
             }
 
-            var scale = GenePool.GammaRescaling(chromosome);
-
             return fixedKeys;;
         }
 
@@ -232,11 +266,13 @@ namespace Main
             private NodeChromosome[] _mClones;
             private NodeChromosome _mBest;
             private double _mStep;
+            public Dictionary<int, double> Steps { get; set; } 
 
             public SequentialOptimizer(ParallelNodeCostCalculator calc)
             {
                 _mCalc = calc;
 
+                Steps = new Dictionary<int, double>();
                 AbsTol = 5e-3;
                 StepMin = 0.005;
                 StepMax = 1;
@@ -246,12 +282,13 @@ namespace Main
 
             public NodeChromosome Optimize(NodeChromosome seed)
             {
+                Steps.Clear();
                 _mBest = seed;
                 _mCalc.UpdateCost(new []{seed});
                 _mClones = new NodeChromosome[seed.Genes.Count];
                 _mStep = StepMax;
                 Console.WriteLine("Cost is {0} after {1} evals", _mBest.Cost, _mCalc.Evaluations);
-                if (File.Exists(@"C:\proto\seqStats.txt")) File.Move(@"C:\proto\seqStats.txt", @"C:\proto\seqStats" + DateTime.Now.ToString("dd-MM-yy hh_mm") + ".txt");
+                if (File.Exists(@"C:\proto\seqStats.txt")) File.Move(@"C:\proto\seqStats.txt", @"C:\proto\seqStats" + DateTime.Now.ToString("dd-MM-yy hh_mm_ss") + ".txt");
                 File.Create(@"C:\proto\seqStats.txt").Close();
 
                 while (_mStep > StepMin)
@@ -260,6 +297,8 @@ namespace Main
                     bool gammaProgress = true;
                     while (alphaProgress || gammaProgress)
                     {
+                        Steps.Add(_mCalc.Evaluations, _mBest.Cost);
+                        
                         if (alphaProgress)
                         {
                             alphaProgress = Step((a, b) => StepAlphaDown(a, b, _mStep), (a, b) => StepAlphaUp(a, b, _mStep));

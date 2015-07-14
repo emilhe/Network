@@ -10,9 +10,9 @@ namespace BusinessLogic.Cost
     interface INodeCostCalculator
     {
 
-        Dictionary<string, double> DetailedSystemCosts(NodeGenes nodeGenes, bool includeTransmission = false);
+        Dictionary<string, double> DetailedSystemCosts(NodeGenes nodeGenes);
 
-        double SystemCost(NodeGenes nodeGenes, bool includeTransmission = false);
+        double SystemCost(NodeGenes nodeGenes);
 
     }
 }

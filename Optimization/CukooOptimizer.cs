@@ -15,7 +15,7 @@ namespace Optimization
         public int Generation { get; private set; }
         public bool PrintToConsole { get; set; }
         public bool CacheOnDisk { get; set; }
-        public List<double> Steps { get; set; } 
+        public Dictionary<int, double> Steps { get; set; } 
 
         public double LevyFlightRate { get; set; }
         public double DifferentialEvolutionRate { get; set; }
@@ -30,7 +30,7 @@ namespace Optimization
 
             PrintToConsole = true;
             CacheOnDisk = true;
-            Steps = new List<double>();
+            Steps = new Dictionary<int, double>();
 
             // Default values, good for most purposes.
             LevyFlightRate = 1;
@@ -45,6 +45,7 @@ namespace Optimization
             EvalPopulation(nests);
             nests = nests.OrderBy(item => item.Cost).ToArray();
             T bestNest = nests[0];
+            Steps.Add(_mCostCalculator.Evaluations, bestNest.Cost);
             if(PrintToConsole) Console.WriteLine("Generation {0}, Cost = {1}", Generation, bestNest.Cost);
             // New trail eggs are generated in the trails eggs vector.
             var n = nests.Length;
@@ -68,7 +69,7 @@ namespace Optimization
                 }
                 nests = UpdateNests(nests, trailEggs);
                 bestNest = nests[0];
-                Steps.Add(bestNest.Cost);
+                Steps.Add(_mCostCalculator.Evaluations,bestNest.Cost);
                 // Debug info.
                 if (CacheOnDisk) bestNest.ToJsonFile(@"C:\proto\bestConfig.txt");
                 if (PrintToConsole) Console.WriteLine("Generation {0}, Cost = {1}", Generation, bestNest.Cost);

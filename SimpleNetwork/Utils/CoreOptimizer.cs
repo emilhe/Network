@@ -105,6 +105,38 @@ namespace BusinessLogic.Utils
                 Wrap.Model.Optimize();
                 if (DebugLog) Console.WriteLine("Solve balance: {0}", DateTime.Now.Subtract(now).TotalMilliseconds);
 
+                var status = Wrap.Model.Get(GRB.IntAttr.Status);
+                if (status == GRB.Status.INFEASIBLE)
+                {
+                    Wrap.Model.ComputeIIS();
+                    Wrap.Model.Write(@"C:\Temp\flowModel.ilp");
+                }
+                if (status == GRB.Status.NUMERIC)
+                {
+                    //// Try increasing the tolerance if possible.
+                    //if (SetTmpTol != null)
+                    //{
+                    //    SetTmpTol();
+                    //    Wrap.Model.Optimize();
+                    //    status = Wrap.Model.Get(GRB.IntAttr.Status);
+                    //}
+                    // In cause of failure, no flows are assumed.
+                    if (status == GRB.Status.NUMERIC)
+                    {
+                        Console.WriteLine("Gurobi had numerical difficulties. Untable to fix. No flows were assumed.");
+                        NodeOptima.Fill(i => Mismatches[i]);
+                        foreach (var opt in StorageOptima) opt.Fill(0);
+                        Mismatches.ToJsonFile(string.Format(@"C:\proto\GUROBI_PROBLEM_{0}.txt", DateTime.Now.Millisecond));
+                        return;
+                    }
+                    Console.WriteLine("Gurobi had numerical difficulties. Fixed by increased tolerance.");
+                }
+                if (status != GRB.Status.OPTIMAL && status != GRB.Status.SUBOPTIMAL)
+                {
+                    Console.WriteLine("Optimization was stopped with status " + status);
+                    throw new ArgumentException("Model fucked up!");
+                }
+
                 // Extract node optima.
                 for (int i = 0; i < N; i++)
                 {

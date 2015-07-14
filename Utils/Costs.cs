@@ -16,6 +16,8 @@ namespace Utils
         public const double DcCostPerKm = 1500;
         // Cost in €/MW
         public const double DcConverterCost = 150000;
+        // Life time of links in years.
+        public const double LinkLifeTime = 40; 
         // Link properties.
         public static readonly Dictionary<string, string> LinkType =
             FileUtils.DictionaryFromFile<string, string>(@"C:\EmherSN\data\LineType.txt");
@@ -55,7 +57,8 @@ namespace Utils
             Name = "Wind – onshore",
             CapExFixed = 1.0,
             OpExFixed = 15,
-            OpExVariable = 0.0
+            OpExVariable = 0.0,
+            Lifetime = 25
         };
 
         public static Asset OffshoreWind = new Asset
@@ -63,7 +66,8 @@ namespace Utils
             Name = "Wind – offshore",
             CapExFixed = 2.0,
             OpExFixed = 55,
-            OpExVariable = 0.0
+            OpExVariable = 0.0,
+            Lifetime = 20
         };
 
         //public static Asset Wind = new Asset
@@ -77,9 +81,10 @@ namespace Utils
         public static Asset Solar = new Asset
         {
             Name = "Solar photovoltaic",
-            CapExFixed = 1.5,
+            CapExFixed = 0.75,
             OpExFixed = 8.5,
-            OpExVariable = 0.0
+            OpExVariable = 0.0,
+            Lifetime = 25
         };
 
         public static Asset CCGT = new Asset
@@ -87,7 +92,8 @@ namespace Utils
             Name = "CCGT",
             CapExFixed = 0.90,
             OpExFixed = 4.5,
-            OpExVariable = 56.0
+            OpExVariable = 56.0,
+            Lifetime = 30
         };
 
         public class Asset
@@ -99,6 +105,8 @@ namespace Utils
             public double OpExFixed { get; set; }
             // Euros/MWh/year                        
             public double OpExVariable { get; set; }
+            // Life time in years
+            public double Lifetime { get; set; }
         }
 
         #endregion

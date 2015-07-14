@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Interfaces;
@@ -17,8 +18,8 @@ namespace BusinessLogic.Nodes
 
         public ReModel Model { get; set; }
         public Measureable Balancing { get; set; }
-        public List<IGenerator> Generators { get; set; }
-        public List<IStorage> Storages { get; set; }
+        public IList<IGenerator> Generators { get; set; }
+        public IList<IStorage> Storages { get; set; }
 
         private double _mLoad { get; set; }
 
@@ -30,7 +31,8 @@ namespace BusinessLogic.Nodes
             Balancing.Properties.Add("Country", Name);
 
             Generators = Model.GetGenerators();
-            Storages = new List<IStorage>();
+            Storages = new SortedStorages();
+ 
         }
 
         public double GetDelta()
@@ -100,6 +102,92 @@ namespace BusinessLogic.Nodes
             _mLoad = Model.LoadTimeSeries.GetValue(tick);
             foreach (var generator in Generators) generator.TickChanged(tick);
             foreach (var storage in Storages) storage.TickChanged(tick);
+        }
+
+        class SortedStorages : IList<IStorage>
+        {
+            private List<IStorage> _mCore = new List<IStorage>();
+
+            void UpdateOrder()
+            {
+                _mCore = _mCore.OrderByDescending(item => item.Efficiency).ToList();
+            }
+
+            #region Delegation
+
+            public IEnumerator<IStorage> GetEnumerator()
+            {
+                return _mCore.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return ((IEnumerable) _mCore).GetEnumerator();
+            }
+
+            public void Add(IStorage item)
+            {
+                _mCore.Add(item);
+                UpdateOrder();
+            }
+
+            public void Clear()
+            {
+                _mCore.Clear();
+            }
+
+            public bool Contains(IStorage item)
+            {
+                return _mCore.Contains(item);
+            }
+
+            public void CopyTo(IStorage[] array, int arrayIndex)
+            {
+                _mCore.CopyTo(array, arrayIndex);
+            }
+
+            public bool Remove(IStorage item)
+            {
+                var removed = _mCore.Remove(item);
+                UpdateOrder();
+                return removed;
+            }
+
+            public int Count
+            {
+                get { return _mCore.Count; }
+            }
+
+            public bool IsReadOnly
+            {
+                get { return false; }
+            }
+
+            public int IndexOf(IStorage item)
+            {
+                return _mCore.IndexOf(item);
+            }
+
+            public void Insert(int index, IStorage item)
+            {
+                _mCore.Insert(index, item);
+                UpdateOrder();
+            }
+
+            public void RemoveAt(int index)
+            {
+                _mCore.RemoveAt(index);
+                UpdateOrder();
+            }
+
+            public IStorage this[int index]
+            {
+                get { return _mCore[index]; }
+                set { _mCore[index] = value; }
+            }
+
+            #endregion
+
         }
 
     }

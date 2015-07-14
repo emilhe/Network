@@ -34,6 +34,15 @@ namespace BusinessLogic.Storages
 
         #region Energy info
 
+        public double ChargeLevel
+        {
+            get
+            {
+                if (NominalEnergy == 0) return 0;
+                return _mRemainingEnergy/NominalEnergy;
+            }
+        }
+
         /// <summary>
         /// Minus means energy TO RELASE, plus means energy to be stored.
         /// </summary>

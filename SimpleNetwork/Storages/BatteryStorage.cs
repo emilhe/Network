@@ -14,7 +14,7 @@ namespace BusinessLogic.Storages
 
         public BatteryStorage(double capacity, double initialCapacity = 0)
         {
-            _mCore = new BasicStorage("Battery storage", 1, capacity, initialCapacity);
+            _mCore = new BasicStorage("Battery storage", 1-1e-6, capacity, initialCapacity);
         }
 
         public void Sample(int tick)
@@ -91,6 +91,11 @@ namespace BusinessLogic.Storages
         {
             get { return _mCore.Capacity; }
             set { _mCore.Capacity = value; }
+        }
+
+        public double ChargeLevel
+        {
+            get { return _mCore.ChargeLevel; }
         }
 
         public void TickChanged(int tick)

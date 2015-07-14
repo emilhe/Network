@@ -69,6 +69,11 @@
         /// </summary>
         double Capacity { get; }
 
+        /// <summary>
+        /// Number between 1 (full) and 0 (empty).
+        /// </summary>
+        double ChargeLevel { get; }
+
     }
 
 }

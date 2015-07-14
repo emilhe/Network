@@ -36,10 +36,10 @@ namespace Main.Figures
             foreach (var fraction in fractions)
             {
                 // Inject edge constraints.
-                (core.TcController as SimulationController).EdgeFuncs.Clear();
-                (core.TcController as SimulationController).EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100),
+                (core.Controller as SimulationController).EdgeFuncs.Clear();
+                (core.Controller as SimulationController).EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100),
                 list => ConfigurationUtils.GetEdgeObject(list, "flow32YearCfmaxk=1Gamma1alpha1local", fraction));
-                result.Add(fraction, calc.DetailedSystemCosts(new NodeGenes(1, 1), true));
+                result.Add(fraction, calc.DetailedSystemCosts(new NodeGenes(1, 1)));
             }
 
             result.ToJsonFile(@"C:\EmherSN\HomogeneousVElocal32.txt");

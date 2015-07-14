@@ -19,7 +19,6 @@ namespace BusinessLogic.Cost
         private int _mEvaluations;
         private ISolarCostModel _mSolarCostModel = new SolarCostModelImpl();
 
-        public bool Transmission { get; set; }
         public bool CacheEnabled { get; set; }
         
         public int Evaluations
@@ -73,7 +72,7 @@ namespace BusinessLogic.Cost
                 // Very expensive if extra thread are spawned (they are, apparently..).
                 var id = Thread.CurrentThread.ManagedThreadId;
                 if (!_mCalcMap.ContainsKey(id)) _mCalcMap.TryAdd(id, SpawnCostCalc());
-                chromosome.UpdateCost(solution => _mCalcMap[id].SystemCost((solution as NodeChromosome).Genes, Transmission));
+                chromosome.UpdateCost(solution => _mCalcMap[id].SystemCost((solution as NodeChromosome).Genes));
             });
         }
 
@@ -91,6 +90,11 @@ namespace BusinessLogic.Cost
             });
 
             return result;
+        }
+
+        public void ResetEvals()
+        {
+            _mEvaluations = 0;
         }
 
         private void Update()

@@ -1,37 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Storages;
 using BusinessLogic.TimeSeries;
 using BusinessLogic.Utils;
-using Utils;
 
 namespace BusinessLogic.Generators
 {
-    public class HydroReservoirGenerator : IGenerator
+    class BiomassGenerator : IGenerator
     {
 
         private readonly BasicStorage _mInternalReservoir;
-        private readonly double[] _mInflowPattern;
+        private readonly double _mHourlyInflow;
 
         public IStorage InverseGenerator { get; private set; }
-        public IStorage Pump { get; private set; }
 
-        public HydroReservoirGenerator(HydroInfo info)
+        public BiomassGenerator(double cap, double inflow)
         {
-            _mInternalReservoir = new BasicStorage("Internal reservoir", 1, info.ReservoirCapacity*1e3,
-                info.ReservoirCapacity*1e3*0.5) {Capacity = info.Capacity/1000};
-            _mInflowPattern = info.InflowPattern;
+            _mInternalReservoir = new BasicStorage("Internal biomass", 1, inflow, inflow * 0.5) { Capacity = cap / 1000 };
+            _mHourlyInflow = inflow/8766;
 
-            const double pumpEff = 0.8;
             InverseGenerator = new VirtualStorage(_mInternalReservoir, 1);
-            Pump = new VirtualStorage(_mInternalReservoir, pumpEff) {Capacity = info.PumpCapacity/pumpEff/1000, Name = "Pump"};
         }
 
         public string Name
         {
-            get { return "Hydro reservoir generator"; }
+            get { return "Biomass generator"; }
         }
 
         public double Production { get; set; }
@@ -79,12 +77,11 @@ namespace BusinessLogic.Generators
         public void TickChanged(int tick)
         {
             // Always produce AS MUCH as possible.
-            Production = -_mInternalReservoir.AvailableEnergy(Response.Discharge) *
+            Production = -_mInternalReservoir.AvailableEnergy(Response.Discharge)*
                          Math.Pow(_mInternalReservoir.ChargeLevel, UncSyncScheme.Power);
             ((VirtualStorage)InverseGenerator).Capacity = Production;
-            // The inflow pattern is in GWh/day.
-            var day = Math.Ceiling((double)tick%Stuff.HoursInYear/24)%365;
-            _mInternalReservoir.InternalInject(_mInflowPattern[(int)day]/24 - Production, 1, double.PositiveInfinity);
+            _mInternalReservoir.InternalInject(_mHourlyInflow - Production, 1, double.PositiveInfinity);
         }
+
     }
 }

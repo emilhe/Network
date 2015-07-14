@@ -25,6 +25,14 @@ namespace Utils
             return source;
         }
 
+        // Note defined INCLUDING end limit
+        public static double[] Linspace(this double[] source, double from, double to)
+        {
+            var delta = (to - from) / (source.Length-1);
+            for (int i = 0; i < source.Length; i++) source[i] = i*delta+from;
+            return source;
+        }
+
         public static double[] Ones(this double[] source)
         {
             for (int i = 0; i < source.Length; i++) source[i] = 1;
@@ -47,6 +55,12 @@ namespace Utils
         public static double[] Add(this double[] source, double[] other, double weight = 1)
         {
             for (int i = 0; i < source.Length; i++) source[i] = source[i] + other[i]*weight;
+            return source;
+        }
+
+        public static double[] Add(this double[] source, double other)
+        {
+            for (int i = 0; i < source.Length; i++) source[i] = source[i] + other;
             return source;
         }
 

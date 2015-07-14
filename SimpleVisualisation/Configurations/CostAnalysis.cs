@@ -46,7 +46,7 @@ namespace Main.Configurations
                 // Calculate costs.
                 alphas[j] = j*delta;
                 // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCosts(NodeGenesFactory.SpawnBeta(1, alphas[j], beta), inclTrans))
+                foreach (var item in costCalc.DetailedSystemCosts(NodeGenesFactory.SpawnBeta(1, alphas[j], beta)))
                 {
                     data[item.Key][j] = item.Value;
                 }
@@ -79,7 +79,7 @@ namespace Main.Configurations
                 for (int i = 0; i <= alphaRes; i++)
                 {
                     alphas[i] = alphaStart + (i) * delta;
-                    points[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betaValues[j]), true);
+                    points[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betaValues[j]));
                 }
                 data.Add(new BetaWrapper
                 {
@@ -127,7 +127,7 @@ namespace Main.Configurations
 
 
         // Gamma fixed = 1.0
-        public static void BetaWithGenetic(MainForm main, List<int> kValues, bool inclTrans = false)
+        public static void BetaWithGenetic(MainForm main, List<int> kValues)
         {
 
             var alphaStart = 0.5;
@@ -150,8 +150,8 @@ namespace Main.Configurations
                 {
                     alphas[i] = alphaStart + (i)*delta;
                     betas[j] = Stuff.FindBeta(kValues[j], 1e-3);
-                    betaPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]), inclTrans);
-                    maxCfPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]), inclTrans);
+                    betaPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]));
+                    maxCfPoints[i] = costCalc.SystemCost(NodeGenesFactory.SpawnCfMax(alphas[i], 1, kValues[j]));
                 }
                 data.Add(new BetaWrapper
                 {
@@ -175,11 +175,11 @@ namespace Main.Configurations
             //}
             // Add special genetic point.
             var genes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\VEgeneticWithConstraintTransK=1.txt");
-            data.Add(new BetaWrapper { K = 1, GeneticX = genes.Alpha, GeneticY = costCalc.SystemCost(genes, inclTrans), Note = "1Y + T"});
+            data.Add(new BetaWrapper { K = 1, GeneticX = genes.Alpha, GeneticY = costCalc.SystemCost(genes), Note = "1Y + T"});
             genes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\VEgeneticWithoutConstraintTransK=1.txt");
-            data.Add(new BetaWrapper { K = 1, GeneticX = genes.Alpha, GeneticY = costCalc.SystemCost(genes, inclTrans), Note = "1Y" });
+            data.Add(new BetaWrapper { K = 1, GeneticX = genes.Alpha, GeneticY = costCalc.SystemCost(genes), Note = "1Y" });
             genes = FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\Master Thesis\Layouts\32VEgeneticWithoutConstraintTransK=1.txt");
-            data.Add(new BetaWrapper { K = 1, GeneticX = genes.Alpha, GeneticY = costCalc.SystemCost(genes, inclTrans), Note = "32Y" });
+            data.Add(new BetaWrapper { K = 1, GeneticX = genes.Alpha, GeneticY = costCalc.SystemCost(genes), Note = "32Y" });
 
             // Setup view.
             var view = main.DisplayPlot();
@@ -195,7 +195,7 @@ namespace Main.Configurations
         }
 
         // Gamma fixed = 1.0
-        public static void VaryBeta(MainForm main, bool inclTrans = false, List<string> paths = null)
+        public static void VaryBeta(MainForm main, List<string> paths = null)
         {
             var betas = new[]{0,1.273,1.920,2.359,2.693};
             var alphaRes = 10;
@@ -211,7 +211,7 @@ namespace Main.Configurations
                 for (int i = 0; i < alphaRes; i++)
                 {         
                     alphas[i] = (i+1) * delta;
-                    points[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]), inclTrans);
+                    points[i] = costCalc.SystemCost(NodeGenesFactory.SpawnBeta(alphas[i], 1, betas[j]));
                 }
                 data.Add(string.Format("Beta = {0} (K={1})",betas[j], j+1), points);
             }
@@ -229,7 +229,7 @@ namespace Main.Configurations
                 foreach (var path in paths)
                 {
                     var dna = FileUtils.FromJsonFile<NodeGenes>(path);
-                    view.AddData(new[] { dna.Alpha }, new[] { costCalc.SystemCost(dna, inclTrans) }, string.Format("Genetic optimum K={0}",idx), true, true);
+                    view.AddData(new[] { dna.Alpha }, new[] { costCalc.SystemCost(dna) }, string.Format("Genetic optimum K={0}",idx), true, true);
                     idx++;
                 }
             }
@@ -258,7 +258,7 @@ namespace Main.Configurations
                 gammas[j] = 0.5 + j * delta;
                 chromosome.Gamma = gammas[j];
                 // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCosts(chromosome, true)) data[item.Key][j] = item.Value;
+                foreach (var item in costCalc.DetailedSystemCosts(chromosome)) data[item.Key][j] = item.Value;
             }
 
             // Setup view.
@@ -286,7 +286,7 @@ namespace Main.Configurations
                 gammas[j] = 0.5 + j * delta;
                 //chromosome.Gamma = gammas[j];
                 // Append costs to data structure.
-                foreach (var item in costCalc.DetailedSystemCosts(genes, true)) data[item.Key][j] = item.Value;
+                foreach (var item in costCalc.DetailedSystemCosts(genes)) data[item.Key][j] = item.Value;
             }
 
             // Setup view.

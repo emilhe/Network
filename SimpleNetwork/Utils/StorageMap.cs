@@ -43,7 +43,9 @@ namespace BusinessLogic.Utils
                 for (int j = 0; j < _mNodes.Length; j++)
                 {
                     var remainder = _mNodes[j].Storages[i].Inject(values[i][j]);
-                    if (Math.Abs(remainder) > Delta) throw new ArgumentException("Charge failure!");
+                    if (!(Math.Abs(remainder) > Delta)) continue;
+                    Console.WriteLine("Delta is {0}", remainder);
+                    throw new ArgumentException("Charge failure!");
                 }
             }
         }

@@ -131,6 +131,7 @@
     <Compile Include="ExportStrategies\UncSyncScheme.cs" />
     <Compile Include="FailureStrategies\AllowBlackoutsStrategy.cs" />
     <Compile Include="FailureStrategies\NoBlackoutStrategy.cs" />
+    <Compile Include="Generators\BiomassGenerator.cs" />
     <Compile Include="Interfaces\INode.cs" />
     <Compile Include="Interfaces\IMeasureable.cs" />
     <Compile Include="ExportStrategies\NoExportScheme.cs" />

@@ -13,7 +13,8 @@ namespace Optimization
         bool TerminationCondition(T[] nests, int evaluations);
 
         T DifferentialEvolution(T[] nests, int i);
-        T LevyFlight(T nest, T bestNests);
+        T LevyFlight(T nest, T bestNests, double stepSize = 0);
+        T Best { get; set; }
 
     }
 }

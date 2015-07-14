@@ -95,6 +95,11 @@ namespace BusinessLogic.Storages
             set { _mCore.Capacity = value; }
         }
 
+        public double ChargeLevel
+        {
+            get { return _mCore.ChargeLevel; }
+        }
+
         public void TickChanged(int tick)
         {
             var weight = (_mInflowPattern == null)? 1.0/Stuff.HoursInYear : _mInflowPattern.GetValue(tick);

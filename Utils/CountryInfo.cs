@@ -470,9 +470,9 @@ namespace Utils
     {
         // Reservoir capacity in TWh
         public double ReservoirCapacity { get; set; }
-        // Total hydro capacity in GW
+        // Total hydro capacity in MW
         public double Capacity { get; set; }
-        // Pumped hydro capacity in GW
+        // Pumped hydro capacity in MW
         public double PumpCapacity { get; set; }
         // Inflow pattern; average daily inflow in GWh
         public double[] InflowPattern { get; set; }

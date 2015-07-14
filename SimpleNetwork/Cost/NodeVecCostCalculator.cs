@@ -35,7 +35,7 @@ namespace BusinessLogic.Cost
             foreach (var vec in toUpdate)
             {
                 vec.Normalize();
-                vec.Cost = _mCalc.SystemCost(new NodeChromosome(vec).Genes, true) + GenePool.Penalty(vec);
+                vec.Cost = _mCalc.SystemCost(new NodeChromosome(vec).Genes) + GenePool.Penalty(vec);
             }
         }
     }

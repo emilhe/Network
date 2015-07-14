@@ -19,12 +19,11 @@ namespace BusinessLogic.Storages
         {
             _mCore = core;
             _mEfficiency = eff;
+
+            Name = "Virtual storage";
         }
 
-        public string Name
-        {
-            get { return "Virtual storage"; }
-        }
+        public string Name { get; set; }
 
         public double Efficiency
         {
@@ -34,7 +33,7 @@ namespace BusinessLogic.Storages
         public double Inject(double amount)
         {
             // It is NOT possible to discharge the reservoir; the generator is already at max.
-            if (amount < 0) return amount;
+            if (amount <= 1e-5) return amount;
             return _mCore.InternalInject(amount, _mEfficiency, Capacity);
         }
 
@@ -47,6 +46,8 @@ namespace BusinessLogic.Storages
 
         public double RemainingEnergy(Response response)
         {
+            // It is NOT possible to discharge the reservoir; the generator is already at max.
+            if (response.Equals(Response.Discharge)) return 0;
             return _mCore.InternalRemainingEnergy(response, _mEfficiency);
         }
 
@@ -58,6 +59,11 @@ namespace BusinessLogic.Storages
         }
 
         #region Delegation
+
+        public double ChargeLevel
+        {
+            get { return _mCore.ChargeLevel; }
+        }
 
         public double InitialEnergy
         {

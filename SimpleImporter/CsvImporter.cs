@@ -29,7 +29,8 @@ namespace SimpleImporter
                     ParseOld(source);
                     break;
                 case TsSource.VE50PCT:
-                    Base = @"C:\Users\Emil\Desktop\REatlas-client";
+                    Base = @"C:\NewTs";
+                    //Base = @"C:\Users\Emil\Desktop\REatlas-client";
                     ParseNew(source);
                     break;
                 default:
