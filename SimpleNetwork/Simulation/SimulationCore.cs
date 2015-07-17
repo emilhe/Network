@@ -11,13 +11,10 @@ namespace BusinessLogic.Simulation
     {
 
         public bool LogAllNodeProperties { get; set; }
-        public bool LogSystemProperties { get; set; }
-        public bool LogNodalBalancing { get; set; }
         public bool LogFlows { get; set; }
 
         #region Fields
 
-        private Dictionary<string, DenseTimeSeries> _mSystemTimeSeries;
         private readonly Stopwatch _mWatch;
         private readonly bool _mDebug;
         private bool _mSuccess;
@@ -30,7 +27,7 @@ namespace BusinessLogic.Simulation
 
         #region Model delegation
 
-        public IList<INode> Nodes
+        public INode[] Nodes
         {
             get { return _mModel.Nodes; }
             set { _mModel.Nodes = value; }
@@ -42,10 +39,10 @@ namespace BusinessLogic.Simulation
             set { _mModel.FailureStrategy = value; }
         }
 
-        public IExportStrategy ExportStrategy
+        public IExportScheme ExportScheme
         {
-            get { return _mModel.ExportStrategy; }
-            set { _mModel.ExportStrategy = value; }
+            get { return _mModel.ExportScheme; }
+            set { _mModel.ExportScheme = value; }
         }
 
         #endregion
@@ -93,8 +90,6 @@ namespace BusinessLogic.Simulation
                 if (_mModel.Failure) _mSuccess = false;
                 if (_mDebug) Console.WriteLine("Total: " + _mWatch.ElapsedMilliseconds);
                 tick++;
-                //if (logLevel == LogLevelEnum.None && _mModel.Failure) break;
-                //if(_mTick % 10000 == 0) Console.WriteLine("Progress: {0} of {1}",_mTick, ticks);
             }
 
             CreateOutput();
@@ -105,9 +100,9 @@ namespace BusinessLogic.Simulation
         /// </summary>
         private void ResetStorages()
         {
-            foreach (var item in Nodes.SelectMany(item => item.StorageCollection))
+            foreach (var item in Nodes.SelectMany(item => item.Storages))
             {
-                item.Value.ResetEnergy();
+                item.ResetEnergy();
             }
         }
 
@@ -118,7 +113,6 @@ namespace BusinessLogic.Simulation
         {
             _mTickListeners = new List<ITickListener>();
             _mTickListeners.AddRange(Nodes);
-            _mTickListeners.AddRange(Nodes.Select(item => item.Balancing));
         }
 
         /// <summary>
@@ -126,32 +120,18 @@ namespace BusinessLogic.Simulation
         /// </summary>
         private void SetupLoggers()
         {
-            // System loggers.
-            if (LogSystemProperties)
-            {
-                var systemTimeSeries = new List<DenseTimeSeries>
-                {
-                    new DenseTimeSeries("Curtailment", _mTicks),
-                    new DenseTimeSeries("Mismatch", _mTicks),
-                    new DenseTimeSeries("Backup", _mTicks),
-                };
-                _mSystemTimeSeries = systemTimeSeries.ToDictionary(item => item.Name, item => item);
-            }
-            else _mSystemTimeSeries = null;
-
-            // Export strategy loggers.
-            if (LogFlows) ExportStrategy.Start(_mTicks);
-            else ExportStrategy.Clear();
-
             foreach (var node in Nodes)
             {
+                // Balancing loggers.
+                node.Balancing.Start(_mTicks);
                 // Nodal loggers.
                 if (LogAllNodeProperties) node.Start(_mTicks);
                 else node.Clear();
-                // Balancing loggers.
-                if (LogNodalBalancing) node.Balancing.Start(_mTicks);
-                else node.Balancing.Clear();
             }
+
+            // Export scheme loggers.
+            if (LogFlows) ExportScheme.Start(_mTicks);
+            else ExportScheme.Clear();
         }
 
         /// <summary>
@@ -167,18 +147,11 @@ namespace BusinessLogic.Simulation
         /// </summary>
         private void SignalLoggers(int tick)
         {
-            if (LogSystemProperties)
-            {
-                _mSystemTimeSeries["Curtailment"].AppendData(_mModel.Curtailment);
-                _mSystemTimeSeries["Mismatch"].AppendData(_mModel.Mismatch);
-                _mSystemTimeSeries["Backup"].AppendData(_mModel.Backup);
-            }
-
-            if (LogFlows) ExportStrategy.Sample(tick);
+            if (LogFlows) ExportScheme.Sample(tick);
 
             foreach (var node in Nodes)
             {
-                if (LogNodalBalancing) node.Balancing.Sample(tick);
+                node.Balancing.Sample(tick);
                 if (LogAllNodeProperties) node.Sample(tick);                
             }
         }
@@ -189,10 +162,9 @@ namespace BusinessLogic.Simulation
         private void CreateOutput()
         {
             var ts = new List<ITimeSeries>();
-            if (LogFlows) ts.AddRange(ExportStrategy.CollectTimeSeries());
-            if (LogSystemProperties) ts.AddRange(_mSystemTimeSeries.Values);
+            ts.AddRange(Nodes.SelectMany(item => item.Balancing.CollectTimeSeries()));            
+            if (LogFlows) ts.AddRange(ExportScheme.CollectTimeSeries());
             if (LogAllNodeProperties) ts.AddRange(Nodes.SelectMany(item => item.CollectTimeSeries()));
-            if (!LogAllNodeProperties && LogNodalBalancing) ts.AddRange(Nodes.SelectMany(item => item.Balancing.CollectTimeSeries()));
 
             Output = new SimulationOutput
             {

@@ -6,6 +6,8 @@ namespace Utils
     public static class Costs
     {
 
+        public static bool Unsafe { get; set; }
+
         // Source: Optimal heterogeneity of a highly renewable pan-European electricity system + Magnus (e_lineinfo.txt).
         #region Transmission
 
@@ -22,13 +24,12 @@ namespace Utils
 
         public static string GetKey(string from, string to)
         {
-            string key = null;
             var key1 = string.Format("{0}-{1}", from, to);
             var key2 = string.Format("{1}-{0}", from, to);
-            if (LinkLength.ContainsKey(key1)) key = key1;
-            if (LinkLength.ContainsKey(key2)) key = key2;
-            if (key == null) throw new ArgumentException("Link not found: " + key1);
-            return key;
+            if (LinkLength.ContainsKey(key1)) return key1;
+            if (LinkLength.ContainsKey(key2)) return key2;
+            if (Unsafe) return key1;         
+            throw new ArgumentException("Link not found: " + key1);
         }
 
         #endregion

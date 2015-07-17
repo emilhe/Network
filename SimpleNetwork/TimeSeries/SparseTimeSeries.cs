@@ -101,7 +101,7 @@ namespace BusinessLogic.TimeSeries
 
         #region Delegation
 
-        private readonly BasicTimeSeries _mCore = new BasicTimeSeries();
+        private readonly TimeSeriesMetaData _mCore = new TimeSeriesMetaData();
 
         public string Name
         {

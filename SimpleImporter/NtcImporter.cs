@@ -37,8 +37,8 @@ namespace SimpleImporter
                 {
                     data.Add(new LinkDataRow
                     {
-                        CountryFrom = Countries[i],
-                        CountryTo = Countries[j],
+                        From = Countries[i],
+                        To = Countries[j],
                         LinkCapacity = int.Parse(cells[j])
                     });
                 }

@@ -93,5 +93,9 @@ namespace BusinessLogic.Storages
             set { _mCore.Capacity = value; }
         }
 
+        public void TickChanged(int tick)
+        {
+            ((ITickListener) _mCore).TickChanged(tick);
+        }
     }
 }

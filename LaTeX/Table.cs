@@ -25,11 +25,11 @@ namespace LaTeX
             builder.AppendLine(@"\label{tab:" + Label + "}");
             if(!string.IsNullOrEmpty(Injection)) builder.AppendLine(Injection);
             builder.AppendLine(@"\begin{adjustbox}{center}");
-            builder.AppendLine(@"\begin{tabular}{" + Format + @"}  \hline");
+            builder.AppendLine(@"\begin{tabular}{" + Format + @"}  \toprule");
             AppendHeader(builder);
-            builder.AppendLine(@" \hline");
+            builder.AppendLine(@" \midrule");
             AppendRows(builder);
-            builder.AppendLine(@" \hline");
+            builder.AppendLine(@" \bottomrule");
             builder.AppendLine(@"\end{tabular}");
             builder.AppendLine(@"\end{adjustbox}");
             builder.AppendLine(@"\end{table}");
@@ -41,7 +41,7 @@ namespace LaTeX
         {
             for (int i = 0; i < Header.Length; i++)
             {
-                builder.Append(Header[i]);
+                builder.Append(@"\multicolumn{1}{c}{\textbf{" + Header[i] + "}}");
                 builder.Append(i < Header.Length - 1 ? " & " : @"\\");
             }
             if (Units == null) return;
@@ -49,7 +49,7 @@ namespace LaTeX
             builder.AppendLine();
             for (int i = 0; i < Units.Length; i++)
             {
-                builder.Append(Units[i]);
+                builder.Append(@"\multicolumn{1}{c}{\textbf{" + Units[i] + "}}");
                 builder.Append(i < Units.Length - 1 ? " & " : @"\\");
             }
         }

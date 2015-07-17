@@ -50,7 +50,7 @@ namespace Utils.Statistics
         /// </summary>
         private static double FastPercentile(List<double> orderedData, double percentile)
         {
-            var idx = (int) Math.Ceiling((orderedData.Count-1)*(percentile/100));
+            var idx = (int) Math.Round((orderedData.Count-1)*(percentile/100));
             return orderedData.Count == 0 ? 0 : orderedData[idx];
         }
 

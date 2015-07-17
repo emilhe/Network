@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BusinessLogic.Cost.Optimization;
 using Utils;
 
 namespace BusinessLogic.Cost
@@ -35,9 +36,19 @@ namespace BusinessLogic.Cost
         {
             return new NodeGene
             {
-                Alpha = Rnd.NextDouble() * (AlphaMax - AlphaMin) + AlphaMin,
-                Gamma = Rnd.NextDouble() * (GammaMax - GammaMin) + GammaMin
+                Alpha = RndAlpha(),
+                Gamma = RndGamma()
             };
+        }
+
+        public static double RndGamma()
+        {
+            return Rnd.NextDouble()*(GammaMax - GammaMin) + GammaMin;
+        }
+
+        public static double RndAlpha()
+        {
+            return Rnd.NextDouble()*(AlphaMax - AlphaMin) + AlphaMin;
         }
 
         #endregion
@@ -130,7 +141,7 @@ namespace BusinessLogic.Cost
 
         private static double LevyStep()
         {
-            return Rnd.NextLevy(0.5, 1);
+            return Rnd.NextLevy(1.5, 0);
         }
 
         #endregion
@@ -184,6 +195,15 @@ namespace BusinessLogic.Cost
         #endregion
 
         #region Util methods
+
+        public static bool Renormalize(double[] vec)
+        {
+            var rescaling = GammaRescaling(vec);
+            if (rescaling.Equals(double.NegativeInfinity)) return false;
+
+            ScaleGamma(vec, rescaling);
+            return true;
+        }
 
         public static bool Renormalize(NodeChromosome chromosome)
         {
@@ -243,7 +263,7 @@ namespace BusinessLogic.Cost
             return chromosome.Gamma/effGamma;
         }
 
-        private static double GammaRescaling(NodeChromosome chromosome)
+        public static double GammaRescaling(NodeChromosome chromosome)
         {
             var genes = chromosome.Genes;
             // Calculte new effective gamma.
@@ -264,6 +284,56 @@ namespace BusinessLogic.Cost
             }
             // Return the scaling factor.
             return chromosome.Gamma/effGamma;
+        }
+
+        private static double GammaRescaling(double[] vec)
+        {
+            var n = NodeVec.Labels.Count;
+            // Calculte new effective gamma.
+            var wind = 0.0;
+            var solar = 0.0;
+            for (int i = 0; i < n; i++)
+            {
+                var load = CountryInfo.GetMeanLoad(NodeVec.Labels[i]);
+                wind += vec[i] * load * vec[i+n];
+                solar += vec[i]*load*(1 - vec[i + n]);
+            }
+            var effGamma = (wind + solar) / CountryInfo.GetMeanLoadSum();
+            // Check if the new effective gamma violates the contstraints.
+            for (int i = 0; i < n; i++)
+            {
+                var value = vec[i]/effGamma;
+                if (GammaMin - value > 1e-5) return double.NegativeInfinity;
+                if (GammaMax - value < -1e-5) return double.NegativeInfinity;
+            }
+            // Return the scaling factor (TODO: NOT ONE; SHOULD BE ALL OVER GAMMA).
+            return 1 / effGamma; 
+        }
+
+        public static double Penalty(NodeVec vec)
+        {
+
+            var n = NodeVec.Labels.Count;
+            var penalty = 0.0;
+            var delta = 1e-6;
+            // Calculate alpha/gamma penalties.
+            for (int i = 0; i < n; i++)
+            {
+                if (vec[i] < GammaMax + delta) penalty -= Math.Log(GammaMax + (delta - vec[i]));
+                else penalty += 1e3;
+                if (vec[i] > GammaMin - delta) penalty -= Math.Log(vec[i] - (GammaMin - delta));
+                else penalty += 1e3;
+                if (vec[i + n] < AlphaMax + delta) penalty -= Math.Log(AlphaMax + (delta - vec[i + n]));
+                else penalty += 1e3;
+                if (vec[i + n] > AlphaMin - delta) penalty -= Math.Log(vec[i] - (AlphaMin - delta));
+                else penalty += 1e3;
+            }
+            return penalty/1000;
+        }
+
+        private static void ScaleGamma(double[] vec, double scaling)
+        {
+            for (int i = 0; i < NodeVec.Labels.Count; i++) vec[i] *= scaling;
         }
 
         private static void ScaleGamma(NodeChromosome chromosome, double scaling)

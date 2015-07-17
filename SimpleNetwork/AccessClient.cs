@@ -16,7 +16,7 @@ namespace BusinessLogic
 
         #region Country data
 
-        public static List<CountryNode> GetAllCountryDataOld(TsSource source, int offset = 0)
+        public static CountryNode[] GetAllCountryDataOld(TsSource source, int offset = 0)
         {
             var countries = ProtoStore.LoadCountries();
             var result = new List<CountryNode>(countries.Count);
@@ -29,10 +29,10 @@ namespace BusinessLogic
                 result.Add(new CountryNode(new ReModel(country, load, solar, onshoreWind)));
             }
 
-            return result;
+            return result.ToArray();
         }
 
-        public static List<CountryNode> GetAllCountryDataNew(TsSource source, int offset = 0)
+        public static CountryNode[] GetAllCountryDataNew(TsSource source, int offset = 0)
         {
             var countries = ProtoStore.LoadCountries();
             var result = new List<CountryNode>(countries.Count);
@@ -46,7 +46,7 @@ namespace BusinessLogic
                 result.Add(new CountryNode(new ReModel(country, load, solar, onshoreWind, offshoreWind)));
             }
 
-            return result;
+            return result.ToArray();
         }
 
         private static ImmutableTimeSeries GetTs(string country, TsType type, TsSource source, int offset)

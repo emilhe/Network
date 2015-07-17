@@ -1,6 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+<<<<<<< HEAD
+using System.Text;
+using System.Threading.Tasks;
+using BusinessLogic;
+=======
+>>>>>>> master
 using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
 using BusinessLogic.FailureStrategies;
@@ -17,6 +23,8 @@ namespace Main.Figures
     public class FlowAnalysiscs
     {
 
+<<<<<<< HEAD
+=======
         public static void ConstrainedFlowCostAnalysisISET(MainForm main)
         {        
             //CalculateFlowData();
@@ -46,20 +54,41 @@ namespace Main.Figures
             result.ToJsonFile(@"C:\Users\Emil\IdeaProjects\Python\constTrans\trailDataISET.txt");
         }
 
+>>>>>>> master
         public static void ConstrainedFlowCostAnalysis(MainForm main)
         {
             CalculateFlowData();
 
+<<<<<<< HEAD
+            var fractions = new[] { 1.0, 0.75, 2.0 / 3, 0.5, 1.0/3, 0.0 };
+            //var fractions = new[] { 1.0, 0.75, 0.5, 0.40, 1.0 / 3, 0.25, 0.15, 0.0 }; OLD SYNC
+            //var fractions = new[] { 1.0, 0.75, 2.0 / 3, 0.6, 0.5, 1.0 / 3, 0.25, 0.0 };   
+            //var fractions = new[] { 1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05 };
+
+            var result = new Dictionary<double, Dictionary<string, double>>();
+            var core =  new FullCore(); //new ModelYearCore(FileUtils.FromJsonFile<ModelYearConfig>(@"C:\EmherSN\32YearAlpha0.5to1Gamma0.5to2Sync.txt"));
+            var eval = new ParameterEvaluator(core) { CacheEnabled = true };
+=======
             var fractions = new[] { 1.0, 0.75, 2.0 / 3, 0.6, 0.5, 1.0 / 3, 0.25, 0.0 };
             //var fractions = new[] { 1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05 };
 
             var result = new Dictionary<double, Dictionary<string, double>>();
             var core = new FullCore(); //new FullCore();
             var eval = new ParameterEvaluator(core);
+>>>>>>> master
             var calc = new NodeCostCalculator(eval);
             foreach (var fraction in fractions)
             {
                 // Inject edge constraints.
+<<<<<<< HEAD
+                (core.TcController as SimulationController).EdgeFuncs.Clear();
+                (core.TcController as SimulationController).EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100),
+                list => ConfigurationUtils.GetEdgeObject(list, "flow32YearCfmaxk=1Gamma1alpha1local", fraction));
+                result.Add(fraction, calc.DetailedSystemCosts(new NodeGenes(1, 1), true));
+            }
+
+            result.ToJsonFile(@"C:\EmherSN\HomogeneousVElocal32.txt");
+=======
                 core.TcController.EdgeFuncs.Clear();
                 core.TcController.EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100),
                 list => ConfigurationUtils.GetEdges(list.Select(item => (INode)item).ToList(), "flow32YearAlpha1Gamma1", fraction));
@@ -67,6 +96,7 @@ namespace Main.Figures
             }
 
             result.ToJsonFile(@"C:\Users\Emil\IdeaProjects\Python\constTrans\HomogeneousVE.txt");
+>>>>>>> master
         }
 
         public static void ConstrainedFlowAnalysis(MainForm main)
@@ -101,9 +131,9 @@ namespace Main.Figures
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput()
                 {
-                    ExportStrategy = ExportStrategy.ConstrainedFlow
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             ctrl.FailFuncs = new Dictionary<string, Func<IFailureStrategy>>();
             ctrl.FailFuncs.Add("Allow blackouts", () => new AllowBlackoutsStrategy(100));
@@ -117,7 +147,7 @@ namespace Main.Figures
                 var fraction = fractions[fracIdx];
                 // Update edge functions.
                 ctrl.EdgeFuncs.Clear();
-                ctrl.EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100), list => ConfigurationUtils.GetEdges(list.Select(item => (INode)item).ToList(), "flowTest", fraction)); // OK
+                ctrl.EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100), list => ConfigurationUtils.GetEdgeObject(list, "flowTest", fraction)); // OK
                 // Evaluate.    
                 var result = ctrl.EvaluateGrid(grid)[0].Grid;
                 // Find last success.
@@ -177,7 +207,7 @@ namespace Main.Figures
             //view.MainChart.ChartAreas[0].AxisY.Title = "Mixing, α";
             //view.MainChart.ChartAreas[0].AxisY.Minimum = 0.59;
             //view.MainChart.ChartAreas[0].AxisY.Maximum = 0.61;
-            //ChartUtils.SaveChart(view.MainChart, 1000, 500, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\ConstrainedFlow.png");
+            //ChartUtils.SaveChart(view.MainChart, 1000, 500, @"C:\Users\Emil\Dropbox\Master Thesis\Notes\Figures\ConstrainedLocalized.png");
         }
 
         private static void CalculateFlowData()
@@ -185,11 +215,15 @@ namespace Main.Figures
             var nodes = ConfigurationUtils.CreateNodesNew();
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE50PCT, Offset = 0, Length = 32 });
+<<<<<<< HEAD
+            ctrl.ExportStrategies.Add(new ExportSchemeInput(){Scheme = ExportScheme.ConstrainedLocalized});;
+=======
             ctrl.ExportStrategies.Add(
                 new ExportStrategyInput
                 {
                     ExportStrategy = ExportStrategy.ConstrainedFlow
                 });
+>>>>>>> master
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("No storage", input =>
             {
@@ -200,7 +234,11 @@ namespace Main.Figures
             ctrl.LogFlows = true;
             //var outputs = ctrl.EvaluateTs(1.026, 0.65);
             //var outputs = ctrl.EvaluateTs(1.021, 0.62);
+<<<<<<< HEAD
+            var outputs = ctrl.EvaluateTs(NodeGenesFactory.SpawnCfMax(1, 1, 1));
+=======
             var outputs = ctrl.EvaluateTs(NodeGenesFactory.SpawnCfMax(1,1,3));
+>>>>>>> master
 
             // Create reference histogram.
             var flows = new List<LinkDataRow>();
@@ -209,14 +247,46 @@ namespace Main.Figures
                 var countries = pair.Key.Split(new[] { "\r\n" }, StringSplitOptions.None);
                 flows.Add(new LinkDataRow
                 {
-                    CountryFrom = CountryInfo.GetName(countries[0]),
-                    CountryTo = CountryInfo.GetName(countries[1]),
+                    From = CountryInfo.GetName(countries[0]),
+                    To = CountryInfo.GetName(countries[1]),
                     LinkCapacity = pair.Value
                 });
             }
 
+<<<<<<< HEAD
+            ProtoStore.SaveLinkData(flows, "flow32YearCfmaxk=1Gamma1alpha1local"); //flowReal
+=======
             ProtoStore.SaveLinkData(flows, "flow32YearCfmaxk=3Gamma1alpha1"); //flowReal
+>>>>>>> master
         }
+
+        //private static void CalculateFlowData()
+        //{
+        //    var ctrl = new SimulationController { InvalidateCache = false };
+        //    ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
+        //    ctrl.ExportStrategies.Add(
+        //        new ExportSchemeInput()
+        //        {
+        //            Scheme = ExportScheme.UnconstrainedSynchronized
+        //        });
+        //    //var outputs = ctrl.EvaluateTs(1.026, 0.65);
+        //    var outputs = ctrl.EvaluateTs(1.021, 0.62);
+
+        //    // Create reference histogram.
+        //    var flows = new List<LinkDataRow>();
+        //    foreach (var pair in FullCapacities(outputs[0]))
+        //    {
+        //        var countries = pair.Key.Split(new[] { "\r\n" }, StringSplitOptions.None);
+        //        flows.Add(new LinkDataRow
+        //        {
+        //            From = CountryInfo.GetName(countries[0]),
+        //            To = CountryInfo.GetName(countries[1]),
+        //            LinkCapacity = pair.Value
+        //        });
+        //    }
+
+        //    ProtoStore.SaveLinkData(flows, "flow1YearAlpha1Gamma1Sync"); //flowReal
+        //}
 
         #region Flow analysis
 
@@ -225,9 +295,9 @@ namespace Main.Figures
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput()
                 {
-                    ExportStrategy = ExportStrategy.ConstrainedFlow
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             ctrl.NodeFuncs.Add("6h batt (homo), 25TWh hydrogen (homo), 150 TWh hydro (hetero)", s =>
             {
@@ -297,9 +367,9 @@ namespace Main.Figures
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput()
                 {
-                    ExportStrategy = ExportStrategy.ConstrainedFlow,
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             //ctrl.NodeFuncs.Clear();
             //ctrl.NodeFuncs.Add("2.2 TWh batt (delta), 25 TWh hydrogen (delta), 150 TWh hydro (delta)", s =>
@@ -350,9 +420,9 @@ namespace Main.Figures
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput()
                 {
-                    ExportStrategy = ExportStrategy.ConstrainedFlow
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("6h batt (homo), 150 TWh hydro (homo)", s =>
@@ -440,9 +510,9 @@ namespace Main.Figures
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput()
                 {
-                    ExportStrategy = ExportStrategy.ConstrainedFlow
+                    Scheme = ExportScheme.ConstrainedLocalized
                 });
             var outputs = ctrl.EvaluateTs(1.026, 0.65);
             var view = main.DisplayHistogram();

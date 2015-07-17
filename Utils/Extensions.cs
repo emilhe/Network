@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
 using Newtonsoft.Json;
 
 namespace Utils
@@ -23,6 +25,68 @@ namespace Utils
             return source;
         }
 
+        public static double[] Ones(this double[] source)
+        {
+            for (int i = 0; i < source.Length; i++) source[i] = 1;
+            return source;
+        }
+
+        public static double[] Mult(this double[] source, double num)
+        {
+            for (int i = 0; i < source.Length; i++) source[i] = source[i]*num;
+            return source;
+        }
+
+        public static double[] Norm(this double[] source, double norm = 1)
+        {
+            var sum = source.Sum();
+            for (int i = 0; i < source.Length; i++) source[i] = source[i] * (norm/sum);
+            return source;
+        }
+
+        public static double[] Add(this double[] source, double[] other, double weight = 1)
+        {
+            for (int i = 0; i < source.Length; i++) source[i] = source[i] + other[i]*weight;
+            return source;
+        }
+
+        public static T[] Fill<T>(this T[] source, T elem)
+        {
+            for (int i = 0; i < source.Length; i++) source[i] = elem;
+            return source;
+        }
+
+        public static T[] Fill<T>(this T[] source, Func<T> elem)
+        {
+            for (int i = 0; i < source.Length; i++) source[i] = elem();
+            return source;
+        }
+
+        public static T[] Fill<T>(this T[] source, Func<int,T> elem)
+        {
+            for (int i = 0; i < source.Length; i++) source[i] = elem(i);
+            return source;
+        }
+
+        public static T[,] Fill<T>(this T[,] source, T elem)
+        {
+            for (int i = 0; i < source.GetLength(0); i++)
+            {
+                for (int j = 0; j < source.GetLength(1); j++)
+                {
+                    source[i, j] = elem;
+                }
+            }
+            return source;
+        }
+
+        public static T[] Copy<T>(this T[] source)
+        {
+            var result = new T[source.Length];
+            for (int i = 0; i < source.Length; i++) result[i] = source[i];
+            return result;
+        }
+
         public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source, Random rng)
         {
             T[] elements = source.ToArray();
@@ -36,6 +100,28 @@ namespace Utils
                 elements[swapIndex] = elements[i];
             }
         }
+
+        public static string ToDebugString<TKey, TValue>(this IDictionary<TKey, TValue> dictionary)
+        {
+            return "{" + string.Join(",", dictionary.Select(kv => kv.Key.ToString() + "=" + kv.Value.ToString()).ToArray()) + "}";
+        }
+
+        #region Matrix extensions
+
+        public static Matrix<double> PseudoInverse(this Matrix<double> A)
+        {
+            var evd = A.Evd();
+            var D = evd.D;
+            var Dplus = new DenseMatrix(D.RowCount, D.ColumnCount);
+            for (int i = 0; i < D.RowCount; i++)
+            {
+                Dplus[i, i] = (D[i, i] < 1e-6) ? 0 : 1.0/D[i, i];
+            }
+            var V = evd.EigenVectors;
+            return V.Multiply(Dplus.Multiply(V.Transpose()));
+        }
+
+        #endregion
 
         #region Hash extensions
 
@@ -278,6 +364,14 @@ namespace Utils
         }
 
         #endregion
+
+        public static void AddAll<TKey,TValue>(this Dictionary<TKey, TValue> dict, Dictionary<TKey, TValue> other)
+        {
+            foreach (var pair in other)
+            {
+                dict.Add(pair.Key, pair.Value);
+            }
+        }
 
     }
 }

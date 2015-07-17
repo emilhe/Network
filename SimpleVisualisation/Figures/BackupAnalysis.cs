@@ -24,10 +24,10 @@ namespace Main.Figures
             var ctrl = new SimulationController
             {
                 InvalidateCache = false,
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput{ExportStrategy = ExportStrategy.None},
-                    //new ExportStrategyInput{ExportStrategy = ExportStrategy.Cooperative, DistributionStrategy = DistributionStrategy.SkipFlow}
+                    new ExportSchemeInput{Scheme = ExportScheme.None},
+                    //new ExportStrategyInput{ExportScheme = ExportScheme.Cooperative, DistributionStrategy = DistributionStrategy.SkipFlow}
                 },
                 Sources = new List<TsSourceInput>
                 {
@@ -102,10 +102,9 @@ namespace Main.Figures
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.ISET, Offset = 0, Length = 8 });
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput
                 {
-                    ExportStrategy = ExportStrategy.Cooperative,
-                    DistributionStrategy = DistributionStrategy.SkipFlow
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             var data = ctrl.EvaluateTs(1.0225, 0.65);
             // Derive yearly relevant data.

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Storages;
 using BusinessLogic.TimeSeries;
+using BusinessLogic.Utils;
 
 namespace BusinessLogic.Generators
 {
@@ -22,7 +23,7 @@ namespace BusinessLogic.Generators
 
         public string Name
         {
-            get { return "Hydro reservoir"; }
+            get { return "Hydro reservoir generator"; }
         }
 
         public double Production { get; set; }
@@ -62,9 +63,10 @@ namespace BusinessLogic.Generators
         public void TickChanged(int tick)
         {
             // Always produce AS MUCH as possible.
-            Production = _mInternalReservoir.AvailableEnergy(Response.Discharge);
+            Production = -_mInternalReservoir.AvailableEnergy(Response.Discharge);
             // Inject inflow minus production into the reservoir.
-            _mInternalReservoir.Inject(_mInflowPattern.GetValue(tick) * _mYearlyInflow - Production);
+            if (_mInflowPattern == null) _mInternalReservoir.Inject(_mYearlyInflow/Stuff.HoursInYear - Production);
+            else _mInternalReservoir.Inject(_mInflowPattern.GetValue(tick) * _mYearlyInflow - Production);
         }
     }
 }

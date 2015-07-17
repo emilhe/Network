@@ -304,9 +304,9 @@ namespace SimpleImporter
     public class LinkDataRow
     {
         [ProtoMember(1)]
-        public string CountryFrom { get; set; }
+        public string From { get; set; }
         [ProtoMember(2)]
-        public string CountryTo { get; set; }
+        public string To { get; set; }
         [ProtoMember(3)]
         public double LinkCapacity { get; set; }
         //[ProtoMember(3)]

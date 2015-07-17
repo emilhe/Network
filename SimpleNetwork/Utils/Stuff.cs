@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
+using BusinessLogic.ExportStrategies;
 using BusinessLogic.Nodes;
+using Utils;
+using Utils.Statistics;
 
 namespace BusinessLogic.Utils
 {
@@ -12,16 +16,14 @@ namespace BusinessLogic.Utils
         public static int HoursInYear = 8766;
         //public static int HoursInYear = 8760;
 
-        public static EdgeSet StraightLine(List<CountryNode> nodes)
+        public static EdgeCollection StraightLine(CountryNode[] nodes)
         {
-            var edges = new EdgeSet(nodes.Count);
-            // For now, connect the nodes in a straight line.
-            for (int i = 0; i < nodes.Count - 1; i++)
+            var builder = new EdgeBuilder(nodes.Select(item => item.Name).ToArray());
+            for (int i = 0; i < nodes.Length - 1; i++)
             {
-                edges.Connect(i, i + 1);
-                edges.Connect(i+1, i);
+                builder.Connect(i, i + 1);
             }
-            return edges;
+            return builder.ToEdges();
         }
 
         // EMHER: The value 0.95 is to "optimal mix".
@@ -43,6 +45,30 @@ namespace BusinessLogic.Utils
                 beta += delta;
             }
             return Math.Max(0,beta-delta);
+        }
+
+        // Delta weights - so far ONLY using one year
+        public static double[] DeltaWeights(CountryNode[] nodes, NodeGenes genes)
+        {
+            var weights = new double[nodes.Length];
+
+            for (int j = 0; j < nodes.Length; j++)
+            {
+                var node = nodes[j];
+                node.Model.Gamma = genes[node.Name].Gamma;
+                node.Model.Alpha = genes[node.Name].Alpha;
+                node.Model.OffshoreFraction = genes[node.Name].OffshoreFraction;
+                var backup = new double[HoursInYear];
+                for (int i = 0; i < HoursInYear; i++)
+                {
+                    node.TickChanged(i);
+                    backup[i] = node.GetDelta();
+                }
+                weights[j] = Math.Abs(MathUtils.Percentile(backup,1));
+            }
+            weights.Norm();
+
+            return weights;
         }
 
     }

@@ -79,18 +79,24 @@
     <Reference Include="Gurobi60.NET">
       <HintPath>..\..\..\..\..\..\gurobi600\win64\bin\Gurobi60.NET.dll</HintPath>
     </Reference>
+    <Reference Include="MathNet.Numerics, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\MathNet.Numerics.3.6.0\lib\net40\MathNet.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.framework">
-      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+    <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -101,43 +107,47 @@
   <ItemGroup>
     <Compile Include="AccessClient.cs" />
     <Compile Include="Cost\CostModels\IBackupCostModel.cs" />
+    <Compile Include="Cost\NodeVecCostCalculator.cs" />
     <Compile Include="Cost\Optimization\CukooNodeOptimizationStrategy.cs" />
     <Compile Include="Cost\Optimization\GenePool.cs" />
     <Compile Include="Cost\Optimization\GeneticNodeOptimizationStrategy.cs" />
     <Compile Include="Cost\INodeCostCalculator.cs" />
     <Compile Include="Cost\Optimization\NodeGenes.cs" />
     <Compile Include="Cost\Optimization\NodeGenesFactory.cs" />
+    <Compile Include="Cost\Optimization\NodeVec.cs" />
+    <Compile Include="Cost\Optimization\SimplexNodeOptimizationStrategy.cs" />
     <Compile Include="Cost\ParallelCostCalculator.cs" />
     <Compile Include="Cost\CostModels\FixedLengthModel.cs" />
     <Compile Include="Cost\CostModels\ISolarCostModel.cs" />
     <Compile Include="Cost\CostModels\ITransmissionCostModel.cs" />
     <Compile Include="Cost\CostModels\IWindCostModel.cs" />
     <Compile Include="Cost\CostModels\VariableLengthModel.cs" />
-    <Compile Include="ExportStrategies\CooperativeExportStrategy.cs" />
-    <Compile Include="ExportStrategies\ExportHelper.cs" />
-    <Compile Include="ExportStrategies\ConstrainedFlowExportStrategy.cs" />
-    <Compile Include="ExportStrategies\SelfishExportStrategy.cs" />
+    <Compile Include="ExportStrategies\ConLocalScheme.cs" />
+    <Compile Include="ExportStrategies\ConScheme.cs" />
+    <Compile Include="ExportStrategies\ConSyncScheme.cs" />
+    <Compile Include="ExportStrategies\EdgeCollection.cs" />
+    <Compile Include="ExportStrategies\PhaseAngleFlow.cs" />
+    <Compile Include="ExportStrategies\UncLocalScheme.cs" />
+    <Compile Include="ExportStrategies\UncSyncScheme.cs" />
     <Compile Include="FailureStrategies\AllowBlackoutsStrategy.cs" />
     <Compile Include="FailureStrategies\NoBlackoutStrategy.cs" />
     <Compile Include="Interfaces\INode.cs" />
     <Compile Include="Interfaces\IMeasureable.cs" />
-    <Compile Include="Interfaces\IDistributionStrategy.cs" />
-    <Compile Include="ExportStrategies\DistributionStrategies\MinimalFlowStrategy.cs" />
-    <Compile Include="ExportStrategies\NoExportStrategy.cs" />
-    <Compile Include="ExportStrategies\DistributionStrategies\SkipFlowStrategy.cs" />
+    <Compile Include="ExportStrategies\NoExportScheme.cs" />
     <Compile Include="Interfaces\IFailureStrategy.cs" />
+    <Compile Include="Interfaces\IOptimizer.cs" />
     <Compile Include="Interfaces\ITickListener.cs" />
     <Compile Include="Cost\NodeCostCalculator.cs" />
     <Compile Include="Cost\Optimization\NodeChromosome.cs" />
     <Compile Include="Cost\Optimization\NodeGene.cs" />
     <Compile Include="Simulation\ISimulation.cs" />
     <Compile Include="Nodes\ReModel.cs" />
-    <Compile Include="Nodes\SuperNode.cs" />
+    <Compile Include="Simulation\ISimulationController.cs" />
     <Compile Include="Simulation\SimulationController.cs" />
     <Compile Include="Storages\CompositeStorage.cs" />
-    <Compile Include="Storages\BalancingStorage.cs" />
     <Compile Include="Generators\HydroReservoirGenerator.cs" />
     <Compile Include="Storages\HydroReservoirStorage.cs" />
+    <Compile Include="Storages\SimpleHydroReservoirStorage.cs" />
     <Compile Include="Storages\StorageCollection.cs" />
     <Compile Include="Generators\ConstantGenerator.cs" />
     <Compile Include="Generators\RandomGenerator.cs" />
@@ -145,14 +155,17 @@
     <Compile Include="Interfaces\ITimeSeries.cs" />
     <Compile Include="Interfaces\ITimeSeriesItem.cs" />
     <Compile Include="NetworkModel.cs" />
-    <Compile Include="Interfaces\IExportStrategy.cs" />
+    <Compile Include="Interfaces\IExportScheme.cs" />
     <Compile Include="Nodes\CountryNode.cs" />
     <Compile Include="Generators\SuperGenerator.cs" />
-    <Compile Include="TimeSeries\BasicTimeSeries.cs" />
+    <Compile Include="TimeSeries\Measureable.cs" />
+    <Compile Include="TimeSeries\TimeSeriesMetaData.cs" />
     <Compile Include="TimeSeries\IndexedTimeSeries.cs" />
     <Compile Include="TimeSeries\Mapping.cs" />
     <Compile Include="TimeSeries\ImmutableTimeSeries.cs" />
-    <Compile Include="Utils\FlowOptimizer.cs" />
+    <Compile Include="Utils\ConLocalOptimizer.cs" />
+    <Compile Include="Utils\ConSyncOptimizer.cs" />
+    <Compile Include="Utils\CoreOptimizer.cs" />
     <Compile Include="Interfaces\IGenerator.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
     <Compile Include="Program.cs" />
@@ -168,11 +181,13 @@
     <Compile Include="TimeSeries\SparseTimeSeries.cs" />
     <Compile Include="TimeSeries\TickTimeSeriesItem.cs" />
     <Compile Include="Utils\ConfigurationUtils.cs" />
-    <Compile Include="Utils\ConstrainedFlowOptimizer.cs" />
     <Compile Include="Utils\GridEvaluator.cs" />
+    <Compile Include="Utils\LinearOptimizer.cs" />
+    <Compile Include="Utils\ObjectiveFactory.cs" />
+    <Compile Include="Utils\QuadFlowOptimizer.cs" />
     <Compile Include="Utils\LineEvaluator.cs" />
-    <Compile Include="Utils\MismatchOptimizer.cs" />
     <Compile Include="Utils\ParameterEvaluator.cs" />
+    <Compile Include="Utils\StorageMap.cs" />
     <Compile Include="Utils\Stuff.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -193,7 +208,13 @@
       <Name>Utils</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="App_Readme\MathNet.Numerics.authors.txt" />
+    <Content Include="App_Readme\MathNet.Numerics.copyright.txt" />
+    <Content Include="App_Readme\MathNet.Numerics.readme.txt" />
+    <Content Include="libiomp5md.dll" />
+    <Content Include="MathNet.Numerics.MKL.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

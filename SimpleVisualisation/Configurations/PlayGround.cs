@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic;
+using BusinessLogic.Cost;
 using BusinessLogic.ExportStrategies;
-using BusinessLogic.ExportStrategies.DistributionStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
 using BusinessLogic.Simulation;
@@ -20,29 +20,40 @@ namespace Main.Configurations
 
         public static void ShowTimeSeris(MainForm main)
         {
-            var ctrl = new SimulationController { InvalidateCache = true };
-            ctrl.Sources.Add(new TsSourceInput { Source = TsSource.ISET, Offset = 0, Length = 1 });
-            ctrl.ExportStrategies.Add(new ExportStrategyInput
+            var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Local.txt");
+            var core = new ModelYearCore(config);
+            //var param = new ParameterEvaluator(core);
+            //var calc = new NodeCostCalculator(param);
+            //var mCf = new NodeGenes(1, 1);
+            //Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
+
+            var ctrl = (core.BeController as SimulationController); // new SimulationController(); 
+            ctrl.InvalidateCache = true;
+            ctrl.NodeFuncs.Clear();
+            ctrl.NodeFuncs.Add("hydro storage", input =>
             {
-                ExportStrategy = ExportStrategy.Cooperative,
-                DistributionStrategy = DistributionStrategy.MinimalFlow
+                var nodes = ConfigurationUtils.CreateNodes();
+                //ConfigurationUtils.SetupHydroStorage(nodes);
+                ConfigurationUtils.SetupHomoStuff(nodes, 1, true, true, false);
+                return nodes;
             });
-            ctrl.ExportStrategies.Add(new ExportStrategyInput
+            ctrl.LogFlows = true;
+            ctrl.LogAllNodeProperties = true;
+            ctrl.ExportStrategies.Clear();
+            ctrl.ExportStrategies.Add(new ExportSchemeInput
             {
-                ExportStrategy = ExportStrategy.ConstrainedFlow
+                Scheme = ExportScheme.UnconstrainedSynchronized
             });
+            ctrl.Sources.Clear();
+            ctrl.Sources.Add(new TsSourceInput { Length = 8, Offset = 0 });
 
-            var data = ctrl.EvaluateTs(1.029, 0.65);
+            var param = new ParameterEvaluator(core);
+            var calc = new NodeCostCalculator(param);
+            var mCf = new NodeGenes(0.56, 1.03);
+            Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
+            ctrl.InvalidateCache = false;
 
-            foreach (var item in data)
-            {
-                foreach (var ts in item.TimeSeries)
-                {
-                    ts.Properties.Add("ExportStrategy", ((ExportStrategy)Byte.Parse(item.Properties["ExportStrategy"])).GetDescription());
-                    ts.DisplayProperties.Add("ExportStrategy");
-                }
-            }
-
+            var data = ctrl.EvaluateTs(0.56, 1.03);
             main.DisplayTimeSeries().SetData(data.SelectMany(item => item.TimeSeries).ToList());
         }
 
@@ -57,11 +68,11 @@ namespace Main.Configurations
                 ConfigurationUtils.SetupNodesFromEcnData(nodes, ProtoStore.LoadEcnData());
                 return nodes;
             });
-            ctrl.ExportStrategies.Add(new ExportStrategyInput
+            ctrl.ExportStrategies.Add(new ExportSchemeInput
             {
-                ExportStrategy = ExportStrategy.Cooperative,
-                DistributionStrategy = DistributionStrategy.SkipFlow
+                Scheme = ExportScheme.ConstrainedLocalized,
             });
+
 
             main.DisplayTimeSeries().SetData(ctrl.EvaluateTs(1.029, 0.65).SelectMany(item => item.TimeSeries).ToList());
         }
@@ -87,12 +98,11 @@ namespace Main.Configurations
             var ctrl = new SimulationController
             {
                 InvalidateCache = true,
-                ExportStrategies = new List<ExportStrategyInput>
+                ExportStrategies = new List<ExportSchemeInput>
                 {
-                    new ExportStrategyInput
+                    new ExportSchemeInput()
                     {
-                        DistributionStrategy = DistributionStrategy.SkipFlow,
-                        ExportStrategy = ExportStrategy.Cooperative
+                        Scheme = ExportScheme.UnconstrainedSynchronized
                     },
                 },
                 Sources = new List<TsSourceInput>
@@ -114,9 +124,9 @@ namespace Main.Configurations
             var ctrl = new SimulationController();
             ctrl.InvalidateCache = true;
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 1 });
-            ctrl.ExportStrategies.Add(new ExportStrategyInput
+            ctrl.ExportStrategies.Add(new ExportSchemeInput()
             {
-                ExportStrategy = ExportStrategy.ConstrainedFlow,
+                Scheme = ExportScheme.ConstrainedLocalized,
             });
             //ctrl.FailFuncs.Add("32 blackouts", () => new AllowBlackoutsStrategy(32));
 
@@ -146,56 +156,56 @@ namespace Main.Configurations
 
         #region Compare the different export schemes
 
-        public static void CompareExportSchemes(MainForm main, bool save = false)
-        {
-            var view = main.DisplayContour();
-            var grid = new GridScanParameters
-            {
-                MixingFrom = 0.45,
-                MixingTo = 0.85,
-                MixingSteps = 40,
-                PenetrationFrom = 1.00,
-                PenetrationTo = 1.75,
-                PenetrationSteps = 100
-            };
-            var ctrl = new SimulationController
-            {
-                ExportStrategies = new List<ExportStrategyInput>
-                {
-                    new ExportStrategyInput
-                    {
-                        DistributionStrategy = DistributionStrategy.SkipFlow,
-                        ExportStrategy = ExportStrategy.Cooperative
-                    },
-                    new ExportStrategyInput
-                    {
-                        DistributionStrategy = DistributionStrategy.SkipFlow,
-                        ExportStrategy = ExportStrategy.Selfish
-                    },
-                    new ExportStrategyInput
-                    {
-                        DistributionStrategy = DistributionStrategy.SkipFlow,
-                        ExportStrategy = ExportStrategy.None
-                    }
-                },
-                Sources = new List<TsSourceInput>
-                {
-                    // Simulate 8 years; the ISET data are 8 years long. Offset VE data by 21; VE are 1979-2010 while ISET are 2000-2007.
-                    //new TsSourceInput {Source = TsSource.VE, Offset = 21, Length = 1},
-                    new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 1},
-                }
-            };
+        //public static void CompareExportSchemes(MainForm main, bool save = false)
+        //{
+        //    var view = main.DisplayContour();
+        //    var grid = new GridScanParameters
+        //    {
+        //        MixingFrom = 0.45,
+        //        MixingTo = 0.85,
+        //        MixingSteps = 40,
+        //        PenetrationFrom = 1.00,
+        //        PenetrationTo = 1.75,
+        //        PenetrationSteps = 100
+        //    };
+        //    var ctrl = new SimulationController
+        //    {
+        //        ExportStrategies = new List<ExportStrategyInput>
+        //        {
+        //            new ExportStrategyInput
+        //            {
+        //                DistributionStrategy = DistributionStrategy.SkipFlow,
+        //                ExportScheme = ExportScheme.Cooperative
+        //            },
+        //            new ExportStrategyInput
+        //            {
+        //                DistributionStrategy = DistributionStrategy.SkipFlow,
+        //                ExportScheme = ExportScheme.Selfish
+        //            },
+        //            new ExportStrategyInput
+        //            {
+        //                DistributionStrategy = DistributionStrategy.SkipFlow,
+        //                ExportScheme = ExportScheme.None
+        //            }
+        //        },
+        //        Sources = new List<TsSourceInput>
+        //        {
+        //            // Simulate 8 years; the ISET data are 8 years long. Offset VE data by 21; VE are 1979-2010 while ISET are 2000-2007.
+        //            //new TsSourceInput {Source = TsSource.VE, Offset = 21, Length = 1},
+        //            new TsSourceInput {Source = TsSource.ISET, Offset = 0, Length = 1},
+        //        }
+        //    };
 
-            var legends = new[] { "Cooperative", "Selfish", "No Export" };
-            var data = ctrl.EvaluateGrid(grid);
-            for (int index = 0; index < data.Count; index++)
-            {
-                var result = data[index];
-                view.AddData(grid.Rows, grid.Cols, result.Grid, legends[index]);
-            }
+        //    var legends = new[] { "Cooperative", "Selfish", "No Export" };
+        //    var data = ctrl.EvaluateGrid(grid);
+        //    for (int index = 0; index < data.Count; index++)
+        //    {
+        //        var result = data[index];
+        //        view.AddData(grid.Rows, grid.Cols, result.Grid, legends[index]);
+        //    }
 
-            //if (save) ChartUtils.SaveChart(view.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\ExportSchemes.png");
-        }
+        //    //if (save) ChartUtils.SaveChart(view.MainChart, 800, 400, @"C:\Users\xXx\Dropbox\Master Thesis\Notes\Figures\ExportSchemes.png");
+        //}
 
         #endregion
 
@@ -216,13 +226,13 @@ namespace Main.Configurations
             //opt.OptimizeIndividually(0.05, 8);
 
             // Find out how good it is.
-            var model = new NetworkModel(nodes, new CooperativeExportStrategy(new SkipFlowStrategy()));
+            var model = new NetworkModel(nodes, new UncSyncScheme(nodes, ConfigurationUtils.GetEuropeEdgeObject(nodes)));
             var simulation = new SimulationCore(model);
             //var mCtrl = new MixController(nodes);
             LineEvaluator.EvalSimulation(lineParams, simulation, 8);
         }
 
-        public static SimulationCore Optimization(List<INode> nodes)
+        public static SimulationCore Optimization(CountryNode[] nodes)
         {
             //var opt = new MixOptimizer(nodes);
             //opt.OptimizeIndividually();
@@ -230,7 +240,7 @@ namespace Main.Configurations
             //opt.ReadMixCahce();
             //opt.OptimizeLocally();
 
-            var model = new NetworkModel(nodes, new CooperativeExportStrategy(new SkipFlowStrategy()));
+            var model = new NetworkModel(nodes, new UncSyncScheme(nodes, ConfigurationUtils.GetEuropeEdgeObject(nodes)));
             var simulation = new SimulationCore(model);
             for (var pen = 1.02; pen <= 1.10; pen += 0.0025)
             {
@@ -265,10 +275,9 @@ namespace Main.Configurations
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE, Offset = 0, Length = 32 });
             ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
+                new ExportSchemeInput
                 {
-                    ExportStrategy = ExportStrategy.Cooperative,
-                    DistributionStrategy = DistributionStrategy.SkipFlow
+                    Scheme = ExportScheme.UnconstrainedSynchronized
                 });
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("6h batt (homo), 150 TWh hydro (homo)", s =>
@@ -284,6 +293,35 @@ namespace Main.Configurations
         }
 
         #endregion
+
+        class MockSimulationController : ISimulationController
+        {
+
+            public List<SimulationOutput> Results { get; set; } 
+
+            public bool CacheEnabled
+            {
+                get { throw new NotImplementedException(); }
+                set { throw new NotImplementedException(); }
+            }
+
+            public bool InvalidateCache
+            {
+                get { throw new NotImplementedException(); }
+                set { throw new NotImplementedException(); }
+            }
+
+            public List<SimulationOutput> EvaluateTs(NodeGenes genes)
+            {
+                return Results;
+            }
+
+            public List<SimulationOutput> EvaluateTs(double penetration, double mixing)
+            {
+                return Results;
+            }
+
+        }
 
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using BusinessLogic.Cost.Optimization;
 using Optimization;
 
 namespace BusinessLogic.Cost
@@ -52,6 +54,24 @@ namespace BusinessLogic.Cost
         {
             Genes = genes;
             InvalidCost = true;
+
+            //if(GenePool.Renormalize(this)) return;
+            //throw new ArgumentException("Renormalisation impossible within alpha/gamma constraints.");
+        }
+
+        public NodeChromosome(NodeVec vec)
+        {
+            var genes = new Dictionary<string, NodeGene>();
+            for (int i = 0; i < NodeVec.Labels.Count; i++)
+            {
+                var key = NodeVec.Labels[i];
+                genes.Add(key, new NodeGene
+                {
+                    Gamma = vec[i],
+                    Alpha = vec[i + NodeVec.Labels.Count],
+                });
+            }
+            Genes = new NodeGenes(genes);
 
             //if(GenePool.Renormalize(this)) return;
             //throw new ArgumentException("Renormalisation impossible within alpha/gamma constraints.");
@@ -116,7 +136,25 @@ namespace BusinessLogic.Cost
                 childDna[name].Alpha = destiny ? Genes[name].Alpha : validPartner.Genes[name].Alpha;
            } 
             return new NodeChromosome(childDna);
-        } 
+        }
 
+        //public IVectorSolution Add(IVectorSolution partner, double weight)
+        //{
+        //    var other = partner as NodeChromosome;
+        //    if (other == null) throw new ArgumentException("Invalid partner.");
+
+        //    var genes = new NodeGenes();
+        //    foreach (var name in Genes.Keys)
+        //    {
+        //        genes[name].Gamma = Genes[name].Gamma + other.Genes[name].Gamma*weight;
+        //        genes[name].Alpha = Genes[name].Alpha + other.Genes[name].Alpha*weight;
+        //    }
+        //    return new NodeChromosome(genes);
+        //}
+
+        //public IVectorSolution Sub(IVectorSolution other)
+        //{
+        //    return Add(other, -1);
+        //}
     }
 }
