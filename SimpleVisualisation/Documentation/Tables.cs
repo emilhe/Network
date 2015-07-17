@@ -59,6 +59,7 @@ namespace Main.Documentation
                 row.AddRange(subRow);
                 i++;
             }
+            table.Rows.Add(row.ToArray());
 
             File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\linkInfo.tex", table.ToTeX());
         }
