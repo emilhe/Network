@@ -11,7 +11,8 @@ using Utils;
 
 namespace BusinessLogic.Utils
 {
-    public class ConfigurationUtils
+    public class 
+        ConfigurationUtils
     {
 
         private const int Year = 2010;
@@ -165,8 +166,9 @@ namespace BusinessLogic.Utils
         }
 
         public static void SetupRealHydro(CountryNode[] nodes, bool pump = true)
-        {
-            var data = FileUtils.FromJsonFile<Dictionary<string, HydroInfo>>(@"C:\Users\Emil\Dropbox\Master Thesis\HydroData2005Kies.txt");
+        {         
+            //var data = FileUtils.FromJsonFile<Dictionary<string, HydroInfo>>(@"C:\Users\Emil\Dropbox\Master Thesis\HydroData2005Kies.txt");
+            var data = FileUtils.FromJsonFile<Dictionary<string, HydroInfo>>(@"C:\Users\Emil\Dropbox\Master Thesis\HydroDataExtended2005Kies.txt");
             // Create storages.
             foreach (var node in nodes)
             {

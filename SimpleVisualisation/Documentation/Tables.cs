@@ -215,8 +215,8 @@ namespace Main.Documentation
                 var cMatch = capacity.SingleOrDefault(item => item.Country.Equals(country));
                 if (eMatch == null || cMatch == null)
                 {
-                    values[0] = "\\color{red} 0.00";
-                    values[1] = "\\color{red} 0.00";
+                    values[0] = "\\color{gray} 0.00";
+                    values[1] = "\\color{gray} 0.00";
                 }
                 else
                 {
@@ -225,7 +225,7 @@ namespace Main.Documentation
                     var capFuck = (hourly > 1e-2 && hourly*1000 > cMatch.Value);
                     var cap = capFuck ? hourly*2 : cMatch.Value/1000;
                     values[0] = hourly.ToString("0.00");
-                    values[1] = (capFuck? "\\color{red}" : "") + cap.ToString("0.00");
+                    values[1] = (capFuck ? "\\color{gray}" : "") + cap.ToString("0.00");
                 }
 
                 var col = idx / 10;
@@ -249,12 +249,16 @@ namespace Main.Documentation
                 Header =
                     new[]
                     {
-                        "", @"$\mathcal{K}^{-}$", @"$\mathcal{K}^{-}$", @"$E^S$", "Hourly inflow (mean)", "",
-                        @"$\mathcal{K}^{-}$", @"$\mathcal{K}^{-}$", @"$E^S$", "Hourly inflow (mean)",
+                        "", @"$\boldsymbol{\mathcal{K}^{-}}$", @"$\boldsymbol{\mathcal{K}^{+}}$", @"$\boldsymbol{E^S}$", "Inflow", "",
+                        @"$\boldsymbol{\mathcal{K}^{-}}$", @"$\boldsymbol{\mathcal{K}^{+}}$", @"$\boldsymbol{E^S}$", "Inflow",
+                    },
+                    Units = new []
+                    {
+                        "", "[GW]","[GW]","[TWh]","[GWh]", "", "[GW]","[GW]","[TWh]","[GWh]"    
                     },
                 Caption =
-                    @"Hest.",
-                Label = "capacity-factors",
+                    @"Installed hydro capacities $\mathcal{K}^{-}$, pump capacities $\mathcal{K}^{+}$, reservoir energy capacities $E^S$ and average hourly inflow for the European countries.",
+                Label = "hydro-data",
                 Format = "lcccclcccc",
                 Rows = new List<string[]>(),
             };
@@ -268,9 +272,9 @@ namespace Main.Documentation
 
                 if (data.ContainsKey(country))
                 {
-                    table.Rows[idx%15][col*5 + 1] = (data[country].Capacity/1000).ToString("0.00");
-                    table.Rows[idx%15][col*5 + 2] = (data[country].PumpCapacity/1000).ToString("0.00");
-                    table.Rows[idx%15][col*5 + 3] = data[country].ReservoirCapacity.ToString("0.00");
+                    table.Rows[idx % 15][col * 5 + 1] = (data[country].Corrected ? "\\color{gray}" : "") + (data[country].Capacity / 1000).ToString("0.00");
+                    table.Rows[idx % 15][col * 5 + 2] = (data[country].Corrected ? "\\color{gray}" : "") + (data[country].PumpCapacity / 1000).ToString("0.00");
+                    table.Rows[idx%15][col*5 + 3] = (data[country].Corrected ? "\\color{gray}" : "") + data[country].ReservoirCapacity.ToString("0.00");
                     table.Rows[idx%15][col*5 + 4] = (data[country].InflowPattern.Average()/24).ToString("0.00");
                 }
                 else
