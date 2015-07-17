@@ -7,10 +7,11 @@ using System.Windows.Forms;
 using BusinessLogic;
 using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
-using BusinessLogic.ExportStrategies;
+using BusinessLogic.Cost.Transmission;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Nodes;
 using BusinessLogic.Simulation;
-using BusinessLogic.Storages;
+using BusinessLogic.TimeSeries;
 using BusinessLogic.Utils;
 using Controls;
 using Controls.Charting;
@@ -40,126 +41,51 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
 
-            var nodes = ConfigurationUtils.CreateNodesNew();
-            ConfigurationUtils.SetupRealHydro(nodes);
-            var effGamma = nodes.Select(item => item.Model.AvgDeficit).Sum()/nodes.Select(item => item.Model.AvgLoad).Sum();
+            //Tables.PrintLinkInfo(3);
 
-            //StorageAnalysis.StorageOptimization();
-            //Tables.PrintCapacityFactors();
+            //foreach(var file in Directory.GetFiles(@"C:\Users\Emil\Dropbox\BACKUP\Python\sandbox\Layouts"))
+            //{
+            //    if(file.Contains(".pdf")) continue;
+            //    var data = FileUtils.FromJsonFile<NodeGenes>(file);
+            //    data.Export().ToJsonFile(file);
+            //}
 
-            //Tables.PrintReducedSolarAlphas();
+            //return;
 
-            //Article.DoOptimizations();
-            //Article.ExportFigureData();
-            Article.ExportExtraFigureData();
+            //        var paths = new[]
+            //        {
+            //            //@"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\overviews\dataSync.txt",
+            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\overviews\realReference.txt",
+            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\overviews\real5h.txt",
+            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\overviews\real35h.txt",
+            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\overviews\real5h+35h.txt"              
+            //        };
+            //        foreach (var path in paths)
+            //        {
+            //            var blob =
+            //FileUtils.FromJsonFile<Dictionary<string, Dictionary<double, BetaWrapper>>>(path);
+            //            Tables.PrintOverviewTable(blob);
+            //            Console.WriteLine();
+            //        }
 
-            //Figures.PlayGround.ExportChromosomeData();
-           
-            //Figures.PlayGround.ExportTcCalcAnalysisDataTmp();
-            //StorageAnalysis.StorageCost();
-            //ModelYearAnalysis.PrintModelYearStuff(this);
-            //ModelYearAnalysis.DetermineModelYear(this);
-            //ModelYearAnalysis.ErrorAnalysis(this);
-            //StorageAnalysis.OptimizeStuff();
-            //StorageAnalysis.ExportBias(new List<double> { 1 });
+            //        var load = CountryInfo.GetMeanLoadSum();
 
-            //CountryInfo.WindOnshoreCf.ToDictionary(item => CountryInfo.GetShortAbbrev(item.Key), item => item.Value).ToJsonFile(@"C:\Users\Emil\Dropbox\AU ESG\SandBox\onshoreWindCf.txt");
-            //CountryInfo.SolarCf.ToDictionary(item => CountryInfo.GetShortAbbrev(item.Key), item => item.Value).ToJsonFile(@"C:\Users\Emil\Dropbox\AU ESG\SandBox\solarCf.txt");
+            //var hours = 5; // Storage capacity in hours
+            //var price = 1.68; // EUR per kWh (pretty low!)
 
-            //var load = ConfigurationUtils.CreateNodes().Select(item => item.Model.AvgLoad).Sum();
-            //StorageAnalysis.Groenne2(0);
-            //StorageAnalysis.Groenne2(1);
-            //StorageAnalysis.Groenne2(2);
-            //StorageAnalysis.Groenne2(3);
+            //var capacity = 5*load; // Storage capacity in GWh
+            //var cost = capacity*price*1e6; // Storage cost in EUR
+            //var scale = Costs.AnnualizationFactor(25)*load*Stuff.HoursInYear;
+            //var lcoe = cost/scale;
 
-            //ModelYearAnalysis.DetermineModelYear(this);
-            //ModelYearAnalysis.ErrorAnalysis(this);
-
-            //StorageAnalysis.StorageCost();
-
-            //var core = new FullCore();
-            //var genes = new NodeGenes(1, 1);
-
-            //var now = DateTime.Now;
-            //core.Controller.EvaluateTs(genes);
-            //Console.WriteLine("Unconstrained took " + DateTime.Now.Subtract(now).TotalMilliseconds);
-
-            //core = new FullCore(32,null,"", ExportScheme.ConstrainedSynchronized);
-            //now = DateTime.Now;
-            //core.Controller.EvaluateTs(genes);
-            //Console.WriteLine("Constrained took " + DateTime.Now.Subtract(now).TotalMilliseconds);
-
-            //StorageAnalysis.ExportStrategyPower(new List<double> { 1 });
-            //StorageAnalysis.ExportStorageReal(new List<double> { 1 });
-            //StorageAnalysis.OptimizeStuff();
-            //StorageAnalysis.OptimizeStuff2();
-            //StorageAnalysis.OptimizeStuff3();
-            //Configurations.PlayGround.ShowTimeSerisNew(this);
-
-            //var data = FileUtils.FromJsonFile<Dictionary<string, Dictionary<double, BetaWrapper>>>(
-            //    @"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\drSyncVEhydroBiok=1,2,3.txt");
-
-            //var k1= data.ToDictionary(item => item.Key, item => item.Value.Take(1).ToDictionary(item1 => item1.Key, item1 => item1.Value));
-            //k1.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\drSyncVEhydroBiok=1.txt");
-            //var k2 = data.ToDictionary(item => item.Key, item => item.Value.Skip(1).Take(1).ToDictionary(item1 => item1.Key, item1 => item1.Value));
-            //k2.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\drSyncVEhydroBiok=2.txt");
-            //var k3 = data.ToDictionary(item => item.Key, item => item.Value.Skip(2).Take(1).ToDictionary(item1 => item1.Key, item1 => item1.Value));
-            //k3.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\drSyncVEhydroBiok=3.txt");
-
-            //Tables.PrintHydroData();
+            //var hest = 0;
 
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1 }, true);
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
 
-            //var tmp = FileUtils.FromJsonFile<Dictionary<string, Dictionary<double, BetaWrapper>>>(@"C:\Users\Emil\Dropbox\BACKUP\Python\solar\solarAnalysis.txt");
-            //foreach (string frac in tmp.Keys)
+            //for (int i = 0; i < 100; i++)
             //{
-            //    var tmp2 = tmp[frac];
-            //    for (int k = 1; k < 4; k++)
-            //    {
-            //        var data = tmp2[k];
-            //        var idx = data.BetaY.ToList().IndexOf(data.BetaY.Min());
-            //        Console.WriteLine("Optimum is alpha = {0} for k = {1} (BETA) {2}", data.BetaX[idx], k, frac);
-            //        idx = data.MaxCfY.ToList().IndexOf(data.MaxCfY.Min());
-            //        Console.WriteLine("Optimum is alpha = {0} for k = {1} (CF) {2}", data.MaxCfX[idx], k, frac);
-            //    }
-            //}
-
-            //// SEQUENTIAL
-            //for (int i = 0; i < 10; i++)
-            //{
-            //    Optimization.Sequential(1, i.ToString());
-            //    //for (int k = 1; k < 4; k++)
-            //    //{
-            //    //    Optimization.Sequential(k, i.ToString());
-            //    //}
-            //}
-            //// CUCKOO
-            //for (int i = 8; i < 10; i++)
-            //{
-            //    for (int k = 1; k < 4; k++)
-            //    {
-            //        if (i == 8 && k == 1) continue;
-            //        if (i == 8 && k == 2) continue;
-            //        Optimization.Cukoo(k, 25, i.ToString());
-            //    }
-            //}
-            //// GENETIC
-            //for (int i = 7; i < 10; i++)
-            //{
-            //    for (int k = 1; k < 4; k++)
-            //    {
-            //        if(i == 7 && k == 1) continue;
-            //        Optimization.Genetic(k, 100, i.ToString());
-            //    }
-            //}
-            //// PURE CUCKOO
-            //for (int i = 0; i < 10; i++)
-            //{
-            //    for (int k = 1; k < 4; k++)
-            //    {
-            //        Optimization.PureCukoo(2, 100, i.ToString() + "-2");
-            //    }
+            //    Optimization.Cukoo(1, 25, i.ToString());
             //}
 
             //var genes = new NodeGenes[30];
@@ -202,11 +128,145 @@ namespace Main
             //}
 
             //// CHECK THAT RESULTS ARE CONSISTENT
-            //var calc = new NodeCostCalculator(new ParameterEvaluator(false));
-            //var opt = FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\VE50cukooK=3@default.txt");
-            //var mCf = NodeGenesFactory.SpawnCfMax(1, 1, 1);
-            //Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
-            //Console.WriteLine("Optimization = " + calc.DetailedSystemCosts(opt, true).ToDebugString());
+            //var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Local.txt");
+            //var core = new ModelYearCore(config);
+            //var param = new ParameterEvaluator(core);
+            //var calc = new NodeCostCalculator(param);
+            //var mCf = new NodeGenes(1,1);
+            ////Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
+
+            //var ctrl = (core.BeController as SimulationController);
+            //ctrl.InvalidateCache = true;
+            //ctrl.NodeFuncs.Clear();
+            //ctrl.NodeFuncs.Add("6h storage", input =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    ConfigurationUtils.SetupHomoStuff(nodes, 1, true, false, false);
+            //    return nodes;
+            //});
+
+            //Console.WriteLine("Homo with 6h = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
+
+            //// First, let's look at the current results.
+            //var calc = new NodeCostCalculator(new ParameterEvaluator(true) { CacheEnabled = true });
+            //var optima = new[]
+            //{
+            //    new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\localK=1solar25pct.txt")),
+            //    new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\localK=1solar50pct.txt")),
+            //    new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\localK=2offshore25pct.txt")),
+            //    new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\localK=2offshore50pct.txt")),
+            //    new NodeChromosome(
+            //        FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\VE50cukooK=1@solar25pct.txt")),
+            //    new NodeChromosome(
+            //        FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\VE50cukooK=1@solar50pct.txt")),
+            //    new NodeChromosome(
+            //        FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\VE50cukooK=1@offshore25pct.txt")),
+            //                        new NodeChromosome(
+            //        FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\VE50cukooK=1@offshore50pct.txt")),
+            //};
+            //// 25% solar
+            //calc.SolarCostModel = new ScaledSolarCostModel(0.25);
+            //Print(optima[0], calc, "SEQ-solar25");
+            //Print(optima[4], calc, "CS-solar25");
+            //// 50% solar
+            //calc.SolarCostModel = new ScaledSolarCostModel(0.50);
+            //Print(optima[1], calc, "SEQ-solar50");
+            //Print(optima[5], calc, "CS-solar50");
+            //// 25% offshore
+            //calc.SolarCostModel = new SolarCostModelImpl();
+            //GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.25);
+            //GenePool.ApplyOffshoreFraction(optima[2].Genes);
+            //GenePool.ApplyOffshoreFraction(optima[6].Genes);
+            //Print(optima[2], calc, "SEQ-offshore25");
+            //Print(optima[6], calc, "CS-offshore25");
+            //// 50% offshore
+            //GenePool.OffshoreFractions = CountryInfo.OffshoreFrations(0.50);
+            //GenePool.ApplyOffshoreFraction(optima[3].Genes);
+            //GenePool.ApplyOffshoreFraction(optima[7].Genes);
+            //Print(optima[3], calc, "SEQ-offshore50");
+            //Print(optima[7], calc, "CS-offshore50");
+
+            var hydroInfo = new Dictionary<string, HydroInfo>();
+            var lines = File.ReadAllLines(@"C:\Users\Emil\Dropbox\Master Thesis\HydroDataExtended.csv");
+            foreach (var line in lines)
+            {
+                var cells = line.Split(',');
+                var inflowFile = string.Format(@"C:\Users\Emil\Dropbox\Master Thesis\HydroInflow\Hydro_Inflow_{0}.csv",
+                    cells[0]);
+                var inflow = new double[365];
+                // Load inflow pattern if present.
+                if (File.Exists(inflowFile))
+                {
+                    var tsLines = File.ReadLines(inflowFile).ToArray();
+                    for (int i = 0; i < inflow.Length; i++)
+                    {
+                        var str = tsLines[1 + i + 9 * 365];
+                        inflow[i] += double.Parse(str.Split(',')[3]); // Take 2012 values
+                        //for (int j = 9; j < 10; j++) 
+                    }
+                }
+                hydroInfo.Add(CountryInfo.GetName(cells[0]), new HydroInfo
+                {
+                    ReservoirCapacity = double.Parse(cells[1]),
+                    Capacity = double.Parse(cells[2]),
+                    PumpCapacity = double.Parse(cells[3]),
+                    InflowPattern = inflow
+                });
+            }
+            var resRatio =
+                hydroInfo.Where(item => item.Value.ReservoirCapacity >= 0)
+                    .Select(item => item.Value.ReservoirCapacity/item.Value.InflowPattern.Average()).Average();
+            var capRatio =
+                hydroInfo.Where(item => item.Value.Capacity >= 0)
+                    .Select(item => item.Value.Capacity / item.Value.InflowPattern.Average()).Average();
+            var pumpRatio =
+                hydroInfo.Where(item => item.Value.PumpCapacity >= 0)
+                    .Select(item => item.Value.PumpCapacity/item.Value.InflowPattern.Average()).Average();
+            foreach (var info in hydroInfo)
+            {
+                if (info.Value.ReservoirCapacity < 0)
+                {
+                    info.Value.ReservoirCapacity = info.Value.InflowPattern.Average() * resRatio;
+                }
+                if (info.Value.Capacity < 0)
+                {
+                    info.Value.Capacity = info.Value.InflowPattern.Average() * capRatio;
+                    info.Value.Corrected = true;
+                }
+                if (info.Value.PumpCapacity < 0)
+                {
+                    info.Value.PumpCapacity = info.Value.InflowPattern.Average() * pumpRatio;
+                    info.Value.Corrected = true;  
+                }
+            }
+            hydroInfo.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\HydroDataExtended2005Kies.txt");
+
+            Tables.PrintHydroData();
+
+            //var sample = new NodeChromosome(new NodeGenes(1, 1));
+            //var calc = new NodeCostCalculator(new ParameterEvaluator(false) { CacheEnabled = false });
+            //Print(sample, calc, "delta0tmp1");
+
+            //var calc = new ParallelNodeCostCalculator()
+            //{
+            //    CacheEnabled = false,
+            //    Transmission = true,
+            //    Full = false
+            //};
+            //Optimization.Sequential(2, "Test0", calc);
+
+
+            #region other
+
+            //for (int index = 0; index < optima.Length; index++)
+            //{
+            //    var optimum = optima[index];
+            //    var cost = calc.DetailedSystemCosts(optimum.Genes, true);
+            //    Console.WriteLine("Cost is {0} at {1}", cost.ToDebugString(), index);
+            //    Console.WriteLine("Combined cost is {0} at {1}", cost.Values.Sum(), index);
+            //}
+
+            //////Configurations.PlayGround.ShowTimeSeris(this);
 
             //////var files = Directory.GetFiles(@"C:\Users\Emil\Desktop\TestSolutions");
             //////var data = new Dictionary<string, List<List<double>>>();
@@ -485,49 +545,15 @@ namespace Main
             //var system = new Simulation(config);
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
+            #endregion
+
         }
 
-        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        static void Print(NodeChromosome optimum, NodeCostCalculator calc, string tag)
         {
-            // Get the subdirectories for the specified directory.
-            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
-            DirectoryInfo[] dirs = dir.GetDirectories();
-
-            if (!dir.Exists)
-            {
-                throw new DirectoryNotFoundException(
-                    "Source directory does not exist or could not be found: "
-                    + sourceDirName);
-            }
-
-            // If the destination directory doesn't exist, create it. 
-            if (!Directory.Exists(destDirName))
-            {
-                Directory.CreateDirectory(destDirName);
-            }
-
-            // Get the files in the directory and copy them to the new location.
-            FileInfo[] files = dir.GetFiles();
-            foreach (FileInfo file in files)
-            {
-                var temppath = Path.Combine(destDirName, file.Name);
-                if (File.Exists(temppath))
-                {
-                    var overwrite = new FileInfo(temppath).CreationTime < file.CreationTime;
-                    if (overwrite) file.CopyTo(temppath, true);
-                }
-                else file.CopyTo(temppath, false);     
-            }
-
-            // If copying subdirectories, copy them and their contents to new location. 
-            if (copySubDirs)
-            {
-                foreach (DirectoryInfo subdir in dirs)
-                {
-                    string temppath = Path.Combine(destDirName, subdir.Name);
-                    DirectoryCopy(subdir.FullName, temppath, copySubDirs);
-                }
-            }
+            var cost = calc.DetailedSystemCosts(optimum.Genes);
+            Console.WriteLine("Cost is {0} at {1}", cost.ToDebugString(), tag);
+            Console.WriteLine("Combined cost is {0} at {1}", cost.Values.Sum(), tag);
         }
 
         #region Contour view
@@ -620,7 +646,7 @@ namespace Main
 
         public TimeSeriesControl DisplayTimeSeries()
         {
-            if(_timeSeriesControl == null) InitializeTsControl();
+            if (_timeSeriesControl == null) InitializeTsControl();
             _timeSeriesControl.Visible = true;
             if (_contourView != null) _contourView.Visible = false;
             if (_histogramView != null) _histogramView.Visible = false;

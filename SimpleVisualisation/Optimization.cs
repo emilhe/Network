@@ -20,11 +20,7 @@ namespace Main
 
         public static void Genetic(int k, int n, string key = "")
         {
-<<<<<<< HEAD
             var name = string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50geneticK={0}@{1}", k, key);
-=======
-            var name = string.Format(@"C:\proto\VE50gaK={0}@{1}", k, key);
->>>>>>> master
             // Adjust gene pool.
             GenePool.K = k;
             // Setup stuff.
@@ -32,15 +28,12 @@ namespace Main
             var population = new NodeChromosome[n];
             for (int i = 0; i < population.Length; i++) population[i] = GenePool.SpawnChromosome();
             //population[0] = new NodeChromosome(NodeGenesFactory.SpawnCfMax(1, 1, k));
-            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelNodeCostCalculator {Full = false, CacheEnabled = false});
+            var optimizer = new GeneticOptimizer<NodeChromosome>(strategy, new ParallelNodeCostCalculator { Full = false, CacheEnabled = false });
             // Do stuff.
             var optimum = optimizer.Optimize(population);
             optimizer.Steps.ToJsonFile(name + "@steps.txt");
             optimum.Genes.ToJsonFile(name + ".txt");
-<<<<<<< HEAD
             Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
-=======
->>>>>>> master
         }
 
         public static void Cukoo(int k, int n = 500, string key = "", NodeChromosome seed = null, ParallelNodeCostCalculator calc = null)
@@ -64,10 +57,9 @@ namespace Main
                     CacheEnabled = false
                 };
             }
-            var optimizer = new PureCukooOptimizer<NodeChromosome>(strategy, calc);
+            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, calc);
             // Do stuff.
             var optimum = optimizer.Optimize(population);
-<<<<<<< HEAD
             optimizer.Steps.ToJsonFile(name + "@steps.txt");
             optimum.Genes.ToJsonFile(name + ".txt");
             Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
@@ -99,15 +91,6 @@ namespace Main
             var optimum = optimizer.Optimize(population);
             optimizer.Steps.ToJsonFile(name + "@steps.txt");
             optimum.Genes.ToJsonFile(name + ".txt");
-=======
-<<<<<<< HEAD
-            //optimizer.Steps.ToJsonFile(name + ".tex");
-            optimum.Genes.ToJsonFile(name + "@steps.tex");
-=======
-            optimizer.Steps.ToJsonFile(name + "@steps.txt");
-            optimum.Genes.ToJsonFile(name + ".txt");
->>>>>>> master
->>>>>>> master
             Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
         }
 
@@ -159,7 +142,7 @@ namespace Main
             var center = new NodeVec(() => 1, () => 1);
             var n = center.Length;
             var simplex = new NodeVec[n + 1];
-            for (int i = 0; i < n+1; i++)
+            for (int i = 0; i < n + 1; i++)
             {
                 var vertex = center.GetVectorCopy();
                 if (i < n)
@@ -173,9 +156,9 @@ namespace Main
             var optimizer = new SimplexOptimizer<NodeVec>(new SimplexNodeOptimizationStrategy(),
                 new NodeVecCostCalculator())
             {
-                Beta = 1 + 2.0/n,
-                Gamma = 0.75 - 1.0/(2*n),
-                Delta = 1 - 1.0/n
+                Beta = 1 + 2.0 / n,
+                Gamma = 0.75 - 1.0 / (2 * n),
+                Delta = 1 - 1.0 / n
             };
             // Optimize.
             var optimum = optimizer.Optimize(simplex);
@@ -228,17 +211,17 @@ namespace Main
                 else
                 {
                     varWind += wind;
-                    varSolar += solar;   
+                    varSolar += solar;
                 }
             }
-            var effGamma = (varWind + varSolar)/(CountryInfo.GetMeanLoadSum() - (fixedWind + fixedSolar));
+            var effGamma = (varWind + varSolar) / (CountryInfo.GetMeanLoadSum() - (fixedWind + fixedSolar));
 
             // Check if the new effective gamma violates the contstraints.
             var failure = false;
             foreach (var key in genes.Keys)
             {
-                if(fixedKeys.Contains(key)) continue;
-                var newGamma = genes[key].Gamma*chromosome.Gamma/effGamma;
+                if (fixedKeys.Contains(key)) continue;
+                var newGamma = genes[key].Gamma * chromosome.Gamma / effGamma;
                 if (GenePool.GammaMin - newGamma > 1e-5)
                 {
                     // Normalization NOT possible. Let's fix this value and try again.
@@ -257,7 +240,7 @@ namespace Main
             }
             // Violation; try fixing the problematic values and do another rescaling.
             if (failure) return GammaRescaling(chromosome, fixedKeys);
-            
+
             // No violation; just do the rescaling!
             foreach (var key in chromosome.Genes.Keys)
             {
@@ -265,7 +248,7 @@ namespace Main
                 chromosome.Genes[key].Gamma /= effGamma;
             }
 
-            return fixedKeys;;
+            return fixedKeys; ;
         }
 
         class SequentialOptimizer
@@ -277,13 +260,13 @@ namespace Main
 
             public double AbsTol { get; set; }
             public double StepMin { get; set; }
-            public double StepMax { get; set; }            
+            public double StepMax { get; set; }
 
             private readonly ParallelNodeCostCalculator _mCalc;
             private NodeChromosome[] _mClones;
             private NodeChromosome _mBest;
             private double _mStep;
-            public Dictionary<int, double> Steps { get; set; } 
+            public Dictionary<int, double> Steps { get; set; }
 
             public SequentialOptimizer(ParallelNodeCostCalculator calc)
             {
@@ -301,7 +284,7 @@ namespace Main
             {
                 Steps.Clear();
                 _mBest = seed;
-                _mCalc.UpdateCost(new []{seed});
+                _mCalc.UpdateCost(new[] { seed });
                 _mClones = new NodeChromosome[seed.Genes.Count];
                 _mStep = StepMax;
                 Console.WriteLine("Cost is {0} after {1} evals", _mBest.Cost, _mCalc.Evaluations);
@@ -315,7 +298,7 @@ namespace Main
                     while (alphaProgress || gammaProgress)
                     {
                         Steps.Add(_mCalc.Evaluations, _mBest.Cost);
-                        
+
                         if (alphaProgress)
                         {
                             alphaProgress = Step((a, b) => StepAlphaDown(a, b, _mStep), (a, b) => StepAlphaUp(a, b, _mStep));

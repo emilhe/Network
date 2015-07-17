@@ -476,5 +476,7 @@ namespace Utils
         public double PumpCapacity { get; set; }
         // Inflow pattern; average daily inflow in GWh
         public double[] InflowPattern { get; set; }
+        // Has the entry been manually corrected?
+        public bool Corrected { get; set; }
     }
 }

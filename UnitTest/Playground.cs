@@ -38,7 +38,7 @@ namespace UnitTest
             };
             var simpleCore = new SimpleCore(uncSync, 1, nodes);
             var eval = new ParameterEvaluator(simpleCore);
-            var cost = (new NodeCostCalculator(eval)).DetailedSystemCosts(genes, true);
+            var cost = (new NodeCostCalculator(eval)).DetailedSystemCosts(genes);
             Console.WriteLine("System cost is " + cost.Select(item => item.Value).Sum());
         }
 
@@ -46,7 +46,7 @@ namespace UnitTest
         {
             var simpleCore = new SimpleCore(ctrl, 1, nodes);
             var eval = new ParameterEvaluator(simpleCore);
-            return (new NodeCostCalculator(eval)).DetailedSystemCosts(new NodeGenes(1, 1), true);
+            return (new NodeCostCalculator(eval)).DetailedSystemCosts(new NodeGenes(1, 1));
         }
 
     }

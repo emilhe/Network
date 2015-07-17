@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-<<<<<<< HEAD
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic;
-=======
->>>>>>> master
 using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
 using BusinessLogic.FailureStrategies;
@@ -20,88 +17,32 @@ using Utils.Statistics;
 
 namespace Main.Figures
 {
-    public class FlowAnalysiscs
+    class FlowAnalysiscs
     {
 
-<<<<<<< HEAD
-=======
-        public static void ConstrainedFlowCostAnalysisISET(MainForm main)
-        {        
-            //CalculateFlowData();
-            //var fractions = new[] { 0.0 };
-            //var fractions = new[] { 1.0, 0.5, 0.0 };
-            var fractions = new[] { 1.0, 0.75, 0.5, 0.25, 0.0 };
-            //var fractions = new[] { 1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05 };
-
-            //var noFlowCore = new NoFlowCore(8, ConfigurationUtils.CreateNodes()); //new FullCore();
-            //var noFlowEval = new ParameterEvaluator(noFlowCore);
-            //var noFlowCalc = new NodeCostCalculator(noFlowEval);
-            //var noFlow = noFlowCalc.DetailedSystemCosts(NodeGenesFactory.SpawnCfMax(1, 1, 1), false);
-
-            var result = new Dictionary<double, Dictionary<string, double>>();
-            var core = new FullCore(8, ConfigurationUtils.CreateNodes()); //new FullCore();
-            var eval = new ParameterEvaluator(core);
-            var calc = new NodeCostCalculator(eval);
-            foreach (var fraction in fractions)
-            {
-                // Inject edge constraints.
-                core.TcController.EdgeFuncs.Clear();
-                core.TcController.EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100),
-                list => ConfigurationUtils.GetEdges(list.Select(item => (INode)item).ToList(), "ISET8yearsAlpha1Gamma1", fraction));
-                result.Add(fraction, calc.DetailedSystemCosts(NodeGenesFactory.SpawnCfMax(1, 1, 1), true));
-            }
-
-            result.ToJsonFile(@"C:\Users\Emil\IdeaProjects\Python\constTrans\trailDataISET.txt");
-        }
-
->>>>>>> master
         public static void ConstrainedFlowCostAnalysis(MainForm main)
         {
             CalculateFlowData();
 
-<<<<<<< HEAD
-            var fractions = new[] { 1.0, 0.75, 2.0 / 3, 0.5, 1.0/3, 0.0 };
+            var fractions = new[] { 1.0, 0.75, 2.0 / 3, 0.5, 1.0 / 3, 0.0 };
             //var fractions = new[] { 1.0, 0.75, 0.5, 0.40, 1.0 / 3, 0.25, 0.15, 0.0 }; OLD SYNC
             //var fractions = new[] { 1.0, 0.75, 2.0 / 3, 0.6, 0.5, 1.0 / 3, 0.25, 0.0 };   
             //var fractions = new[] { 1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05 };
 
             var result = new Dictionary<double, Dictionary<string, double>>();
-            var core =  new FullCore(); //new ModelYearCore(FileUtils.FromJsonFile<ModelYearConfig>(@"C:\EmherSN\32YearAlpha0.5to1Gamma0.5to2Sync.txt"));
+            var core = new FullCore(); //new ModelYearCore(FileUtils.FromJsonFile<ModelYearConfig>(@"C:\EmherSN\32YearAlpha0.5to1Gamma0.5to2Sync.txt"));
             var eval = new ParameterEvaluator(core) { CacheEnabled = true };
-=======
-            var fractions = new[] { 1.0, 0.75, 2.0 / 3, 0.6, 0.5, 1.0 / 3, 0.25, 0.0 };
-            //var fractions = new[] { 1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05 };
-
-            var result = new Dictionary<double, Dictionary<string, double>>();
-            var core = new FullCore(); //new FullCore();
-            var eval = new ParameterEvaluator(core);
->>>>>>> master
             var calc = new NodeCostCalculator(eval);
             foreach (var fraction in fractions)
             {
                 // Inject edge constraints.
-<<<<<<< HEAD
                 (core.Controller as SimulationController).EdgeFuncs.Clear();
                 (core.Controller as SimulationController).EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100),
-=======
-<<<<<<< HEAD
-                (core.TcController as SimulationController).EdgeFuncs.Clear();
-                (core.TcController as SimulationController).EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100),
->>>>>>> master
                 list => ConfigurationUtils.GetEdgeObject(list, "flow32YearCfmaxk=1Gamma1alpha1local", fraction));
                 result.Add(fraction, calc.DetailedSystemCosts(new NodeGenes(1, 1)));
             }
 
             result.ToJsonFile(@"C:\EmherSN\HomogeneousVElocal32.txt");
-=======
-                core.TcController.EdgeFuncs.Clear();
-                core.TcController.EdgeFuncs.Add(string.Format("Europe edges, constrained {0}%", fraction * 100),
-                list => ConfigurationUtils.GetEdges(list.Select(item => (INode)item).ToList(), "flow32YearAlpha1Gamma1", fraction));
-                result.Add(fraction, calc.DetailedSystemCosts(new NodeGenes(1,1), true));
-            }
-
-            result.ToJsonFile(@"C:\Users\Emil\IdeaProjects\Python\constTrans\HomogeneousVE.txt");
->>>>>>> master
         }
 
         public static void ConstrainedFlowAnalysis(MainForm main)
@@ -220,15 +161,7 @@ namespace Main.Figures
             var nodes = ConfigurationUtils.CreateNodesNew();
             var ctrl = new SimulationController { InvalidateCache = false };
             ctrl.Sources.Add(new TsSourceInput { Source = TsSource.VE50PCT, Offset = 0, Length = 32 });
-<<<<<<< HEAD
-            ctrl.ExportStrategies.Add(new ExportSchemeInput(){Scheme = ExportScheme.ConstrainedLocalized});;
-=======
-            ctrl.ExportStrategies.Add(
-                new ExportStrategyInput
-                {
-                    ExportStrategy = ExportStrategy.ConstrainedFlow
-                });
->>>>>>> master
+            ctrl.ExportStrategies.Add(new ExportSchemeInput() { Scheme = ExportScheme.ConstrainedLocalized }); ;
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("No storage", input =>
             {
@@ -239,11 +172,7 @@ namespace Main.Figures
             ctrl.LogFlows = true;
             //var outputs = ctrl.EvaluateTs(1.026, 0.65);
             //var outputs = ctrl.EvaluateTs(1.021, 0.62);
-<<<<<<< HEAD
             var outputs = ctrl.EvaluateTs(NodeGenesFactory.SpawnCfMax(1, 1, 1));
-=======
-            var outputs = ctrl.EvaluateTs(NodeGenesFactory.SpawnCfMax(1,1,3));
->>>>>>> master
 
             // Create reference histogram.
             var flows = new List<LinkDataRow>();
@@ -258,11 +187,7 @@ namespace Main.Figures
                 });
             }
 
-<<<<<<< HEAD
             ProtoStore.SaveLinkData(flows, "flow32YearCfmaxk=1Gamma1alpha1local"); //flowReal
-=======
-            ProtoStore.SaveLinkData(flows, "flow32YearCfmaxk=3Gamma1alpha1"); //flowReal
->>>>>>> master
         }
 
         //private static void CalculateFlowData()

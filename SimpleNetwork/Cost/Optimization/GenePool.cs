@@ -6,20 +6,21 @@ using Utils;
 
 namespace BusinessLogic.Cost
 {
-    public class 
-        
+    public class
+
         GenePool
     {
 
         // ALPHA/GAMMA LIMITS
-        public static double K {
+        public static double K
+        {
             get { return GammaMax; }
             set
             {
                 GammaMax = value;
-                GammaMin = 1.0/value;
+                GammaMin = 1.0 / value;
             }
-        } 
+        }
         public static double AlphaMin = 0;
         public static double AlphaMax = 1;
 
@@ -33,7 +34,7 @@ namespace BusinessLogic.Cost
 
         // Offshore fractions
         public static Dictionary<string, double> OffshoreFractions;
-        
+
 
         #region Gene modification
 
@@ -48,12 +49,12 @@ namespace BusinessLogic.Cost
 
         public static double RndGamma()
         {
-            return Rnd.NextDouble()*(GammaMax - GammaMin) + GammaMin;
+            return Rnd.NextDouble() * (GammaMax - GammaMin) + GammaMin;
         }
 
         public static double RndAlpha()
         {
-            return Rnd.NextDouble()*(AlphaMax - AlphaMin) + AlphaMin;
+            return Rnd.NextDouble() * (AlphaMax - AlphaMin) + AlphaMin;
         }
 
         #endregion
@@ -88,7 +89,7 @@ namespace BusinessLogic.Cost
         {
             ChangeGamma(chromosome, key, () =>
             {
-                var guess = chromosome.Genes[key].Gamma + 0.25*(0.5 - Rnd.NextDouble());
+                var guess = chromosome.Genes[key].Gamma + 0.25 * (0.5 - Rnd.NextDouble());
                 if (guess < GammaMin) guess = GammaMin;
                 if (guess > GammaMax) guess = GammaMax;
                 return guess;
@@ -96,7 +97,7 @@ namespace BusinessLogic.Cost
             });
             ChangeAlpha(chromosome, key, () =>
             {
-                var guess = chromosome.Genes[key].Alpha + 0.10*(0.5 - Rnd.NextDouble());
+                var guess = chromosome.Genes[key].Alpha + 0.10 * (0.5 - Rnd.NextDouble());
                 if (guess < AlphaMin) guess = AlphaMin;
                 if (guess > AlphaMax) guess = AlphaMax;
                 return guess;
@@ -121,7 +122,7 @@ namespace BusinessLogic.Cost
             ScaleGamma(guess, rescaling);
             ApplyOffshoreFraction(guess);
             return guess;
-                
+
         }
 
         private static NodeChromosome LevyFlight(NodeChromosome chromosome, NodeChromosome best, double stepSize = 0)
@@ -134,21 +135,13 @@ namespace BusinessLogic.Cost
             {
                 var bestGene = best.Genes[key];
                 var oldGene = chromosome.Genes[key];
-                var newGene = new NodeGene {Alpha = oldGene.Alpha, Gamma = oldGene.Gamma};
+                var newGene = new NodeGene { Alpha = oldGene.Alpha, Gamma = oldGene.Gamma };
                 // First do alpha.
-<<<<<<< HEAD
                 newGene.Alpha += stepSize * levy * (bestGene.Alpha - oldGene.Alpha);
                 if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
                 if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
                 // Then gamma.
                 newGene.Gamma += stepSize * levy * (bestGene.Gamma - oldGene.Gamma);
-=======
-                newGene.Alpha += StepScale*Rnd.NextDouble()*levy*(bestGene.Alpha - oldGene.Alpha);
-                if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
-                if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
-                // Then gamma.
-                newGene.Gamma += StepScale*Rnd.NextDouble()*levy*(bestGene.Gamma - oldGene.Gamma);
->>>>>>> master
                 if (newGene.Gamma < GammaMin) newGene.Gamma = GammaMin;
                 if (newGene.Gamma > GammaMax) newGene.Gamma = GammaMax;
                 genes.Add(key, newGene);
@@ -195,11 +188,11 @@ namespace BusinessLogic.Cost
                 var gene2 = other2.Genes[key];
                 var newGene = new NodeGene { Alpha = gene.Alpha, Gamma = gene.Gamma };
                 // First do alpha.
-                newGene.Alpha += (gene1.Alpha - gene2.Alpha)*Rnd.NextDouble();
+                newGene.Alpha += (gene1.Alpha - gene2.Alpha) * Rnd.NextDouble();
                 if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
                 if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
                 // Then gamma.
-                newGene.Gamma += (gene1.Gamma - gene2.Gamma)*Rnd.NextDouble();
+                newGene.Gamma += (gene1.Gamma - gene2.Gamma) * Rnd.NextDouble();
                 if (newGene.Gamma < GammaMin) newGene.Gamma = GammaMin;
                 if (newGene.Gamma > GammaMax) newGene.Gamma = GammaMax;
                 genes.Add(key, newGene);
@@ -278,7 +271,7 @@ namespace BusinessLogic.Cost
                 if (value > GammaMax) return double.NegativeInfinity;
             }
             // Return the scaling factor.
-            return chromosome.Gamma/effGamma;
+            return chromosome.Gamma / effGamma;
         }
 
         public static double GammaRescaling(NodeChromosome chromosome)
@@ -301,7 +294,7 @@ namespace BusinessLogic.Cost
                 if (GammaMax - value < -1e-5) return double.NegativeInfinity;
             }
             // Return the scaling factor.
-            return chromosome.Gamma/effGamma;
+            return chromosome.Gamma / effGamma;
         }
 
         private static double GammaRescaling(double[] vec)
@@ -313,19 +306,19 @@ namespace BusinessLogic.Cost
             for (int i = 0; i < n; i++)
             {
                 var load = CountryInfo.GetMeanLoad(NodeVec.Labels[i]);
-                wind += vec[i] * load * vec[i+n];
-                solar += vec[i]*load*(1 - vec[i + n]);
+                wind += vec[i] * load * vec[i + n];
+                solar += vec[i] * load * (1 - vec[i + n]);
             }
             var effGamma = (wind + solar) / CountryInfo.GetMeanLoadSum();
             // Check if the new effective gamma violates the contstraints.
             for (int i = 0; i < n; i++)
             {
-                var value = vec[i]/effGamma;
+                var value = vec[i] / effGamma;
                 if (GammaMin - value > 1e-5) return double.NegativeInfinity;
                 if (GammaMax - value < -1e-5) return double.NegativeInfinity;
             }
             // Return the scaling factor (TODO: NOT ONE; SHOULD BE ALL OVER GAMMA).
-            return 1 / effGamma; 
+            return 1 / effGamma;
         }
 
         public static double Penalty(NodeVec vec)
@@ -346,7 +339,7 @@ namespace BusinessLogic.Cost
                 if (vec[i + n] > AlphaMin - delta) penalty -= Math.Log(vec[i] - (AlphaMin - delta));
                 else penalty += 1e3;
             }
-            return penalty/1000;
+            return penalty / 1000;
         }
 
         private static void ScaleGamma(double[] vec, double scaling)
@@ -432,7 +425,7 @@ namespace BusinessLogic.Cost
                 chromosome.Genes[key].Gamma /= effGamma;
             }
 
-            return fixedKeys; 
+            return fixedKeys;
         }
 
         #endregion

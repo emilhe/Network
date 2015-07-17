@@ -9,22 +9,17 @@ namespace Optimization
     {
 
         public int Generation { get; private set; }
-        public List<double> Steps { get; set; } 
 
         private readonly ICostCalculator<T> _mCostCalculator;
         private readonly IGeneticOptimizationStrategy<T> _mStrat;
-        public Dictionary<int, double> Steps { get; set; } 
+        public Dictionary<int, double> Steps { get; set; }
 
         public GeneticOptimizer(IGeneticOptimizationStrategy<T> optimizationStrategy, ICostCalculator<T> costCalculator)
         {
             _mStrat = optimizationStrategy;
             _mCostCalculator = costCalculator;
 
-<<<<<<< HEAD
             Steps = new Dictionary<int, double>();
-=======
-            Steps = new List<double>();
->>>>>>> master
         }
 
         public T Optimize(T[] population)
@@ -45,7 +40,6 @@ namespace Optimization
                 population = OrderPopulation(population);
                 // Debug info.
                 best = population[0].Cost;
-                Steps.Add(best);
                 population[0].ToJsonFile(@"C:\proto\bestConfig.txt");
                 Generation++;
                 Steps.Add(_mCostCalculator.Evaluations, best);

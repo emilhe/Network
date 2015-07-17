@@ -243,7 +243,7 @@ namespace Main.Documentation
 
         public static void PrintHydroData()
         {
-            var data = FileUtils.FromJsonFile<Dictionary<string, HydroInfo>>(@"C:\Users\Emil\Dropbox\Master Thesis\HydroData2005Kies.txt");
+            var data = FileUtils.FromJsonFile<Dictionary<string, HydroInfo>>(@"C:\Users\Emil\Dropbox\Master Thesis\HydroDataExtended2005Kies.txt");
             var table = new Table
             {
                 Header =
@@ -284,7 +284,7 @@ namespace Main.Documentation
                 idx++;
             }
 
-            File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\hydro.tex", table.ToTeX());
+            File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\hydroExtended.tex", table.ToTeX());
         }
 
         public static void PrintOverviewTable(Dictionary<string, Dictionary<double, BetaWrapper>> blob)
