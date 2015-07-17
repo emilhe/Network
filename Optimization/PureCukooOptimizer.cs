@@ -16,7 +16,11 @@ namespace Optimization
             public int Generation { get; private set; }
             public bool PrintToConsole { get; set; }
             public bool CacheOnDisk { get; set; }
+<<<<<<< HEAD
             public Dictionary<int, double> Steps { get; set; } 
+=======
+            public List<double> Steps { get; set; } 
+>>>>>>> master
 
             public double AbandonRate { get; set; }
 
@@ -31,7 +35,11 @@ namespace Optimization
 
                 PrintToConsole = true;
                 CacheOnDisk = true;
+<<<<<<< HEAD
                 Steps = new Dictionary<int, double>();
+=======
+                Steps = new List<double>();
+>>>>>>> master
 
                 // Default value, good for most purposes.
                 AbandonRate = 0.75;
@@ -40,6 +48,10 @@ namespace Optimization
             public T Optimize(T[] nests)
             {
                 Steps.Clear();
+<<<<<<< HEAD
+=======
+                // Eval generation 0.
+>>>>>>> master
                 Generation = 0;
                 // Initialize data structures.
                 var n = nests.Length;
@@ -87,7 +99,15 @@ namespace Optimization
                     // Update best nest.
                     nests = nests.OrderBy(item => item.Cost).ToArray();
                     bestNest = nests[0];
+<<<<<<< HEAD
                 } while (!_mStrat.TerminationCondition(nests, _mCostCalculator.Evaluations)) ;
+=======
+                    Steps.Add(bestNest.Cost);
+                    // Debug info.
+                    if (CacheOnDisk) bestNest.ToJsonFile(@"C:\proto\bestConfig.txt");
+                    if (PrintToConsole) Console.WriteLine("Generation {0}, Cost = {1}", Generation, bestNest.Cost);
+                }
+>>>>>>> master
 
                 return _mStrat.Best;
             }

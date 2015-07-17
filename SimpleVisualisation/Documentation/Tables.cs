@@ -14,28 +14,50 @@ namespace Main.Documentation
     class Tables
     {
 
-        public static void PrintLinkInfo()
+        public static void PrintLinkInfo(int cols)
         {
+            var header = new List<String>();
+            var format = new StringBuilder();
+            var units = new List<String>();
+            for (int j = 0; j < cols; j++)
+            {
+                //header.AddRange(new[] { "From", "To", "Type", "Length [km]" });
+                header.AddRange(new[] { "From", "To", "Length" });
+                //header.AddRange(new[] { "From-To", "Length" });
+                //format.Append("llcr");
+                format.Append("llr");
+                units.AddRange(new[] { "", "", "[km]" });
+                //units.AddRange(new[] { "", "[km]" });
+            }
             var table = new Table
             {
-                Header = new[] {"From", "To", "Type", "Length [km]"},
-                Caption = "Link information.",
+                Header = header.ToArray(),
+                Caption = "Approximated link lengths.",
                 Label = "link-info",
-                Format = "llcr",
+                Format = format.ToString(),
                 Rows = new List<string[]>(),
-                Injection = @"\small"
+                Units = units.ToArray()
+                //Injection = @"\small"
             };
-
+            int i = 0;
+            var row = new List<String>();
             foreach (var link in Costs.LinkLength.Keys.OrderBy(item => item))
             {
-                var row = new[]
+                if (i >= cols)
                 {
-                    link.Split('-')[0], 
-                    link.Split('-')[1], 
-                    Costs.LinkType[link], 
+                    table.Rows.Add(row.ToArray());
+                    row = new List<String>();
+                    i = 0;
+                }
+                var subRow = new[]
+                {
+                    CountryInfo.GetShortAbbrev(link.Split('-')[0]),// + "-" +
+                    CountryInfo.GetShortAbbrev(link.Split('-')[1]),
+                    //Costs.LinkType[link],
                     Costs.LinkLength[link].ToString()
                 };
-                table.Rows.Add(row);
+                row.AddRange(subRow);
+                i++;
             }
 
             File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\linkInfo.tex", table.ToTeX());
@@ -73,7 +95,7 @@ namespace Main.Documentation
         {
             var results = FileUtils.FromJsonFile<Dictionary<string, Dictionary<double, BetaWrapper>>>
                 (@"C:\Users\Emil\Dropbox\BACKUP\Python\solar\solarAnalysis.txt");
-
+            
             var table = new StringBuilder();
             foreach (var result in results)
             {
@@ -264,6 +286,47 @@ namespace Main.Documentation
             File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\hydro.tex", table.ToTeX());
         }
 
+        public static void PrintOverviewTable(Dictionary<string, Dictionary<double, BetaWrapper>> blob)
+        {
+            var b1 = new StringBuilder();
+            var b2 = new StringBuilder();
+            b1.Append("LCOE & [\\euro] & ");
+            b2.Append("Savings & [\\%] & ");
+            // Extract info form blob.
+            var data = blob["LCOE"];
+            var reference = 0.0;
+            for (int k = 1; k < 4; k++)
+            {
+                var subData = data[k];
+                var beta = subData.BetaY.Min();
+                var cf = subData.MaxCfY.Min();
+                var gen = subData.GeneticY;
+                if (k == 1) reference = beta;
+                b1.Append(string.Format("{0} & {1} & {2} & ",
+                    ThreeSignificantDigits(beta),
+                    ThreeSignificantDigits(cf),
+                    ThreeSignificantDigits(gen)));
+                b2.Append(string.Format("{0} & {1} & {2} & ", 
+                    RelPct(reference, beta), 
+                    RelPct(reference, cf),
+                    RelPct(reference, gen)));
+            }
+            var str1 = b1.ToString();
+            str1 = str1.Substring(0, str1.Length - 2) + @"\\";
+            Console.WriteLine(str1);
+            var str2 = b2.ToString();
+            str2 = str2.Substring(0, str2.Length - 2) + @"\\";
+            Console.WriteLine(str2);
+        }
 
+        private static string RelPct(double reference, double d)
+        {
+            return ThreeSignificantDigits((reference - d)/reference*100);
+        }
+
+        private static string ThreeSignificantDigits(double d)
+        {
+            return d.ToString(d < 10 ? "0.00" : "0.0");
+        }
     }
 }

@@ -20,7 +20,11 @@ namespace Main
 
         public static void Genetic(int k, int n, string key = "")
         {
+<<<<<<< HEAD
             var name = string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50geneticK={0}@{1}", k, key);
+=======
+            var name = string.Format(@"C:\proto\VE50gaK={0}@{1}", k, key);
+>>>>>>> master
             // Adjust gene pool.
             GenePool.K = k;
             // Setup stuff.
@@ -33,7 +37,10 @@ namespace Main
             var optimum = optimizer.Optimize(population);
             optimizer.Steps.ToJsonFile(name + "@steps.txt");
             optimum.Genes.ToJsonFile(name + ".txt");
+<<<<<<< HEAD
             Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
+=======
+>>>>>>> master
         }
 
         public static void Cukoo(int k, int n = 500, string key = "", NodeChromosome seed = null, ParallelNodeCostCalculator calc = null)
@@ -57,9 +64,10 @@ namespace Main
                     CacheEnabled = false
                 };
             }
-            var optimizer = new CukooOptimizer<NodeChromosome>(strategy, calc);
+            var optimizer = new PureCukooOptimizer<NodeChromosome>(strategy, calc);
             // Do stuff.
             var optimum = optimizer.Optimize(population);
+<<<<<<< HEAD
             optimizer.Steps.ToJsonFile(name + "@steps.txt");
             optimum.Genes.ToJsonFile(name + ".txt");
             Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
@@ -91,6 +99,15 @@ namespace Main
             var optimum = optimizer.Optimize(population);
             optimizer.Steps.ToJsonFile(name + "@steps.txt");
             optimum.Genes.ToJsonFile(name + ".txt");
+=======
+<<<<<<< HEAD
+            //optimizer.Steps.ToJsonFile(name + ".tex");
+            optimum.Genes.ToJsonFile(name + "@steps.tex");
+=======
+            optimizer.Steps.ToJsonFile(name + "@steps.txt");
+            optimum.Genes.ToJsonFile(name + ".txt");
+>>>>>>> master
+>>>>>>> master
             Console.WriteLine("K = {0} ({1}) has cost {2}", k, key, optimum.Cost);
         }
 
