@@ -20,8 +20,6 @@ namespace BusinessLogic.Cost
         public ISolarCostModel SolarCostModel = new SolarCostModelImpl();
         public IWindCostModel WindCostModel = new WindCostModelImpl();
 
-        public const double Lifetime = 30;
-
         #region Public interface
 
         public NodeCostCalculator(ParameterEvaluator evaluator)
@@ -32,43 +30,47 @@ namespace BusinessLogic.Cost
         /// <summary>
         /// Detailed system cost (what goes where included).
         /// </summary>
-        public Dictionary<string, double> DetailedSystemCosts(NodeGenes nodeGenes, bool includeTransmission = false)
+        public Dictionary<string, double> DetailedSystemCosts(NodeGenes nodeGenes)
         {
+            Evaluator.MemoryCacheEnabled = true;
             // Calculate cost elements.
             var costs = new Dictionary<string, double>();
-            if (includeTransmission) costs.Add("Transmission", TransmissionCapacityCost(nodeGenes));
+            costs.Add("Transmission", TcCostModel.Eval(Evaluator.LinkCapacities(nodeGenes))/Costs.AnnualizationFactor(Costs.LinkLifeTime));
             foreach (var cost in BaseCosts(nodeGenes)) costs.Add(cost.Key, cost.Value);
             foreach (var cost in BackupCosts(nodeGenes)) costs.Add(cost.Key, cost.Value);
+            Evaluator.MemoryCacheEnabled = false;
+            Evaluator.FlushMemoryCache();
             // Scale costs to get LCOE.
-            var scaling = Evaluator.Nodes.Select(item => item.Model.AvgLoad).Sum()*Utils.Stuff.HoursInYear*Costs.AnnualizationFactor(Lifetime); //TODO: Why annualization factor here???
+            var scaling = Evaluator.Nodes.Select(item => item.Model.AvgLoad).Sum()*Stuff.HoursInYear;
             foreach (var key in costs.Keys.ToArray()) costs[key] = costs[key] / scaling;
 
             return costs;
         }
 
         // Does not REALLY belong here. Consider moving..
-        public Dictionary<string, double> ParameterOverview(NodeGenes nodeGenes, bool includeTransmission = false)
+        public Dictionary<string, double> ParameterOverview(NodeGenes nodeGenes)
         {
+            Evaluator.MemoryCacheEnabled = true;
             // Calculate elements.
             var avgLoad = Evaluator.Nodes.Select(item => item.Model.AvgLoad).Sum();
+            var scaling = avgLoad*Stuff.HoursInYear;
             var parameterOverview = new Dictionary<string, double>();
-            var costs = BaseCosts(nodeGenes).Values.Sum();
+            var costs = BaseCosts(nodeGenes).Values.Sum()/scaling;
 
-            if (includeTransmission)
-            {
-                var tc = TransmissionCapacityCost(nodeGenes);
-                parameterOverview.Add("TC", tc / avgLoad);
-                costs += tc;
-            }
+            var tc = Evaluator.LinkCapacities(nodeGenes);
+            parameterOverview.Add("TC", tc.Select(item => Costs.LinkLength[item.Key]*item.Value).Sum()/avgLoad);
+            costs += TcCostModel.Eval(tc)/Costs.AnnualizationFactor(Costs.LinkLifeTime)/scaling;
             var be = Evaluator.BackupEnergy(nodeGenes);
-            costs += BcCostModel.BackupEnergyCost(be);
+            costs += BcCostModel.BackupEnergyCost(be)/Costs.AnnualizationFactor(Costs.CCGT.Lifetime)/scaling;
             var bc = Evaluator.BackupCapacity(nodeGenes);
-            costs += BcCostModel.BackupCapacityCost(bc);
-            parameterOverview.Add("BE", be / (avgLoad * Utils.Stuff.HoursInYear));
-            parameterOverview.Add("BC", bc / avgLoad);
+            costs += BcCostModel.BackupCapacityCost(bc)/Costs.AnnualizationFactor(Costs.CCGT.Lifetime)/scaling;
+            parameterOverview.Add("BE", be/(avgLoad*Stuff.HoursInYear));
+            parameterOverview.Add("BC", bc/avgLoad);
             parameterOverview.Add("CF", Evaluator.CapacityFactor(nodeGenes));
-            var scaling = Evaluator.Nodes.Select(item => item.Model.AvgLoad).Sum() * Utils.Stuff.HoursInYear * Costs.AnnualizationFactor(Lifetime);
-            parameterOverview.Add("LCOE", costs/scaling);
+            Evaluator.MemoryCacheEnabled = false;
+            Evaluator.FlushMemoryCache();
+            // Scale costs to get LCOE.
+            parameterOverview.Add("LCOE", costs);
 
             return parameterOverview;
         }
@@ -76,13 +78,16 @@ namespace BusinessLogic.Cost
         /// <summary>
         /// Overall system cost.
         /// </summary>
-        public double SystemCost(NodeGenes nodeGenes, bool includeTransmission = false)
+        public double SystemCost(NodeGenes nodeGenes)
         {
+            Evaluator.MemoryCacheEnabled = true;
             // Calculate cost elements.
             var cost = BaseCosts(nodeGenes).Values.Sum() + BackupCosts(nodeGenes).Values.Sum();
-            if (includeTransmission) cost += TransmissionCapacityCost(nodeGenes);
+            cost += TcCostModel.Eval(Evaluator.LinkCapacities(nodeGenes)) / Costs.AnnualizationFactor(Costs.LinkLifeTime);
+            Evaluator.MemoryCacheEnabled = false;
+            Evaluator.FlushMemoryCache();
             // Scale costs to get LCOE.
-            var scaling = Evaluator.Nodes.Select(item => item.Model.AvgLoad).Sum() * Stuff.HoursInYear * Costs.AnnualizationFactor(Lifetime);
+            var scaling = Evaluator.Nodes.Select(item => item.Model.AvgLoad).Sum() * Stuff.HoursInYear;
 
             return cost/scaling;
         }
@@ -90,12 +95,6 @@ namespace BusinessLogic.Cost
         #endregion
 
         #region Cost calculations
-
-        // Cost of transmission network.
-        private double TransmissionCapacityCost(NodeGenes nodeGenes)
-        {
-            return TcCostModel.Eval(Evaluator.LinkCapacities(nodeGenes));
-        }
 
         // Cost of wind/solar facilities.
         private Dictionary<string, double> BaseCosts(NodeGenes nodeGenes)
@@ -120,9 +119,9 @@ namespace BusinessLogic.Cost
             return new Dictionary<string, double>
             {
                 //{"Wind",onshoreCost + offshoreCost},
-                {"Solar", SolarCostModel.SolarCost(solarCapacity)},
-                {"Onshore wind", onshoreCost},
-                {"Offshore wind", offshoreCost},
+                {"Solar", SolarCostModel.SolarCost(solarCapacity)/Costs.AnnualizationFactor(Costs.Solar.Lifetime)},
+                {"Onshore wind", onshoreCost/Costs.AnnualizationFactor(Costs.OnshoreWind.Lifetime)},
+                {"Offshore wind", offshoreCost/Costs.AnnualizationFactor(Costs.OffshoreWind.Lifetime)},
             };
         }
 
@@ -131,8 +130,8 @@ namespace BusinessLogic.Cost
         {
             return new Dictionary<string, double>
             {
-                {"Backup", BcCostModel.BackupCapacityCost(Evaluator.BackupCapacity(nodeGenes))},
-                {"Fuel", BcCostModel.BackupEnergyCost(Evaluator.BackupEnergy(nodeGenes))}
+                {"Backup", BcCostModel.BackupCapacityCost(Evaluator.BackupCapacity(nodeGenes))/Costs.AnnualizationFactor(Costs.CCGT.Lifetime)},
+                {"Fuel", BcCostModel.BackupEnergyCost(Evaluator.BackupEnergy(nodeGenes))/Costs.AnnualizationFactor(Costs.CCGT.Lifetime)}
             };
         }
 

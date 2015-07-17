@@ -18,8 +18,7 @@ namespace BusinessLogic.Cost.CostModels
     public class BackupCostModelImpl : IBackupCostModel
     {
 
-        // Lifetime in years
-        private const double Lifetime = 30;
+        private double Lifetime { get { return Costs.CCGT.Lifetime; } }
 
         public double BackupEnergyCost(double energy)
         {

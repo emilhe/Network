@@ -20,7 +20,7 @@ namespace BusinessLogic.Cost.Optimization
 
         public bool TerminationCondition(NodeChromosome[] chromosomes, int evaluations)
         {
-            return (evaluations > 2500);
+            return (evaluations > 25000);
 
             if (Math.Abs(chromosomes[0].Cost - _mLastCost) > 1e-3)
             {

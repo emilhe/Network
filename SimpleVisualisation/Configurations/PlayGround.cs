@@ -18,6 +18,40 @@ namespace Main.Configurations
 
         #region ShowTimeSeris
 
+        public static void ShowTimeSerisNew(MainForm main)
+        {
+            var core = new FullCore(5, () =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupRealHydro(nodes);
+                ConfigurationUtils.SetupRealBiomass(nodes);
+                return nodes;
+            }, "real storage v1.0");
+
+            var ctrl = (core.Controller as SimulationController); // new SimulationController(); 
+            ctrl.InvalidateCache = true;
+            ctrl.NodeFuncs.Clear();
+            ctrl.NodeFuncs.Add("hydro storage", input =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupRealHydro(nodes);
+                ConfigurationUtils.SetupRealBiomass(nodes);
+                return nodes;
+            });
+            ctrl.LogFlows = true;
+            ctrl.LogAllNodeProperties = true;
+            ctrl.ExportStrategies.Clear();
+            ctrl.ExportStrategies.Add(new ExportSchemeInput
+            {
+                Scheme = ExportScheme.UnconstrainedSynchronized
+            });
+            ctrl.Sources.Clear();
+            ctrl.Sources.Add(new TsSourceInput { Length = 5, Offset = 0 });
+
+            var data = ctrl.EvaluateTs(1, 0.9);
+            main.DisplayTimeSeries().SetData(data.SelectMany(item => item.TimeSeries).ToList());
+        }
+
         public static void ShowTimeSeris(MainForm main)
         {
             var config = FileUtils.FromJsonFile<ModelYearConfig>(@"C:\Users\Emil\Dropbox\Master Thesis\OneYearAlpha0.5to1Gamma0.5to2Local.txt");
@@ -27,7 +61,7 @@ namespace Main.Configurations
             //var mCf = new NodeGenes(1, 1);
             //Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
 
-            var ctrl = (core.BeController as SimulationController); // new SimulationController(); 
+            var ctrl = (core.Controller as SimulationController); // new SimulationController(); 
             ctrl.InvalidateCache = true;
             ctrl.NodeFuncs.Clear();
             ctrl.NodeFuncs.Add("hydro storage", input =>
@@ -50,7 +84,7 @@ namespace Main.Configurations
             var param = new ParameterEvaluator(core);
             var calc = new NodeCostCalculator(param);
             var mCf = new NodeGenes(0.56, 1.03);
-            Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
+            Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf).ToDebugString());
             ctrl.InvalidateCache = false;
 
             var data = ctrl.EvaluateTs(0.56, 1.03);

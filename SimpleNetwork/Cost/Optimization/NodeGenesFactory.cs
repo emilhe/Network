@@ -102,7 +102,7 @@ namespace BusinessLogic.Cost.Optimization
 
             foreach (var key in genes.Keys.ToArray())
             {
-                genes[key].Gamma = gammaWs[key] * alpha + gammaSs[key] * (1 - alpha);
+                genes[key].Gamma = gamma*(gammaWs[key] * alpha + gammaSs[key] * (1 - alpha));
                 genes[key].Alpha = gammaWs[key] * alpha / (alpha * gammaWs[key] + (1 - alpha) * gammaSs[key]);
             }
 

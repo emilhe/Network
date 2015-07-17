@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
 using BusinessLogic.Interfaces;
 using BusinessLogic.TimeSeries;
 using ITimeSeries = BusinessLogic.Interfaces.ITimeSeries;
@@ -33,6 +34,15 @@ namespace BusinessLogic.Storages
 
         #region Energy info
 
+        public double ChargeLevel
+        {
+            get
+            {
+                if (NominalEnergy == 0) return 0;
+                return _mRemainingEnergy/NominalEnergy;
+            }
+        }
+
         /// <summary>
         /// Minus means energy TO RELASE, plus means energy to be stored.
         /// </summary>
@@ -40,15 +50,7 @@ namespace BusinessLogic.Storages
         /// <returns></returns>
         public double RemainingEnergy(Response response)
         {
-            switch (response)
-            {
-                case Response.Charge:
-                    return EffectiveEnergyNeededToRestoreFullCapacity();
-                case Response.Discharge:
-                    return -EffectiveEnergyReleasedOnDrainEmpty();
-                default:
-                    throw new ArgumentException("Illegal Response.");
-            }
+            return InternalRemainingEnergy(response, Efficiency);
         }
 
         /// <summary>
@@ -58,25 +60,43 @@ namespace BusinessLogic.Storages
         /// <returns></returns>
         public double AvailableEnergy(Response response)
         {
+            return InternalAvailableEnergy(response, Efficiency, Capacity);
+        }
+
+        public double InternalRemainingEnergy(Response response, double eff)
+        {
             switch (response)
             {
                 case Response.Charge:
-                    return Math.Min(Capacity, EffectiveEnergyNeededToRestoreFullCapacity());
+                    return EffectiveEnergyNeededToRestoreFullCapacity(eff);
                 case Response.Discharge:
-                    return Math.Max(-Capacity,-EffectiveEnergyReleasedOnDrainEmpty());
+                    return -EffectiveEnergyReleasedOnDrainEmpty(eff);
                 default:
                     throw new ArgumentException("Illegal Response.");
             }
         }
 
-        private double EffectiveEnergyReleasedOnDrainEmpty()
+        public double InternalAvailableEnergy(Response response, double eff, double cap)
         {
-            return _mRemainingEnergy * Efficiency;
+            switch (response)
+            {
+                case Response.Charge:
+                    return Math.Min(cap, EffectiveEnergyNeededToRestoreFullCapacity(eff));
+                case Response.Discharge:
+                    return Math.Max(-cap, -EffectiveEnergyReleasedOnDrainEmpty(eff));
+                default:
+                    throw new ArgumentException("Illegal Response.");
+            }
         }
 
-        private double EffectiveEnergyNeededToRestoreFullCapacity()
+        private double EffectiveEnergyReleasedOnDrainEmpty(double eff)
         {
-            return (NominalEnergy - _mRemainingEnergy) / Efficiency;
+            return _mRemainingEnergy * eff;
+        }
+
+        private double EffectiveEnergyNeededToRestoreFullCapacity(double eff)
+        {
+            return (NominalEnergy - _mRemainingEnergy) / eff;
         }
 
         #endregion
@@ -85,40 +105,51 @@ namespace BusinessLogic.Storages
 
         public double Inject(double amount)
         {
-            if (amount > 0) return Charge(amount);
-            return -Discharge(-amount);
+            return InternalInject(amount, Efficiency, Capacity);
         }
 
         public double InjectMax(Response response)
         {
+            return InternalInjectMax(response, Efficiency, Capacity);
+        } 
+
+        public double InternalInjectMax(Response response, double eff, double cap)
+        {
             var max = (response == Response.Charge)
-                ? EffectiveEnergyNeededToRestoreFullCapacity()
-                : - EffectiveEnergyReleasedOnDrainEmpty();
-            var remainder = Inject(max);
+                ? EffectiveEnergyNeededToRestoreFullCapacity(eff)
+                : -EffectiveEnergyReleasedOnDrainEmpty(eff);
+            var remainder = InternalInject(max, eff, cap);
             return -(max - remainder);
+        }
+
+        public double InternalInject(double amount, double eff, double cap)
+        {
+            if (amount > 0) return Charge(amount, eff, cap);
+            return -Discharge(-amount, eff, cap);
         }
 
         /// <summary>
         /// Discharge the battery. Returns how much energy is still needed (that is NOT discharged).
         /// </summary>
         /// <param name="toDischarge"></param>
+        /// <param name="eff"></param>
         /// <returns> the energy which was not stored </returns>
-        private double Discharge(double toDischarge)
+        private double Discharge(double toDischarge, double eff, double cap)
         {
             var extra = 0.0;
             // Take capacity into account.
-            if (toDischarge > Capacity)
+            if (toDischarge > cap)
             {
-                extra = toDischarge - Capacity;
-                toDischarge = Capacity;
+                extra = toDischarge - cap;
+                toDischarge = cap;
             }
             // Take efficiency into account.
-            toDischarge /= Efficiency;
+            toDischarge /= eff;
             if ((_mRemainingEnergy - toDischarge) < 0)
             {
                 var remainder = toDischarge - _mRemainingEnergy;
                 _mRemainingEnergy = 0;
-                return (remainder*Efficiency) + extra;
+                return (remainder * eff) + extra;
             }
             // There is power; discharge.
             _mRemainingEnergy -= toDischarge;
@@ -129,23 +160,24 @@ namespace BusinessLogic.Storages
         /// Charge the battery. Returns how much energy is left (that is NOT stored).
         /// </summary>
         /// <param name="toCharge"></param>
+        /// <param name="eff"></param>
         /// <returns> the energy which was not stored </returns>
-        private double Charge(double toCharge)
+        private double Charge(double toCharge, double eff, double cap)
         {
             var extra = 0.0;
             // Take capacity into account.
-            if (toCharge > Capacity)
+            if (toCharge > cap)
             {
-                extra = toCharge - Capacity;             
-                toCharge = Capacity;
+                extra = toCharge - cap;
+                toCharge = cap;
             }
             // Take efficiency into account.
-            toCharge *= Efficiency;
+            toCharge *= eff;
             if ((_mRemainingEnergy + toCharge) > NominalEnergy)
             {
                 var excess = (toCharge + _mRemainingEnergy) - NominalEnergy;
                 _mRemainingEnergy = NominalEnergy;
-                return excess/Efficiency + extra;
+                return excess / eff + extra;
             }
             // There is still room; just charge.
             _mRemainingEnergy += toCharge;

@@ -24,7 +24,7 @@ namespace BusinessLogic.Utils
             _mNodalStorageConstrs = new List<GRBConstr[]>(m);
             for (int j = 0; j < m; j++)
             {
-                _mNodalStorageConstrs[j] = new GRBConstr[edges.NodeCount];
+                _mNodalStorageConstrs.Add(new GRBConstr[edges.NodeCount]);
             }
             // Setup optimizer.
             var core = new CoreOptimizer(edges, m, item => ObjectiveFactory.QuadraticBalancing(item, weights));

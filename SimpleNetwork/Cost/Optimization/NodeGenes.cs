@@ -100,6 +100,16 @@ namespace BusinessLogic.Cost
             return new NodeGenes(genes);
         }
 
+
+        // Get (deep) copy with country abbreviation strings (used for graphs).
+        public NodeGenes Import()
+        {
+            var genes = new Dictionary<string, NodeGene>(_mGenes.Count);
+            CloneGenes(genes, CountryInfo.GetName);
+
+            return new NodeGenes(genes);
+        }
+
         private void CloneGenes(Dictionary<string, NodeGene> genes, Func<string, string> map)
         {
             foreach (var gene in _mGenes)
@@ -183,7 +193,11 @@ namespace BusinessLogic.Cost
         public NodeGene this[string key]
         {
             get { return _mGenes[key]; }
-            set { _mGenes[key] = value; }
+            set
+            {
+                if (!_mGenes.ContainsKey(key)) key = CountryInfo.GetName(key);
+                _mGenes[key] = value;
+            }
         }
 
         public ICollection<string> Keys

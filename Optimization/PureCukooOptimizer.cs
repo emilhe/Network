@@ -16,7 +16,11 @@ namespace Optimization
             public int Generation { get; private set; }
             public bool PrintToConsole { get; set; }
             public bool CacheOnDisk { get; set; }
+<<<<<<< HEAD
+            public Dictionary<int, double> Steps { get; set; } 
+=======
             public List<double> Steps { get; set; } 
+>>>>>>> master
 
             public double AbandonRate { get; set; }
 
@@ -31,7 +35,11 @@ namespace Optimization
 
                 PrintToConsole = true;
                 CacheOnDisk = true;
+<<<<<<< HEAD
+                Steps = new Dictionary<int, double>();
+=======
                 Steps = new List<double>();
+>>>>>>> master
 
                 // Default value, good for most purposes.
                 AbandonRate = 0.75;
@@ -40,29 +48,44 @@ namespace Optimization
             public T Optimize(T[] nests)
             {
                 Steps.Clear();
+<<<<<<< HEAD
+=======
                 // Eval generation 0.
+>>>>>>> master
                 Generation = 0;
-                EvalPopulation(nests);
-                nests = nests.OrderBy(item => item.Cost).ToArray();
-                T bestNest = nests[0];
-                if (PrintToConsole) Console.WriteLine("Generation {0}, Cost = {1}", Generation, bestNest.Cost);
                 // Initialize data structures.
                 var n = nests.Length;
                 var eliteN = (int)Math.Round(nests.Length * (1 - AbandonRate));
                 var trailEggs = new T[eliteN];
+                var bestNest = default(T);
 
-                while (!_mStrat.TerminationCondition(nests, _mCostCalculator.Evaluations))
+                do
                 {
+                    // Inital/reset evaluation.
+                    if (nests.Select(item => item.InvalidCost).Any())
+                    {
+                        EvalPopulation(nests);
+                        nests = nests.OrderBy(item => item.Cost).ToArray();
+                        bestNest = nests[0];
+                        if (_mStrat.Best == null) _mStrat.Best = nests[0];
+                    }
+                    // Log info.
+                    if (CacheOnDisk) _mStrat.Best.ToJsonFile(@"C:\proto\bestConfig.txt");
+                    if (PrintToConsole)
+                        Console.WriteLine("Generation {0}, Cost = {1}/{2}", Generation, bestNest.Cost, _mStrat.Best.Cost);
+                    Steps.Add(_mCostCalculator.Evaluations, _mStrat.Best.Cost);
+
+                    // Next iteration.
                     Generation++;
                     // Abandon bad nests.
                     for (int i = eliteN; i < n; i++)
                     {
-                        nests[i] = _mStrat.LevyFlight(nests[i], bestNest);
+                        nests[i] = _mStrat.LevyFlight(nests[i], bestNest,1);
                     }
                     // Generate trail eggs using good nests.
                     for (int i = 0; i < eliteN; i++)
                     {
-                        trailEggs[i] = _mStrat.LevyFlight(nests[i], bestNest);
+                        trailEggs[i] = _mStrat.LevyFlight(nests[i], bestNest,1);
                     }
                     // Eval the new solutions.
                     EvalPopulation(trailEggs);
@@ -76,13 +99,17 @@ namespace Optimization
                     // Update best nest.
                     nests = nests.OrderBy(item => item.Cost).ToArray();
                     bestNest = nests[0];
+<<<<<<< HEAD
+                } while (!_mStrat.TerminationCondition(nests, _mCostCalculator.Evaluations)) ;
+=======
                     Steps.Add(bestNest.Cost);
                     // Debug info.
                     if (CacheOnDisk) bestNest.ToJsonFile(@"C:\proto\bestConfig.txt");
                     if (PrintToConsole) Console.WriteLine("Generation {0}, Cost = {1}", Generation, bestNest.Cost);
                 }
+>>>>>>> master
 
-                return bestNest;
+                return _mStrat.Best;
             }
 
             private void EvalPopulation(T[] unorderedPopulation)

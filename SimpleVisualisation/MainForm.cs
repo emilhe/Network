@@ -7,8 +7,10 @@ using System.Windows.Forms;
 using BusinessLogic;
 using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
+using BusinessLogic.ExportStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Simulation;
+using BusinessLogic.Storages;
 using BusinessLogic.Utils;
 using Controls;
 using Controls.Charting;
@@ -38,12 +40,126 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
 
+            var nodes = ConfigurationUtils.CreateNodesNew();
+            ConfigurationUtils.SetupRealHydro(nodes);
+            var effGamma = nodes.Select(item => item.Model.AvgDeficit).Sum()/nodes.Select(item => item.Model.AvgLoad).Sum();
+
+            //StorageAnalysis.StorageOptimization();
+            //Tables.PrintCapacityFactors();
+
+            //Tables.PrintReducedSolarAlphas();
+
+            //Article.DoOptimizations();
+            //Article.ExportFigureData();
+            Article.ExportExtraFigureData();
+
+            //Figures.PlayGround.ExportChromosomeData();
+           
+            //Figures.PlayGround.ExportTcCalcAnalysisDataTmp();
+            //StorageAnalysis.StorageCost();
+            //ModelYearAnalysis.PrintModelYearStuff(this);
+            //ModelYearAnalysis.DetermineModelYear(this);
+            //ModelYearAnalysis.ErrorAnalysis(this);
+            //StorageAnalysis.OptimizeStuff();
+            //StorageAnalysis.ExportBias(new List<double> { 1 });
+
+            //CountryInfo.WindOnshoreCf.ToDictionary(item => CountryInfo.GetShortAbbrev(item.Key), item => item.Value).ToJsonFile(@"C:\Users\Emil\Dropbox\AU ESG\SandBox\onshoreWindCf.txt");
+            //CountryInfo.SolarCf.ToDictionary(item => CountryInfo.GetShortAbbrev(item.Key), item => item.Value).ToJsonFile(@"C:\Users\Emil\Dropbox\AU ESG\SandBox\solarCf.txt");
+
+            //var load = ConfigurationUtils.CreateNodes().Select(item => item.Model.AvgLoad).Sum();
+            //StorageAnalysis.Groenne2(0);
+            //StorageAnalysis.Groenne2(1);
+            //StorageAnalysis.Groenne2(2);
+            //StorageAnalysis.Groenne2(3);
+
+            //ModelYearAnalysis.DetermineModelYear(this);
+            //ModelYearAnalysis.ErrorAnalysis(this);
+
+            //StorageAnalysis.StorageCost();
+
+            //var core = new FullCore();
+            //var genes = new NodeGenes(1, 1);
+
+            //var now = DateTime.Now;
+            //core.Controller.EvaluateTs(genes);
+            //Console.WriteLine("Unconstrained took " + DateTime.Now.Subtract(now).TotalMilliseconds);
+
+            //core = new FullCore(32,null,"", ExportScheme.ConstrainedSynchronized);
+            //now = DateTime.Now;
+            //core.Controller.EvaluateTs(genes);
+            //Console.WriteLine("Constrained took " + DateTime.Now.Subtract(now).TotalMilliseconds);
+
+            //StorageAnalysis.ExportStrategyPower(new List<double> { 1 });
+            //StorageAnalysis.ExportStorageReal(new List<double> { 1 });
+            //StorageAnalysis.OptimizeStuff();
+            //StorageAnalysis.OptimizeStuff2();
+            //StorageAnalysis.OptimizeStuff3();
+            //Configurations.PlayGround.ShowTimeSerisNew(this);
+
+            //var data = FileUtils.FromJsonFile<Dictionary<string, Dictionary<double, BetaWrapper>>>(
+            //    @"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\drSyncVEhydroBiok=1,2,3.txt");
+
+            //var k1= data.ToDictionary(item => item.Key, item => item.Value.Take(1).ToDictionary(item1 => item1.Key, item1 => item1.Value));
+            //k1.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\drSyncVEhydroBiok=1.txt");
+            //var k2 = data.ToDictionary(item => item.Key, item => item.Value.Skip(1).Take(1).ToDictionary(item1 => item1.Key, item1 => item1.Value));
+            //k2.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\drSyncVEhydroBiok=2.txt");
+            //var k3 = data.ToDictionary(item => item.Key, item => item.Value.Skip(2).Take(1).ToDictionary(item1 => item1.Key, item1 => item1.Value));
+            //k3.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\Python\overviews\drSyncVEhydroBiok=3.txt");
+
+            //Tables.PrintHydroData();
+
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1 }, true);
             //CostAnalysis.BetaWithGenetic(this, new List<int> { 1, 2, 5 }, true);
 
-            //for (int i = 0; i < 100; i++)
+            //var tmp = FileUtils.FromJsonFile<Dictionary<string, Dictionary<double, BetaWrapper>>>(@"C:\Users\Emil\Dropbox\BACKUP\Python\solar\solarAnalysis.txt");
+            //foreach (string frac in tmp.Keys)
             //{
-            //    Optimization.Cukoo(1, 25, i.ToString());
+            //    var tmp2 = tmp[frac];
+            //    for (int k = 1; k < 4; k++)
+            //    {
+            //        var data = tmp2[k];
+            //        var idx = data.BetaY.ToList().IndexOf(data.BetaY.Min());
+            //        Console.WriteLine("Optimum is alpha = {0} for k = {1} (BETA) {2}", data.BetaX[idx], k, frac);
+            //        idx = data.MaxCfY.ToList().IndexOf(data.MaxCfY.Min());
+            //        Console.WriteLine("Optimum is alpha = {0} for k = {1} (CF) {2}", data.MaxCfX[idx], k, frac);
+            //    }
+            //}
+
+            //// SEQUENTIAL
+            //for (int i = 0; i < 10; i++)
+            //{
+            //    Optimization.Sequential(1, i.ToString());
+            //    //for (int k = 1; k < 4; k++)
+            //    //{
+            //    //    Optimization.Sequential(k, i.ToString());
+            //    //}
+            //}
+            //// CUCKOO
+            //for (int i = 8; i < 10; i++)
+            //{
+            //    for (int k = 1; k < 4; k++)
+            //    {
+            //        if (i == 8 && k == 1) continue;
+            //        if (i == 8 && k == 2) continue;
+            //        Optimization.Cukoo(k, 25, i.ToString());
+            //    }
+            //}
+            //// GENETIC
+            //for (int i = 7; i < 10; i++)
+            //{
+            //    for (int k = 1; k < 4; k++)
+            //    {
+            //        if(i == 7 && k == 1) continue;
+            //        Optimization.Genetic(k, 100, i.ToString());
+            //    }
+            //}
+            //// PURE CUCKOO
+            //for (int i = 0; i < 10; i++)
+            //{
+            //    for (int k = 1; k < 4; k++)
+            //    {
+            //        Optimization.PureCukoo(2, 100, i.ToString() + "-2");
+            //    }
             //}
 
             //var genes = new NodeGenes[30];
@@ -85,12 +201,12 @@ namespace Main
             //    Console.WriteLine("CF cost at k = {0} is {1}", k, cfCost);
             //}
 
-            // CHECK THAT RESULTS ARE CONSISTENT
-            var calc = new NodeCostCalculator(new ParameterEvaluator(false));
-            var opt = FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\VE50cukooK=3@default.txt");
-            var mCf = NodeGenesFactory.SpawnCfMax(1, 1, 1);
-            Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
-            Console.WriteLine("Optimization = " + calc.DetailedSystemCosts(opt, true).ToDebugString());
+            //// CHECK THAT RESULTS ARE CONSISTENT
+            //var calc = new NodeCostCalculator(new ParameterEvaluator(false));
+            //var opt = FileUtils.FromJsonFile<NodeGenes>(@"C:\proto\VE50cukooK=3@default.txt");
+            //var mCf = NodeGenesFactory.SpawnCfMax(1, 1, 1);
+            //Console.WriteLine("Homo = " + calc.DetailedSystemCosts(mCf, true).ToDebugString());
+            //Console.WriteLine("Optimization = " + calc.DetailedSystemCosts(opt, true).ToDebugString());
 
             //////var files = Directory.GetFiles(@"C:\Users\Emil\Desktop\TestSolutions");
             //////var data = new Dictionary<string, List<List<double>>>();
@@ -369,6 +485,49 @@ namespace Main
             //var system = new Simulation(config);
             //Console.WriteLine("System setup: " + watch.ElapsedMilliseconds);
 
+        }
+
+        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        {
+            // Get the subdirectories for the specified directory.
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+            DirectoryInfo[] dirs = dir.GetDirectories();
+
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            // If the destination directory doesn't exist, create it. 
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+
+            // Get the files in the directory and copy them to the new location.
+            FileInfo[] files = dir.GetFiles();
+            foreach (FileInfo file in files)
+            {
+                var temppath = Path.Combine(destDirName, file.Name);
+                if (File.Exists(temppath))
+                {
+                    var overwrite = new FileInfo(temppath).CreationTime < file.CreationTime;
+                    if (overwrite) file.CopyTo(temppath, true);
+                }
+                else file.CopyTo(temppath, false);     
+            }
+
+            // If copying subdirectories, copy them and their contents to new location. 
+            if (copySubDirs)
+            {
+                foreach (DirectoryInfo subdir in dirs)
+                {
+                    string temppath = Path.Combine(destDirName, subdir.Name);
+                    DirectoryCopy(subdir.FullName, temppath, copySubDirs);
+                }
+            }
         }
 
         #region Contour view

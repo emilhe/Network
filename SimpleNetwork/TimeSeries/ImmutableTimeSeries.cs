@@ -49,7 +49,7 @@ namespace BusinessLogic.TimeSeries
 
         public List<double> GetAllValues()
         {
-            throw new NotImplementedException();
+            return _mValues.ToList();
         }
 
         #region Delegation

@@ -6,6 +6,7 @@ using System.Text;
 using Controls;
 using LaTeX;
 using NUnit.Framework;
+using SimpleImporter;
 using Utils;
 
 namespace Main.Documentation
@@ -93,8 +94,9 @@ namespace Main.Documentation
         public static void PrintReducedSolarAlphas()
         {
             var results = FileUtils.FromJsonFile<Dictionary<string, Dictionary<double, BetaWrapper>>>
-                (@"C:\Users\Emil\Dropbox\Master Thesis\Python\solar\solarAnalysis.txt");
+                (@"C:\Users\Emil\Dropbox\BACKUP\Python\solar\solarAnalysis.txt");
             
+            var table = new StringBuilder();
             foreach (var result in results)
             {
                 var ks = result.Value.Keys.OrderBy(item => item).ToArray();
@@ -108,23 +110,31 @@ namespace Main.Documentation
                     betaOpt[idx] = item.BetaX[Array.IndexOf(item.BetaY, item.BetaY.Min())];
                     maxCfOpt[idx] = item.MaxCfX[Array.IndexOf(item.MaxCfY, item.MaxCfY.Min())];
                     geneticOpt[idx] = item.GeneticX;
-                    idx ++;
+                    idx++;
                 }
                 // Create tabular stuff.
                 var builder = new StringBuilder();
-                foreach (var k in ks) builder.Append(" & K = " + k);
-                builder.AppendLine(@" \\ \hline");
-                builder.Append(@"$\beta$");
-                foreach (var b in betaOpt) builder.Append(" & " + b.ToString("0.##"));
-                builder.AppendLine(@" \\ ");
-                builder.Append(@"$\nu_{max}$");
-                foreach (var c in maxCfOpt) builder.Append(" & " + c.ToString("0.##"));
-                builder.AppendLine(@" \\ ");
-                builder.Append(@"CS");
-                foreach (var g in geneticOpt) builder.Append(" & " + g.ToString("0.##"));
-                builder.AppendLine(@" \\ \hline");
-                File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\solarScale" + result.Key.Substring(1,1) + ".tex", builder.ToString());
+                builder.Append((double.Parse(result.Key)*100).ToString("0") + @"\%");
+                for (int i = 0; i < ks.Length; i++)
+                {
+                    builder.Append(" & " + betaOpt[i].ToString("0.00") + " & " + maxCfOpt[i].ToString("0.00") + " & " + geneticOpt[i].ToString("0.00"));
+                }
+                builder.Append(@"\\");
+                //foreach (var k in ks) builder.Append(" & K = " + k);
+                //builder.AppendLine(@" \\ \hline");
+                //builder.Append(@"$\beta$");
+                //foreach (var b in betaOpt) builder.Append(" & " + b.ToString("0.##"));
+                //builder.AppendLine(@" \\ ");
+                //builder.Append(@"CF");
+                //foreach (var c in maxCfOpt) builder.Append(" & " + c.ToString("0.##"));
+                //builder.AppendLine(@" \\ ");
+                //builder.Append(@"GAS");
+                //foreach (var g in geneticOpt) builder.Append(" & " + g.ToString("0.##"));
+                //builder.AppendLine(@" \\ \hline");
+                //File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\solarScale" + result.Key + ".tex", builder.ToString());
+                table.AppendLine(builder.ToString());
             }
+            File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\solarScale.tex", table.ToString());
         }
 
         public static void PrintCapacityFactors()
@@ -165,6 +175,115 @@ namespace Main.Documentation
             }
 
             File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\" + name, table.ToTeX());
+        }
+
+        public static void PrintBiomassData()
+        {
+            const int year = 2010;
+            const string type = "Biomass";
+            var data = ProtoStore.LoadEcnData();
+            var energy = data.Where(item =>
+                item.RowHeader.Equals(type) &&
+                item.ColumnHeader.Equals("Gross electricity generation") &&
+                item.Year.Equals(year)).ToArray();
+            var capacity = data.Where(item =>
+            item.RowHeader.Equals(type) &&
+            item.ColumnHeader.Equals("Installed capacity") &&
+            item.Year.Equals(year)).ToArray();
+
+            var table = new Table
+            {
+                Header =
+                    new[]
+                    {
+                        "", @"$\mathcal{K}^{-}$", @"Prod/y", "",@"$\mathcal{K}^{-}$", @"Prod/y", "",
+                        @"$\mathcal{K}^{-}$", @"Prod/y",
+                    },
+                Caption =
+                    @"Hest.",
+                Label = "capacity-factors",
+                Format = "lcclcclcc",
+                Rows = new List<string[]>(),
+            };
+
+            var idx = 0;
+            foreach (var country in CountryInfo.GetCountries().OrderBy(item => item))
+            {
+                var values = new string[2];
+                var eMatch = energy.SingleOrDefault(item => item.Country.Equals(country));
+                var cMatch = capacity.SingleOrDefault(item => item.Country.Equals(country));
+                if (eMatch == null || cMatch == null)
+                {
+                    values[0] = "\\color{red} 0.00";
+                    values[1] = "\\color{red} 0.00";
+                }
+                else
+                {
+                    // We have a match, let's add the backup.
+                    var hourly = eMatch.Value / (365 * 24);
+                    var capFuck = (hourly > 1e-2 && hourly*1000 > cMatch.Value);
+                    var cap = capFuck ? hourly*2 : cMatch.Value/1000;
+                    values[0] = hourly.ToString("0.00");
+                    values[1] = (capFuck? "\\color{red}" : "") + cap.ToString("0.00");
+                }
+
+                var col = idx / 10;
+                if (col == 0) table.Rows.Add(new string[9]);
+
+                table.Rows[idx % 10][col * 3 + 0] = CountryInfo.GetShortAbbrev(country);
+                table.Rows[idx%10][col*3 + 1] = values[1];
+                table.Rows[idx%10][col*3 + 2] = values[0];
+
+                idx++;
+            }
+
+            File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\biomass.tex", table.ToTeX());
+        }
+
+        public static void PrintHydroData()
+        {
+            var data = FileUtils.FromJsonFile<Dictionary<string, HydroInfo>>(@"C:\Users\Emil\Dropbox\Master Thesis\HydroData2005Kies.txt");
+            var table = new Table
+            {
+                Header =
+                    new[]
+                    {
+                        "", @"$\mathcal{K}^{-}$", @"$\mathcal{K}^{-}$", @"$E^S$", "Hourly inflow (mean)", "",
+                        @"$\mathcal{K}^{-}$", @"$\mathcal{K}^{-}$", @"$E^S$", "Hourly inflow (mean)",
+                    },
+                Caption =
+                    @"Hest.",
+                Label = "capacity-factors",
+                Format = "lcccclcccc",
+                Rows = new List<string[]>(),
+            };
+
+            var idx = 0;
+            foreach (var country in CountryInfo.GetCountries().OrderBy(item => item))
+            {
+                var col = idx / 15;
+                if (col == 0) table.Rows.Add(new string[10]);
+                table.Rows[idx % 15][col * 5 + 0] = CountryInfo.GetShortAbbrev(country);
+
+                if (data.ContainsKey(country))
+                {
+                    table.Rows[idx%15][col*5 + 1] = (data[country].Capacity/1000).ToString("0.00");
+                    table.Rows[idx%15][col*5 + 2] = (data[country].PumpCapacity/1000).ToString("0.00");
+                    table.Rows[idx%15][col*5 + 3] = data[country].ReservoirCapacity.ToString("0.00");
+                    table.Rows[idx%15][col*5 + 4] = (data[country].InflowPattern.Average()/24).ToString("0.00");
+                }
+                else
+                {
+                    table.Rows[idx%15][col*5 + 1] = "N/A";
+                    table.Rows[idx%15][col*5 + 2] = "N/A";
+                    table.Rows[idx%15][col*5 + 3] = "N/A";
+                    table.Rows[idx%15][col*5 + 4] = "N/A";
+                }
+
+                idx++;
+            }
+
+            File.WriteAllText(@"C:\Users\Emil\Dropbox\Master Thesis\Tables\hydro.tex", table.ToTeX());
         }
 
         public static void PrintOverviewTable(Dictionary<string, Dictionary<double, BetaWrapper>> blob)

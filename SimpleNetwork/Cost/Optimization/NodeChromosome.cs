@@ -87,7 +87,9 @@ namespace BusinessLogic.Cost
             while (!success)
             {
                 child = SpawnChild(validPartner);
-                success = GenePool.Renormalize(child);
+                //success = GenePool.Renormalize(child);
+                GenePool.RecursiveGammaRescaling(this, new List<string>());
+                success = true;
             }
 
             return child;
@@ -104,14 +106,23 @@ namespace BusinessLogic.Cost
                 // 40% change for mutation.
                 if (destiny > 0.10)
                 {
-                    GenePool.TryMutate(this, key);
+                    Genes[key].Gamma += 0.25 * (0.5 - Rnd.NextDouble());
+                    if (Genes[key].Gamma < GenePool.GammaMin) Genes[key].Gamma = GenePool.GammaMin;
+                    if (Genes[key].Gamma > GenePool.GammaMax) Genes[key].Gamma = GenePool.GammaMax;
+                    Genes[key].Alpha += 0.10 * (0.5 - Rnd.NextDouble());
+                    if (Genes[key].Alpha < GenePool.AlphaMin) Genes[key].Alpha = GenePool.AlphaMin;
+                    if (Genes[key].Alpha > GenePool.AlphaMax) Genes[key].Alpha = GenePool.AlphaMax;
+                    //GenePool.TryMutate(this, key);
                 }
                 // 10% chance for reseed.                    
                 else
                 {
-                    GenePool.TryReSeed(this, key);
+                    Genes[key].Gamma = Rnd.NextDouble() * (GenePool.GammaMax - GenePool.GammaMin) + GenePool.GammaMin;
+                    Genes[key].Alpha = Rnd.NextDouble() * (GenePool.AlphaMax - GenePool.AlphaMin) + GenePool.AlphaMin;
+                    //GenePool.TryReSeed(this, key);
                 }
             }
+            GenePool.RecursiveGammaRescaling(this, new List<string>());
 
             InvalidCost = true;
         }

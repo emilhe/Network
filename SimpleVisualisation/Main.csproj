@@ -87,6 +87,7 @@
     <Compile Include="Configurations\FlowAnalysis.cs" />
     <Compile Include="Configurations\PlayGround.cs" />
     <Compile Include="Configurations\RealData.cs" />
+    <Compile Include="Configurations\StorageAnalysis.cs" />
     <Compile Include="Documentation\Tables.cs" />
     <Compile Include="Figures\BackupAnalysis.cs" />
     <Compile Include="Figures\Comparisons.cs" />

@@ -19,7 +19,6 @@ namespace BusinessLogic.Cost
         private int _mEvaluations;
         private ISolarCostModel _mSolarCostModel = new SolarCostModelImpl();
 
-        public bool Transmission { get; set; }
         public bool CacheEnabled { get; set; }
         
         public int Evaluations
@@ -48,6 +47,8 @@ namespace BusinessLogic.Cost
             }
         }
 
+        public Func<NodeCostCalculator> SpawnCostCalc { get; set; } 
+
         private ConcurrentDictionary<int, NodeCostCalculator> _mCalcMap;
         private readonly ParallelOptions _mOptions;
 
@@ -56,8 +57,9 @@ namespace BusinessLogic.Cost
             if (maxDegreeOfParallelism == -1) maxDegreeOfParallelism = Environment.ProcessorCount;
             _mOptions = new ParallelOptions {MaxDegreeOfParallelism = maxDegreeOfParallelism};
             _mCalcMap = new ConcurrentDictionary<int, NodeCostCalculator>();
+            SpawnCostCalc = SpawnCalc;
             // Initialize dummy calculator to ensure that the cache is updated.
-            var dummy = SpawnCalc();
+            var dummy = SpawnCostCalc();
         }
 
         public void UpdateCost(IList<NodeChromosome> chromosomes)
@@ -69,8 +71,8 @@ namespace BusinessLogic.Cost
             {
                 // Very expensive if extra thread are spawned (they are, apparently..).
                 var id = Thread.CurrentThread.ManagedThreadId;
-                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.TryAdd(id, SpawnCalc());
-                chromosome.UpdateCost(solution => _mCalcMap[id].SystemCost((solution as NodeChromosome).Genes, Transmission));
+                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.TryAdd(id, SpawnCostCalc());
+                chromosome.UpdateCost(solution => _mCalcMap[id].SystemCost((solution as NodeChromosome).Genes));
             });
         }
 
@@ -83,11 +85,16 @@ namespace BusinessLogic.Cost
             {
                 // Very expensive if extra thread are spawned (they are, apparently..).
                 var id = Thread.CurrentThread.ManagedThreadId;
-                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.TryAdd(id, SpawnCalc());
+                if (!_mCalcMap.ContainsKey(id)) _mCalcMap.TryAdd(id, SpawnCostCalc());
                 result[i] = evalFunc(_mCalcMap[id], chromosomes[i]);
             });
 
             return result;
+        }
+
+        public void ResetEvals()
+        {
+            _mEvaluations = 0;
         }
 
         private void Update()

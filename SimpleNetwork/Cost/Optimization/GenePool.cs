@@ -7,6 +7,7 @@ using Utils;
 namespace BusinessLogic.Cost
 {
     public class 
+        
         GenePool
     {
 
@@ -25,10 +26,14 @@ namespace BusinessLogic.Cost
         public static double GammaMin = 1;
         public static double GammaMax = 1;
         private static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);
-            
+
+        public static double StepScale = 0.1;
+        public static double LevyAlpha = 1.5; //0.5
+        public static double LevyBeta = 0; // 1
+
         // Offshore fractions
         public static Dictionary<string, double> OffshoreFractions;
-        private const double StepScale = 1;
+        
 
         #region Gene modification
 
@@ -61,6 +66,8 @@ namespace BusinessLogic.Cost
         {
             double rescaling;
             NodeChromosome guess;
+            //var guess = new NodeChromosome(new NodeGenes(RndGene));
+            //RecursiveGammaRescaling(guess, new List<string>());
             do
             {
                 guess = new NodeChromosome(new NodeGenes(RndGene));
@@ -100,13 +107,15 @@ namespace BusinessLogic.Cost
 
         #region Levy flight
 
-        public static NodeChromosome DoLevyFlight(NodeChromosome chromosome, NodeChromosome best)
+        public static NodeChromosome DoLevyFlight(NodeChromosome chromosome, NodeChromosome best, double stepSize = 0)
         {
             double rescaling;
             NodeChromosome guess;
+            //var guess = LevyFlight(chromosome, best);
+            //RecursiveGammaRescaling(guess, new List<string>());
             do
             {
-                guess = LevyFlight(chromosome, best);
+                guess = LevyFlight(chromosome, best, stepSize);
                 rescaling = GammaRescaling(guess);
             } while (rescaling.Equals(double.NegativeInfinity));
             ScaleGamma(guess, rescaling);
@@ -115,10 +124,11 @@ namespace BusinessLogic.Cost
                 
         }
 
-        private static NodeChromosome LevyFlight(NodeChromosome chromosome, NodeChromosome best)
+        private static NodeChromosome LevyFlight(NodeChromosome chromosome, NodeChromosome best, double stepSize = 0)
         {
             var genes = new Dictionary<string, NodeGene>();
             var levy = LevyStep();
+            if (stepSize == 0) stepSize = StepScale;
 
             foreach (var key in chromosome.Genes.Keys.ToArray())
             {
@@ -126,11 +136,19 @@ namespace BusinessLogic.Cost
                 var oldGene = chromosome.Genes[key];
                 var newGene = new NodeGene {Alpha = oldGene.Alpha, Gamma = oldGene.Gamma};
                 // First do alpha.
+<<<<<<< HEAD
+                newGene.Alpha += stepSize * levy * (bestGene.Alpha - oldGene.Alpha);
+                if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
+                if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
+                // Then gamma.
+                newGene.Gamma += stepSize * levy * (bestGene.Gamma - oldGene.Gamma);
+=======
                 newGene.Alpha += StepScale*Rnd.NextDouble()*levy*(bestGene.Alpha - oldGene.Alpha);
                 if (newGene.Alpha < AlphaMin) newGene.Alpha = AlphaMin;
                 if (newGene.Alpha > AlphaMax) newGene.Alpha = AlphaMax;
                 // Then gamma.
                 newGene.Gamma += StepScale*Rnd.NextDouble()*levy*(bestGene.Gamma - oldGene.Gamma);
+>>>>>>> master
                 if (newGene.Gamma < GammaMin) newGene.Gamma = GammaMin;
                 if (newGene.Gamma > GammaMax) newGene.Gamma = GammaMax;
                 genes.Add(key, newGene);
@@ -141,28 +159,29 @@ namespace BusinessLogic.Cost
 
         private static double LevyStep()
         {
-            return Rnd.NextLevy(1.5, 0);
+            return Rnd.NextLevy(LevyAlpha, LevyBeta);
         }
 
         #endregion
 
         #region Differential evolution
 
-        public static NodeChromosome DoDifferentialEvolution(NodeChromosome chromosome, NodeChromosome[] chromosomes)
+        public static NodeChromosome DoDifferentialEvolution(NodeChromosome chromosome, NodeChromosome[] chromosomes, int i, int j)
         {
             double rescaling;
             NodeChromosome guess;
+            //var guess = DifferentialEvolution(chromosome, chromosomes[i], chromosomes[j]);
+            //RecursiveGammaRescaling(guess, new List<string>());
             do
             {
-                var i = (int) Math.Round(Rnd.NextDouble()*(chromosomes.Length - 1));
-                var j = (int)Math.Round(Rnd.NextDouble() * (chromosomes.Length - 1));
                 guess = DifferentialEvolution(chromosome, chromosomes[i], chromosomes[j]);
                 rescaling = GammaRescaling(guess);
+                i = (int)Math.Round(Rnd.NextDouble() * (chromosomes.Length - 1));
+                j = (int)Math.Round(Rnd.NextDouble() * (chromosomes.Length - 1));
             } while (rescaling.Equals(double.NegativeInfinity));
             ScaleGamma(guess, rescaling);
             ApplyOffshoreFraction(guess);
             return guess;
-
         }
 
         private static NodeChromosome DifferentialEvolution(NodeChromosome chromosome, NodeChromosome other1, NodeChromosome other2)
@@ -190,7 +209,6 @@ namespace BusinessLogic.Cost
         }
 
         #endregion
-
 
         #endregion
 
@@ -353,6 +371,68 @@ namespace BusinessLogic.Cost
             {
                 genes[key].OffshoreFraction = OffshoreFractions[key];
             }
+        }
+
+        public static List<string> RecursiveGammaRescaling(NodeChromosome chromosome, List<string> fixedKeys)
+        {
+            var genes = chromosome.Genes;
+
+            // Calculte new effective gamma (for VARAIBLE .
+            var varWind = 0.0;
+            var fixedWind = 0.0;
+            var varSolar = 0.0;
+            var fixedSolar = 0.0;
+            foreach (var key in genes.Keys)
+            {
+                var load = CountryInfo.GetMeanLoad(key);
+                var wind = genes[key].Gamma * load * genes[key].Alpha;
+                var solar = genes[key].Gamma * load * (1 - genes[key].Alpha);
+                if (fixedKeys.Contains(key))
+                {
+                    fixedWind += wind;
+                    fixedSolar += solar;
+                }
+                else
+                {
+                    varWind += wind;
+                    varSolar += solar;
+                }
+            }
+            var effGamma = (varWind + varSolar) / (CountryInfo.GetMeanLoadSum() - (fixedWind + fixedSolar));
+
+            // Check if the new effective gamma violates the contstraints.
+            var failure = false;
+            foreach (var key in genes.Keys)
+            {
+                if (fixedKeys.Contains(key)) continue;
+                var newGamma = genes[key].Gamma * chromosome.Gamma / effGamma;
+                if (GammaMin - newGamma > 1e-5)
+                {
+                    // Normalization NOT possible. Let's fix this value and try again.
+                    genes[key].Gamma = GammaMin;
+                    fixedKeys.Add(key);
+                    failure = true;
+
+                }
+                if (GammaMax - newGamma < -1e-5)
+                {
+                    // Normalization NOT possible. Let's fix this value and try again.
+                    genes[key].Gamma = GammaMax;
+                    fixedKeys.Add(key);
+                    failure = true;
+                }
+            }
+            // Violation; try fixing the problematic values and do another rescaling.
+            if (failure) return RecursiveGammaRescaling(chromosome, fixedKeys);
+
+            // No violation; just do the rescaling!
+            foreach (var key in chromosome.Genes.Keys)
+            {
+                if (fixedKeys.Contains(key)) continue;
+                chromosome.Genes[key].Gamma /= effGamma;
+            }
+
+            return fixedKeys; 
         }
 
         #endregion

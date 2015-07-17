@@ -7,17 +7,27 @@ namespace Utils.Statistics
     public class MathUtils
     {
 
+        // DEPRECATED DEFINITION
+        ///// <summary>
+        ///// The capacity is maximum of the absolute value of the 0.5% and the 99.5% quantiles.
+        ///// </summary>
+        //public static double CalcCapacity(IEnumerable<double> values)
+        //{
+        //    var orderedValues = values.OrderBy(item => item).ToList();
+
+        //    var min = Math.Abs(FastPercentile(orderedValues, 0.5));
+        //    var max = Math.Abs(FastPercentile(orderedValues, 99.5));
+
+        //    return Math.Max(min, max);
+        //}
+
         /// <summary>
-        /// The capacity is maximum of the absolute value of the 0.5% and the 99.5% quantiles.
+        /// To get the capacity, the events are mapped into absolute values of which the 99% quantile is used.
         /// </summary>
         public static double CalcCapacity(IEnumerable<double> values)
         {
-            var orderedValues = values.OrderBy(item => item).ToList();
-
-            var min = Math.Abs(FastPercentile(orderedValues, 0.5));
-            var max = Math.Abs(FastPercentile(orderedValues, 99.5));
-
-            return Math.Max(min, max);
+            var orderedValues = values.Select(Math.Abs).OrderBy(item => item).ToList();
+            return FastPercentile(orderedValues, 99.0);
         }
 
         /// <summary>
@@ -50,7 +60,7 @@ namespace Utils.Statistics
         /// </summary>
         private static double FastPercentile(List<double> orderedData, double percentile)
         {
-            var idx = (int) Math.Round((orderedData.Count-1)*(percentile/100));
+            var idx = (int)Math.Round((orderedData.Count - 1) * (percentile / 100));
             return orderedData.Count == 0 ? 0 : orderedData[idx];
         }
 

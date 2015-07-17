@@ -10,9 +10,20 @@ namespace BusinessLogic.Storages
     public class BasicBackup : IStorage
     {
         private readonly BasicStorage _mCore;
+        private readonly double _mInflow;
+        private readonly double _mEff;
+
+        public BasicBackup(string name, double capacity, double initialCapacity, double inflow, double eff)
+        {
+            _mEff = eff;
+            _mInflow = inflow;
+            _mCore = new BasicStorage(name, 1, capacity, initialCapacity);
+        }
 
         public BasicBackup(string name, double capacity)
         {
+            _mInflow = 0;
+            _mEff = 0;
             _mCore = new BasicStorage(name, 1, capacity, capacity);
         }
 
@@ -48,8 +59,7 @@ namespace BusinessLogic.Storages
 
         public double Efficiency
         {
-            // A backup cannot be charged.
-            get { return 0; }
+            get { return _mEff; }
         }
 
         public double InitialEnergy
@@ -97,8 +107,14 @@ namespace BusinessLogic.Storages
             set { _mCore.Capacity = value; }
         }
 
+        public double ChargeLevel
+        {
+            get { return _mCore.ChargeLevel; }
+        }
+
         public void TickChanged(int tick)
         {
+            _mCore.Inject(_mInflow);
             ((ITickListener) _mCore).TickChanged(tick);
         }
     }
