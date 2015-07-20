@@ -17,7 +17,7 @@ using Utils;
 
 namespace Main.Figures
 {
-    class PlayGround
+    static class PlayGround
     {
 
         public const string DefaultOptimumPath = @"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50gadK={0}@default.txt";
@@ -26,6 +26,7 @@ namespace Main.Figures
         public const string SolarCost75PctOptimumPath = @"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50gadK={0}@solar75pct.txt";
         public const string Offshore25PctOptimumPath = @"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50gadK={0}@offshore25pct.txt";
         public const string Offshore50PctOptimumPath = @"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50gadK={0}@offshore50pct.txt";
+        public const string StorageOptimumPath = @"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50gadK={0}@{1}@unbiased.txt";
 
         #region Data export to JSON for external rendering
 
@@ -34,7 +35,7 @@ namespace Main.Figures
         public static void ExportChromosomeData()
         {
             var mix = 0.84;
-            var basePath = @"C:\Users\Emil\Dropbox\BACKUP\Python\chromosomes\";
+            var basePath = @"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\chromosomes\";
             var layouts = new Dictionary<NodeGenes, string>();
 
             // Standard beta/max CF layouts
@@ -75,6 +76,15 @@ namespace Main.Figures
                 layouts.Add(genes, string.Format("k={0}solar25pct.txt", k));
                 genes = FileUtils.FromJsonFile<NodeGenes>(string.Format(SolarCost50PctOptimumPath, k));
                 layouts.Add(genes, string.Format("k={0}solar50pct.txt", k));
+            }
+            
+            // Optimized STORAGE layouts.
+            for (int k = 1; k < 4; k++)
+            {
+                var genes = FileUtils.FromJsonFile<NodeGenes>(string.Format(StorageOptimumPath, k, "Reference"));
+                layouts.Add(genes, string.Format("VE50gadK={0}@Reference@unbiased.txt", k));
+                genes = FileUtils.FromJsonFile<NodeGenes>(string.Format(StorageOptimumPath, k, "5h+35h"));
+                layouts.Add(genes, string.Format("VE50gadK={0}@5h+35h@unbiased.txt", k));
             }
 
             // Save the data as JSON.
@@ -277,7 +287,7 @@ namespace Main.Figures
 
             foreach (var layout in layouts)
             {
-                // What genes?
+                // What genes?  
                 var genes = FileUtils.FromJsonFile<NodeGenes>(string.Format(layout));
                 var capacities = evaluator.LinkCapacities(genes);
                 var links = capacities.Select(MapLink);
@@ -338,7 +348,7 @@ namespace Main.Figures
                 name));
         }
 
-        private static LinkDataRow MapLink(KeyValuePair<string, double> pair)
+        public static LinkDataRow MapLink(KeyValuePair<string, double> pair)
         {
             return new LinkDataRow
             {
