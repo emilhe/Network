@@ -33,19 +33,19 @@ namespace Main.Configurations
                 var nodes = ConfigurationUtils.CreateNodesNew();
                 ConfigurationUtils.SetupHomoStuff(nodes, 32, true, false, false);
                 return nodes;
-            }, "5h storage con sync", ExportScheme.ConstrainedSynchronized))){CacheEnabled = false};
+            }, "5h storage con sync", ExportScheme.ConstrainedSynchronized))) { CacheEnabled = false };
             var opt = CalcBetaCurves(kValues, 0.0,
                 genes => genes.Select(item => item.Alpha).ToArray(),
                 genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
             opt.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\data5hSyncOpt.txt");
             Console.WriteLine("Optimization strategy 1 done");
-           
+
             //data.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\data10hStorageSync.txt");
         }
 
         public static void ExportStorageOverview(List<double> kValues)
         {
-            var costCalc = new ParallelNodeCostCalculator() { CacheEnabled = false, Full = true};
+            var costCalc = new ParallelNodeCostCalculator() { CacheEnabled = false, Full = true };
             // No storage
             var proj = CalcBetaCurves(kValues, 0.0,
                 genes => genes.Select(item => item.Alpha).ToArray(),
@@ -78,7 +78,7 @@ namespace Main.Configurations
             proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\data35hSyncProj.txt");
             Console.WriteLine("35h storage done.");
             // 35h + 5h storage
-            costCalc = new ParallelNodeCostCalculator() { CacheEnabled = false };    
+            costCalc = new ParallelNodeCostCalculator() { CacheEnabled = false };
             costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
             {
                 var nodes = ConfigurationUtils.CreateNodesNew();
@@ -151,7 +151,7 @@ namespace Main.Configurations
             var n = 5;
             for (int i = 0; i < n; i++)
             {
-                var pow = i*0.5;
+                var pow = i * 0.5;
                 UncSyncScheme.Power = pow;
                 costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
                 costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
@@ -166,7 +166,7 @@ namespace Main.Configurations
                     genes =>
                         costCalc.ParallelEval(genes,
                             (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-                proj.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\data5h35hPower{0}.txt",pow));
+                proj.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\data5h35hPower{0}.txt", pow));
                 var min = proj["BC"].Values.Select(item => item.BetaY).Min().Min();
                 Console.WriteLine("Power {0} with min {1}.", UncSyncScheme.Power, min);
             }
@@ -178,7 +178,7 @@ namespace Main.Configurations
             Dictionary<string, Dictionary<double, BetaWrapper>> proj;
 
             UncSyncScheme.Power = 0;
-            var biasVec = new double[] {0.245};
+            var biasVec = new double[] { 0.245 };
             for (int i = 0; i < biasVec.Length; i++)
             {
                 var bias = biasVec[i];
@@ -200,6 +200,22 @@ namespace Main.Configurations
                 var min = proj["BC"].Values.Select(item => item.BetaY).Min().Min();
                 Console.WriteLine("Bias {0} with min {1}.", UncSyncScheme.Bias, min);
             }
+        }
+
+        private static void Eval(string path, Func<CountryNode[]> nodeFunc, List<double> kValues = null)
+        {
+            var basePath = @"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\";
+            if (kValues == null) kValues = new List<double>() { 1 };
+            var costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
+            costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, nodeFunc, "stuff"))) { CacheEnabled = false };
+            // Storage
+            var proj = CalcBetaCurves(kValues, 0.0,
+                genes => genes.Select(item => item.Alpha).ToArray(),
+                genes =>
+                    costCalc.ParallelEval(genes,
+                        (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
+            proj.ToJsonFile(Path.Combine(basePath, path));
+            Console.WriteLine("Real(ly?) done.");
         }
 
         public static void ExportStorageReal(List<double> kValues)
@@ -269,195 +285,168 @@ namespace Main.Configurations
 
             #region Different strategies
 
-            costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-            costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
-            {
-                var nodes = ConfigurationUtils.CreateNodesNew();
-                ConfigurationUtils.SetupRealHydro(nodes);
-                ConfigurationUtils.SetupRealBiomass(nodes);
-                return nodes;
-            }, "real storage v1.0 w5h"))) { CacheEnabled = false };
-            // Storage
-            proj = CalcBetaCurves(kValues, 0.0,
-                genes => genes.Select(item => item.Alpha).ToArray(),
-                genes =>
-                    costCalc.ParallelEval(genes,
-                        (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-            proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBio.txt");
-            Console.WriteLine("Real(ly?) done.");
-
-            UncSyncScheme.Bias = 0;
-            UncSyncScheme.Power = 0.5;
-            costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-            costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
-            {
-                var nodes = ConfigurationUtils.CreateNodesNew();
-                ConfigurationUtils.SetupRealHydro(nodes);
-                ConfigurationUtils.SetupRealBiomass(nodes);
-                return nodes;
-            }, "real storage v1.0 w5h"))) { CacheEnabled = false };
-            // Storage
-            proj = CalcBetaCurves(kValues, 0.0,
-                genes => genes.Select(item => item.Alpha).ToArray(),
-                genes =>
-                    costCalc.ParallelEval(genes,
-                        (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-            proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBioPow.txt");
-            Console.WriteLine("Real(ly?) done.");
-
-            UncSyncScheme.Bias = 0.30;
-            UncSyncScheme.Power = 0;
-            costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-            costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
-            {
-                var nodes = ConfigurationUtils.CreateNodesNew();
-                ConfigurationUtils.SetupRealHydro(nodes);
-                ConfigurationUtils.SetupRealBiomass(nodes);
-                return nodes;
-            }, "real storage v1.0 w5h"))) { CacheEnabled = false };
-            // Storage
-            proj = CalcBetaCurves(kValues, 0.0,
-                genes => genes.Select(item => item.Alpha).ToArray(),
-                genes =>
-                    costCalc.ParallelEval(genes,
-                        (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-            proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBioBias.txt");
-            Console.WriteLine("Real(ly?) done.");
-
-            #endregion
-
-            #region Hydro -> hydro+pump -> hydro+pump+bio comparison.
-
-            //costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-            //costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
-            //{
-            //    var nodes = ConfigurationUtils.CreateNodesNew();
-            //    //ConfigurationUtils.SetupRealHydro(nodes);
-            //    //ConfigurationUtils.SetupRealBiomass(nodes);
-            //    return nodes;
-            //}, "real storage v1.0 w5h"))) { CacheEnabled = false };
-            //// Storage
-            //proj = CalcBetaCurves(kValues, 0.0,
-            //    genes => genes.Select(item => item.Alpha).ToArray(),
-            //    genes =>
-            //        costCalc.ParallelEval(genes,
-            //            (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-            //proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEref.txt");
-            //Console.WriteLine("Real(ly?) done.");
-
-            //costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-            //costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
-            //{
-            //    var nodes = ConfigurationUtils.CreateNodesNew();
-            //    ConfigurationUtils.SetupRealHydro(nodes, false);
-            //    //ConfigurationUtils.SetupRealBiomass(nodes);
-            //    return nodes;
-            //}, "real storage v1.0 w5h"))) { CacheEnabled = false };
-            //// Storage
-            //proj = CalcBetaCurves(kValues, 0.0,
-            //    genes => genes.Select(item => item.Alpha).ToArray(),
-            //    genes =>
-            //        costCalc.ParallelEval(genes,
-            //            (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-            //proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroNoPump.txt");
-            //Console.WriteLine("Real(ly?) done.");
-
-            //costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-            //costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
-            //{
-            //    var nodes = ConfigurationUtils.CreateNodesNew();
-            //    ConfigurationUtils.SetupRealHydro(nodes);
-            //    //ConfigurationUtils.SetupRealBiomass(nodes);
-            //    return nodes;
-            //}, "real storage v1.0 w5h"))) { CacheEnabled = false };
-            //// Storage
-            //proj = CalcBetaCurves(kValues, 0.0,
-            //    genes => genes.Select(item => item.Alpha).ToArray(),
-            //    genes =>
-            //        costCalc.ParallelEval(genes,
-            //            (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-            //proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydro.txt");
-            //Console.WriteLine("Real(ly?) done.");
-
-            //costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-            //costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
+            //UncSyncScheme.Bias = 0;
+            //UncSyncScheme.Power = 0;
+            //// Default strategy.
+            //Eval("drSyncVEhydroBio.txt", () =>
             //{
             //    var nodes = ConfigurationUtils.CreateNodesNew();
             //    ConfigurationUtils.SetupRealHydro(nodes);
             //    ConfigurationUtils.SetupRealBiomass(nodes);
             //    return nodes;
-            //}, "real storage v1.0 w5h"))) { CacheEnabled = false };
-            //// Storage
-            //proj = CalcBetaCurves(kValues, 0.0,
-            //    genes => genes.Select(item => item.Alpha).ToArray(),
-            //    genes =>
-            //        costCalc.ParallelEval(genes,
-            //            (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-            //proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBio.txt");
-            //Console.WriteLine("Real(ly?) done.");
+            //});
+            //// Power strategy.
+            //UncSyncScheme.Bias = 0;
+            //UncSyncScheme.Power = 0.5;
+            //Eval("drSyncVEhydroBioPow.txt", () =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    ConfigurationUtils.SetupRealHydro(nodes);
+            //    ConfigurationUtils.SetupRealBiomass(nodes);
+            //    return nodes;
+            //});
+            //// Bias strategy.
+            //UncSyncScheme.Bias = 0.19;
+            //UncSyncScheme.Power = 0;
+            //Eval("drSyncVEhydroBioBias.txt", () =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    ConfigurationUtils.SetupRealHydro(nodes);
+            //    ConfigurationUtils.SetupRealBiomass(nodes);
+            //    return nodes;
+            //});
 
             #endregion
 
-            #region extra storage
+            #region Different levels of hydro/bio
 
-            //UncSyncScheme.Bias = 0.10;
+            //UncSyncScheme.Bias = 0;
             //UncSyncScheme.Power = 0;
+            //// None.
+            //Eval("drSyncVEref.txt", () =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    //ConfigurationUtils.SetupRealHydro(nodes);
+            //    //ConfigurationUtils.SetupRealBiomass(nodes);
+            //    return nodes;
+            //});
+            //// Hydro excl. pump.
+            //Eval("drSyncVEhydroNoPump.txt", () =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    ConfigurationUtils.SetupRealHydro(nodes, false);
+            //    //ConfigurationUtils.SetupRealBiomass(nodes);
+            //    return nodes;
+            //});
+            //// Hydro incl. pump
+            //Eval("drSyncVEhydro.txt", () =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    ConfigurationUtils.SetupRealHydro(nodes);
+            //    ConfigurationUtils.SetupRealBiomass(nodes);
+            //    return nodes;
+            //});
+            //// Hydro incl. pump
+            //Eval("drSyncVEhydroBio.txt", () =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    ConfigurationUtils.SetupRealHydro(nodes);
+            //    ConfigurationUtils.SetupRealBiomass(nodes);
+            //    return nodes;
+            //});
 
-            //costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-            //costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
+            #endregion
+
+            #region Different level of extra storage
+
+            //UncSyncScheme.Bias = 0;
+            //UncSyncScheme.Power = 0;
+            //// None.
+            //Eval("drSyncVEhydroBio.txt", () =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    ConfigurationUtils.SetupRealHydro(nodes);
+            //    ConfigurationUtils.SetupRealBiomass(nodes);
+            //    //ConfigurationUtils.SetupHomoStuff(nodes, 32, false, false, false);
+            //    return nodes;
+            //});
+            //// 5h.
+            //Eval("drSyncVEhydroBio5h.txt", () =>
             //{
             //    var nodes = ConfigurationUtils.CreateNodesNew();
             //    ConfigurationUtils.SetupRealHydro(nodes);
             //    ConfigurationUtils.SetupRealBiomass(nodes);
             //    ConfigurationUtils.SetupHomoStuff(nodes, 32, true, false, false);
             //    return nodes;
-            //}, "real storage v1.0 w5h"))) { CacheEnabled = false };
-            //// Storage
-            //proj = CalcBetaCurves(kValues, 0.0,
-            //    genes => genes.Select(item => item.Alpha).ToArray(),
-            //    genes =>
-            //        costCalc.ParallelEval(genes,
-            //            (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes, true)));
-            //proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBioBias5h.txt");
-            //Console.WriteLine("Real(ly?) done.");
-
-            //costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-            //costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
+            //});
+            //// 35h.
+            //Eval("drSyncVEhydroBio35h.txt", () =>
             //{
             //    var nodes = ConfigurationUtils.CreateNodesNew();
             //    ConfigurationUtils.SetupRealHydro(nodes);
             //    ConfigurationUtils.SetupRealBiomass(nodes);
             //    ConfigurationUtils.SetupHomoStuff(nodes, 32, false, true, false);
             //    return nodes;
-            //}, "real storage v1.0 w5h"))) { CacheEnabled = false };
-            //// Storage
-            //proj = CalcBetaCurves(kValues, 0.0,
-            //    genes => genes.Select(item => item.Alpha).ToArray(),
-            //    genes =>
-            //        costCalc.ParallelEval(genes,
-            //            (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes, true)));
-            //proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBioBias35h.txt");
-            //Console.WriteLine("Real(ly?) done.");
-
-            //costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-            //costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
+            //});
+            //// 5h+35h.
+            //Eval("drSyncVEhydroBio5h35h.txt", () =>
             //{
             //    var nodes = ConfigurationUtils.CreateNodesNew();
             //    ConfigurationUtils.SetupRealHydro(nodes);
             //    ConfigurationUtils.SetupRealBiomass(nodes);
             //    ConfigurationUtils.SetupHomoStuff(nodes, 32, true, true, false);
             //    return nodes;
-            //}, "real storage v1.0 w5h"))) { CacheEnabled = false };
-            //// Storage
-            //proj = CalcBetaCurves(kValues, 0.0,
-            //    genes => genes.Select(item => item.Alpha).ToArray(),
-            //    genes =>
-            //        costCalc.ParallelEval(genes,
-            //            (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-            //proj.ToJsonFile(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBioBias35h5h.txt");
-            //Console.WriteLine("Real(ly?) done.");
+            //});
 
             #endregion
+
+            #region Different level of extra storage - biased
+
+            UncSyncScheme.Bias = 0.19;
+            UncSyncScheme.Power = 0;
+            // None.
+            Eval("drSyncVEhydroBioBias.txt", () =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupRealHydro(nodes);
+                ConfigurationUtils.SetupRealBiomass(nodes);
+                //ConfigurationUtils.SetupHomoStuff(nodes, 32, false, false, false);
+                return nodes;
+            });
+            //UncSyncScheme.Bias = 0.14;
+            //// 5h.
+            //Eval("drSyncVEhydroBioBias5h.txt", () =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    ConfigurationUtils.SetupRealHydro(nodes);
+            //    ConfigurationUtils.SetupRealBiomass(nodes);
+            //    ConfigurationUtils.SetupHomoStuff(nodes, 32, true, false, false);
+            //    return nodes;
+            //});
+            //UncSyncScheme.Bias = 0.13;
+            //// 35h.
+            //Eval("drSyncVEhydroBioBias35h.txt", () =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    ConfigurationUtils.SetupRealHydro(nodes);
+            //    ConfigurationUtils.SetupRealBiomass(nodes);
+            //    ConfigurationUtils.SetupHomoStuff(nodes, 32, false, true, false);
+            //    return nodes;
+            //});
+            //UncSyncScheme.Bias = 0.12;
+            //// 5h+35h.
+            //Eval("drSyncVEhydroBioBias5h35h.txt", () =>
+            //{
+            //    var nodes = ConfigurationUtils.CreateNodesNew();
+            //    ConfigurationUtils.SetupRealHydro(nodes);
+            //    ConfigurationUtils.SetupRealBiomass(nodes);
+            //    ConfigurationUtils.SetupHomoStuff(nodes, 32, true, true, false);
+            //    return nodes;
+            //});
+
+            #endregion
+
+
 
             #region Compare VE/ISET
 
@@ -539,132 +528,156 @@ namespace Main.Configurations
             ParallelNodeCostCalculator costCalc;
             Dictionary<string, Dictionary<double, BetaWrapper>> proj;
 
-            var powVec = new[] {0};
-            //var biasVec = new[] { 0 };
-            var biasVec = new[] { 0, 0.25 };
-
-            for (int i = 0; i < powVec.Length; i++)
-            for (int j = 0; j < biasVec.Length; j++)
-            {
-                UncSyncScheme.Power = powVec[i];
-                UncSyncScheme.Bias = biasVec[j];
-                //costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-                //costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
-                //{
-                //    var nodes = ConfigurationUtils.CreateNodesNew();
-                //    ConfigurationUtils.SetupRealHydro(nodes);
-                //    ConfigurationUtils.SetupRealBiomass(nodes);
-                //    ConfigurationUtils.SetupHomoStuff(nodes, 32, true, true, false);
-                //    return nodes;
-                //}, "real storage v1.0 w5h"))) { CacheEnabled = false };
-                //// Storage
-                //proj = CalcBetaCurves(new List<double> { 1 }, 0.0,
-                //    genes => genes.Select(item => item.Alpha).ToArray(),
-                //    genes =>
-                //        costCalc.ParallelEval(genes,
-                //            (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-                //proj.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBioBias35h5h{0}.txt", UncSyncScheme.Bias, UncSyncScheme.Power));
-                ////proj.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\optBias{0}Power{1}.txt", UncSyncScheme.Bias, UncSyncScheme.Power));
-                //var min = proj["BC"].Values.Select(item => item.BetaY).Min().Min();
-                //Console.WriteLine("Bias {0} & Power {1} => Min = {2}.", UncSyncScheme.Bias, UncSyncScheme.Power, min);
-                // Dump data
-                var core = new FullCore(32, () =>
-                {
-                    var nodes = ConfigurationUtils.CreateNodesNew();
-                    //ConfigurationUtils.SetupRealHydro(nodes);
-                    //ConfigurationUtils.SetupRealBiomass(nodes);
-                    ConfigurationUtils.SetupHomoStuff(nodes, 32, true, true, false);
-                    return nodes;
-                }, "real storage v1.0 w5h" + UncSyncScheme.Bias);
-                core.Controller.CacheEnabled = false;
-                var data = core.Controller.EvaluateTs(1, 0.7);
-                var balancingTs = data[0].TimeSeries.Where(item => item.Name.Contains("Balancing")).ToArray();
-                var t = balancingTs[0].Count();
-                var pos = new double[t];
-                var neg = new double[t];
-                for (int k = 0; k < t; k++)
-                {
-                    var val = balancingTs.Select(item => item.GetValue(k)).Sum();
-                    if (val < 0) neg[k] += val;
-                    else pos[k] += val;
-                    //foreach (var ts in balancingTs)
-                    //{
-                    //    var val = ts.GetValue(k);
-                    //    if (val < 0) neg[k] += val;
-                    //    else pos[k] += val;
-                    //}
-                }
-                //pos.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\storage_ts\curtailmentBias{0}.txt", UncSyncScheme.Bias));
-                neg.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\storage_ts\backupGenerationBias{0}.txt", UncSyncScheme.Bias));
-            }
-
-        }
-
-        public static void OptimizeStuff2()
-        {
-            ParallelNodeCostCalculator costCalc;
-            Dictionary<string, Dictionary<double, BetaWrapper>> proj;
-
             var powVec = new[] { 0 };
             //var biasVec = new[] { 0 };
-            var biasVec = new[] { 0.17, 0.17, 0.18, 0.19, 0.20 };
+            var biasVec = new[] { 0, 0.25 };
 
             for (int i = 0; i < powVec.Length; i++)
                 for (int j = 0; j < biasVec.Length; j++)
                 {
                     UncSyncScheme.Power = powVec[i];
                     UncSyncScheme.Bias = biasVec[j];
-                    costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
-                    costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
-                    {
-                        var nodes = ConfigurationUtils.CreateNodesNew();
-                        ConfigurationUtils.SetupRealHydro(nodes);
-                        ConfigurationUtils.SetupRealBiomass(nodes);
-                        ConfigurationUtils.SetupHomoStuff(nodes, 32, true, false, false);
-                        return nodes;
-                    }, "real storage v1.0 w5h"))) { CacheEnabled = false };
-                    // Storage
-                    proj = CalcBetaCurves(new List<double> { 1 }, 0.0,
-                        genes => genes.Select(item => item.Alpha).ToArray(),
-                        genes =>
-                            costCalc.ParallelEval(genes,
-                                (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
-                    proj.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBioBias5h{0}.txt", UncSyncScheme.Bias, UncSyncScheme.Power));
-                    //proj.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\optBias{0}Power{1}.txt", UncSyncScheme.Bias, UncSyncScheme.Power));
-                    var min = proj["BC"].Values.Select(item => item.BetaY).Min().Min();
-                    Console.WriteLine("Bias {0} & Power {1} => Min = {2}.", UncSyncScheme.Bias, UncSyncScheme.Power, min);
-                    //// Dump data
-                    //var core = new FullCore(32, () =>
+                    //costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
+                    //costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
                     //{
                     //    var nodes = ConfigurationUtils.CreateNodesNew();
                     //    ConfigurationUtils.SetupRealHydro(nodes);
                     //    ConfigurationUtils.SetupRealBiomass(nodes);
-                    //    //ConfigurationUtils.SetupHomoStuff(nodes, 32, true, true, false);
+                    //    ConfigurationUtils.SetupHomoStuff(nodes, 32, true, true, false);
                     //    return nodes;
-                    //}, "real storage v1.0 w5h");
-                    //core.Controller.CacheEnabled = false;
-                    //var data = core.Controller.EvaluateTs(1, 0.9);
-                    //var balancingTs = data[0].TimeSeries.Where(item => item.Name.Contains("Balancing")).ToArray();
-                    //var t = balancingTs[0].Count();
-                    //var pos = new double[t];
-                    //var neg = new double[t];
-                    //for (int k = 0; k < t; k++)
-                    //{
-                    //    var val = balancingTs.Select(item => item.GetValue(k)).Sum();
-                    //    if (val < 0) neg[k] += val;
-                    //    else pos[k] += val;
-                    //    //foreach (var ts in balancingTs)
-                    //    //{
-                    //    //    var val = ts.GetValue(k);
-                    //    //    if (val < 0) neg[k] += val;
-                    //    //    else pos[k] += val;
-                    //    //}
-                    //}
-                    //pos.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\ts\realCurtailmentBias{0}.txt", UncSyncScheme.Bias));
-                    //neg.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\ts\realBackupGenerationBias{0}.txt", UncSyncScheme.Bias));
+                    //}, "real storage v1.0 w5h"))) { CacheEnabled = false };
+                    //// Storage
+                    //proj = CalcBetaCurves(new List<double> { 1 }, 0.0,
+                    //    genes => genes.Select(item => item.Alpha).ToArray(),
+                    //    genes =>
+                    //        costCalc.ParallelEval(genes,
+                    //            (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
+                    //proj.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBioBias35h5h{0}.txt", UncSyncScheme.Bias, UncSyncScheme.Power));
+                    ////proj.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\optBias{0}Power{1}.txt", UncSyncScheme.Bias, UncSyncScheme.Power));
+                    //var min = proj["BC"].Values.Select(item => item.BetaY).Min().Min();
+                    //Console.WriteLine("Bias {0} & Power {1} => Min = {2}.", UncSyncScheme.Bias, UncSyncScheme.Power, min);
+                    // Dump data
+                    var core = new FullCore(32, () =>
+                    {
+                        var nodes = ConfigurationUtils.CreateNodesNew();
+                        ConfigurationUtils.SetupRealHydro(nodes);
+                        ConfigurationUtils.SetupRealBiomass(nodes);
+                        ConfigurationUtils.SetupHomoStuff(nodes, 32, true, true, false);
+                        return nodes;
+                    }, "real storage v1.0 w5h" + UncSyncScheme.Bias);
+                    core.Controller.CacheEnabled = false;
+                    var data = core.Controller.EvaluateTs(1, 0.7);
+                    var balancingTs = data[0].TimeSeries.Where(item => item.Name.Contains("Balancing")).ToArray();
+                    var t = balancingTs[0].Count();
+                    var pos = new double[t];
+                    var neg = new double[t];
+                    for (int k = 0; k < t; k++)
+                    {
+                        var val = balancingTs.Select(item => item.GetValue(k)).Sum();
+                        if (val < 0) neg[k] += val;
+                        else pos[k] += val;
+                        //foreach (var ts in balancingTs)
+                        //{
+                        //    var val = ts.GetValue(k);
+                        //    if (val < 0) neg[k] += val;
+                        //    else pos[k] += val;
+                        //}
+                    }
+                    //pos.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\storage_ts\curtailmentBias{0}.txt", UncSyncScheme.Bias));
+                    neg.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\storage_ts\backupGenerationBias{0}.txt", UncSyncScheme.Bias));
                 }
 
         }
+
+        private static KeyValuePair<double, double[]> EvalOpt(double[] powVec, double[] biasVec, Func<CountryNode[]> nodeFunc)
+        {
+            var opt = new KeyValuePair<double, double[]>(double.MaxValue, new double[0]);
+            for (int i = 0; i < powVec.Length; i++)
+            {
+                for (int j = 0; j < biasVec.Length; j++)
+                {
+                    UncSyncScheme.Power = powVec[i];
+                    UncSyncScheme.Bias = biasVec[j];
+                    var costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
+                    costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, nodeFunc, "stuff"))) { CacheEnabled = false };
+                    // Storage
+                    var proj = CalcBetaCurves(new List<double> { 1 }, 0.0,
+                        genes => genes.Select(item => item.Alpha).ToArray(),
+                        genes =>
+                            costCalc.ParallelEval(genes,
+                                (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
+                    // Dump data?
+                    //proj.ToJsonFile(
+                    //    string.Format(
+                    //        @"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\drSyncVEhydroBioBias5h{0}.txt",
+                    //        UncSyncScheme.Bias, UncSyncScheme.Power));
+                    //proj.ToJsonFile(string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\optBias{0}Power{1}.txt", UncSyncScheme.Bias, UncSyncScheme.Power));
+                    var min = proj["BC"].Values.Select(item => item.BetaY).Min().Min();
+                    if (min < opt.Key)
+                    {
+                        opt = new KeyValuePair<double, double[]>(min, new[] { UncSyncScheme.Power, UncSyncScheme.Bias });
+                    }
+                    Console.WriteLine("Bias {0} & Power {1} => Min = {2}.", UncSyncScheme.Bias, UncSyncScheme.Power, min);
+                }
+            }
+            return opt;
+        }
+
+        public static void OptimizeStuff2()
+        {
+            double[] powVec;
+            double[] biasVec;
+            KeyValuePair<double, double[]> opt;
+
+            // No storage.
+            powVec = new[] { 0.0 };
+            biasVec = new[] { 0.19 };
+            EvalOpt(powVec, biasVec, () =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupRealHydro(nodes);
+                ConfigurationUtils.SetupRealBiomass(nodes);
+                //ConfigurationUtils.SetupHomoStuff(nodes, 32, true, false, false);
+                return nodes;
+            });
+            // 5h.
+            powVec = new[] { 0.0 };
+            biasVec = new[] { 0.14 };
+            opt = EvalOpt(powVec, biasVec, () =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupRealHydro(nodes);
+                ConfigurationUtils.SetupRealBiomass(nodes);
+                ConfigurationUtils.SetupHomoStuff(nodes, 32, true, false, false);
+                return nodes;
+            });
+            Console.WriteLine("Optimum for 5h is bias = {0}", opt.Value[1]);
+            // 35h.
+            powVec = new[] { 0.0 };
+            biasVec = new[] { 0.13 };
+            opt = EvalOpt(powVec, biasVec, () =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupRealHydro(nodes);
+                ConfigurationUtils.SetupRealBiomass(nodes);
+                ConfigurationUtils.SetupHomoStuff(nodes, 32, false, true, false);
+                return nodes;
+            });
+            Console.WriteLine("Optimum for 35h is bias = {0}", opt.Value[1]);
+            // 5h35h.
+            powVec = new[] { 0.0 };
+            biasVec = new[] { 0.12 };
+            opt = EvalOpt(powVec, biasVec, () =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupRealHydro(nodes);
+                ConfigurationUtils.SetupRealBiomass(nodes);
+                ConfigurationUtils.SetupHomoStuff(nodes, 32, true, true, false);
+                return nodes;
+            });
+            Console.WriteLine("Optimum for 5h35h is bias = {0}", opt.Value[1]);
+        }
+
 
         public static void OptimizeStuff3()
         {
@@ -673,7 +686,7 @@ namespace Main.Configurations
 
             var powVec = new[] { 0 };
             //var biasVec = new[] { 0 };
-            var biasVec = new[] { 0.16, 0.15};
+            var biasVec = new[] { 0.16, 0.15 };
 
             for (int i = 0; i < powVec.Length; i++)
                 for (int j = 0; j < biasVec.Length; j++)
@@ -766,7 +779,7 @@ namespace Main.Configurations
             var alphas = new double[res + 1].Linspace(0, 1);
             var genes = alphas.Select(item => NodeGenesFactory.SpawnBeta(item, 1, beta)).ToArray();
             var results = new Dictionary<string, double[]>();
-            var linkResults = new Dictionary<string, Dictionary<string,double>[]>();
+            var linkResults = new Dictionary<string, Dictionary<string, double>[]>();
             results.Add("alpha", alphas);
             // Determine the backup capacity.
             var costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
@@ -786,7 +799,7 @@ namespace Main.Configurations
             //results.Add("Localized-tc", e.Select(item => item["TC"]).ToArray());
             //results.Add("Localized-bc", e.Select(item => item["BC"]).ToArray());
             //results.Add("Localized-be", e.Select(item => item["BE"]).ToArray());
-            linkResults.Add("Localized", costCalc.ParallelEval(genes.ToList(), (c, g) => c.Evaluator.LinkCapacities(g)));         
+            linkResults.Add("Localized", costCalc.ParallelEval(genes.ToList(), (c, g) => c.Evaluator.LinkCapacities(g)));
             // Do stuff.
             foreach (var scenario in scenarios)
             {
@@ -799,7 +812,7 @@ namespace Main.Configurations
                     for (int i = 0; i < alphas.Length; i++)
                     {
                         // Calculate TC.
-                        costCalc = new ParallelNodeCostCalculator(4) {CacheEnabled = false, Full = true};
+                        costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
                         costCalc.SpawnCostCalc =
                             () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(8, () =>
                             {
@@ -810,13 +823,13 @@ namespace Main.Configurations
                                 {
                                     node.Storages.Add(new BasicBackup("kb", 1e9)
                                     {
-                                        Capacity = scenario.Value(node, genes[i][node.Name])/sum*bcs[i]
+                                        Capacity = scenario.Value(node, genes[i][node.Name]) / sum * bcs[i]
                                     });
                                 }
                                 return nodes;
-                            }, scenario.Key, ExportScheme.ConstrainedLocalized))) {CacheEnabled = false};
+                            }, scenario.Key, ExportScheme.ConstrainedLocalized))) { CacheEnabled = false };
                         // Append data.
-                        
+
                         //var eval = costCalc.ParallelEval(new List<NodeGenes> {genes[i]},
                         //    (c, g) => c.ParameterOverview(g));
                         //data[i] = eval[0]["TC"];
@@ -851,16 +864,16 @@ namespace Main.Configurations
             };
             var bias = new Dictionary<string, double>
             {
-                {"Reference", 0.30},
-                {"5h", 0.20},
-                {"35h", 0.16},
-                {"5h+35h", 0.14}
+                {"Reference", 0.19},
+                {"5h", 0.14},
+                {"35h", 0.13},
+                {"5h+35h", 0.12}
             };
             var noBias = DoMagic(scenarios, bias, false);
             var withbias = DoMagic(scenarios, bias, true);
-            noBias.ToJsonFile(Path.Combine(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\storage_cost", "noBias1y.txt"));
+            noBias.ToJsonFile(Path.Combine(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\storage_cost", "noBias.txt"));
             withbias.ToJsonFile(Path.Combine(@"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\storage_cost",
-                "withBias1y.txt"));
+                "withBias.txt"));
         }
 
         public static void StorageOptimization()
@@ -875,10 +888,10 @@ namespace Main.Configurations
             };
             var bias = new Dictionary<string, double>
             {
-                {"Reference", 0.30},
-                {"5h", 0.20},
-                {"35h", 0.16},
-                {"5h+35h", 0.14}
+                {"Reference", 0.19},
+                {"5h", 0.14},
+                {"35h", 0.13},
+                {"5h+35h", 0.12}
             };
 
             // Storage optimizations
@@ -887,7 +900,7 @@ namespace Main.Configurations
                 foreach (var scenario in scenarios)
                 {
                     UncSyncScheme.Bias = 0;
-                    var costCalc = new ParallelNodeCostCalculator(4) {CacheEnabled = false, Full = false};
+                    var costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = false };
                     costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(1, () =>
                     {
                         var nodes = ConfigurationUtils.CreateNodesNew();
@@ -895,8 +908,8 @@ namespace Main.Configurations
                         ConfigurationUtils.SetupRealBiomass(nodes);
                         scenario.Value(nodes);
                         return nodes;
-                    }, scenario.Key))) {CacheEnabled = false};
-                    //Optimization.Sequential(k, scenario.Key + "@unbiased", costCalc);
+                    }, scenario.Key))) { CacheEnabled = false };
+                    Optimization.Sequential(k, scenario.Key + "@unbiased", costCalc);
                     costCalc.ResetEvals();
                     UncSyncScheme.Bias = bias[scenario.Key];
                     Optimization.Sequential(k, scenario.Key + "@biased", costCalc);
@@ -907,14 +920,15 @@ namespace Main.Configurations
         private static Dictionary<string, double[]> DoMagic(Dictionary<string, Action<CountryNode[]>> scenarios, Dictionary<string, double> biasVec, bool bias)
         {
             const int res = 10;
-            var alphas = new double[res+1].Linspace(0, 1);
+            var alphas = new double[res + 1].Linspace(0, 1);
             var genes = alphas.Select(item => new NodeGenes(item, 1));
             var results = new Dictionary<string, double[]>();
             results.Add("alpha", alphas);
             ParallelNodeCostCalculator costCalc;
             foreach (var scenario in scenarios)
             {
-                if(bias) UncSyncScheme.Bias = biasVec[scenario.Key];
+                UncSyncScheme.Power = 0;
+                UncSyncScheme.Bias = bias ? biasVec[scenario.Key] : 0;
                 costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = true };
                 costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(32, () =>
                 {
@@ -925,7 +939,7 @@ namespace Main.Configurations
                     return nodes;
                 }, scenario.Key))) { CacheEnabled = false };
                 results.Add(scenario.Key, costCalc.ParallelEval(genes.ToList(), (c, g) => c.SystemCost(g)));
-                Console.WriteLine(scenario.Key + " is done " + (bias? "with" : "without") + " bias");
+                Console.WriteLine(scenario.Key + " is done " + (bias ? "with" : "without") + " bias");
             }
             return results;
         }
@@ -938,7 +952,7 @@ namespace Main.Configurations
             {
                 var nodes = ConfigurationUtils.CreateNodes(TsSource.ISET);
                 return nodes;
-            }, "ISET TEST DATA"))) { CacheEnabled = false, TcCostModel = new VariableLengthModel()};
+            }, "ISET TEST DATA"))) { CacheEnabled = false, TcCostModel = new VariableLengthModel() };
             var proj = CalcBetaCurves(kValues, 0.0,
                 genes => genes.Select(item => item.Alpha).ToArray(),
                 genes => costCalc.ParallelEval(genes, (calculator, nodeGenes) => calculator.ParameterOverview(nodeGenes)));
