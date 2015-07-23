@@ -22,17 +22,17 @@ namespace Main.Documentation
             for (int j = 0; j < cols; j++)
             {
                 //header.AddRange(new[] { "From", "To", "Type", "Length [km]" });
-                header.AddRange(new[] { "From", "To", "Length" });
+                header.AddRange(new[] { "From", "To","Type", "Length" });
                 //header.AddRange(new[] { "From-To", "Length" });
                 //format.Append("llcr");
-                format.Append("llr");
-                units.AddRange(new[] { "", "", "[km]" });
+                format.Append("llcr");
+                units.AddRange(new[] { "", "", "", "[km]" });
                 //units.AddRange(new[] { "", "[km]" });
             }
             var table = new Table
             {
                 Header = header.ToArray(),
-                Caption = "Approximated link lengths.",
+                Caption = "Overview of link lengths (approximated) and types.",
                 Label = "link-info",
                 Format = format.ToString(),
                 Rows = new List<string[]>(),
@@ -53,7 +53,7 @@ namespace Main.Documentation
                 {
                     CountryInfo.GetShortAbbrev(link.Split('-')[0]),// + "-" +
                     CountryInfo.GetShortAbbrev(link.Split('-')[1]),
-                    //Costs.LinkType[link],
+                    Costs.LinkType[link],
                     Costs.LinkLength[link].ToString()
                 };
                 row.AddRange(subRow);
