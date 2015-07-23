@@ -170,8 +170,9 @@ namespace Main
             var name = string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50gadK={0}@{1}", k, tag);
 
             // seed = new NodeChromosome(FileUtils.FromJsonFile<NodeGenes>(@"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50gadK=1@1.txt")
-            if (seed == null) seed = GenePool.SpawnChromosome();  //new NodeChromosome(new NodeGenes(1, 1));
-            GenePool.ApplyOffshoreFraction(seed.Genes);
+            //if (seed == null) seed = GenePool.SpawnChromosome();  //new NodeChromosome(new NodeGenes(1, 1));
+            if (seed == null) seed = new NodeChromosome(new NodeGenes(0.5,1));  //new NodeChromosome(new NodeGenes(1, 1));
+            GenePool.ApplyFractions(seed.Genes);
             GenePool.K = k;
             if (calc == null)
             {
@@ -193,16 +194,19 @@ namespace Main
         {
             var genes = chromosome.Genes;
 
-            // Calculte new effective gamma (for VARAIBLE .
+            // Calculte new effective gamma (for VARAIBLE) .
             var varWind = 0.0;
             var fixedWind = 0.0;
             var varSolar = 0.0;
             var fixedSolar = 0.0;
+            // New stuff.
+            var fixedOther = 0.0;
             foreach (var key in genes.Keys)
             {
                 var load = CountryInfo.GetMeanLoad(key);
                 var wind = genes[key].Gamma * load * genes[key].Alpha;
                 var solar = genes[key].Gamma * load * (1 - genes[key].Alpha);
+                fixedOther += genes[key].Gamma*load*(genes[key].BiomassFraction + genes[key].HydroFraction);
                 if (fixedKeys.Contains(key))
                 {
                     fixedWind += wind;
@@ -214,7 +218,7 @@ namespace Main
                     varSolar += solar;
                 }
             }
-            var effGamma = (varWind + varSolar) / (CountryInfo.GetMeanLoadSum() - (fixedWind + fixedSolar));
+            var effGamma = (varWind + varSolar)/(CountryInfo.GetMeanLoadSum() - (fixedWind + fixedSolar + fixedOther));
 
             // Check if the new effective gamma violates the contstraints.
             var failure = false;
@@ -225,15 +229,14 @@ namespace Main
                 if (GenePool.GammaMin - newGamma > 1e-5)
                 {
                     // Normalization NOT possible. Let's fix this value and try again.
-                    genes[key].Gamma = GenePool.GammaMin;
+                    genes[key].UpdateGamma(GenePool.GammaMin);
                     fixedKeys.Add(key);
                     failure = true;
-
                 }
                 if (GenePool.GammaMax - newGamma < -1e-5)
                 {
                     // Normalization NOT possible. Let's fix this value and try again.
-                    genes[key].Gamma = GenePool.GammaMax;
+                    genes[key].UpdateGamma(GenePool.GammaMax);
                     fixedKeys.Add(key);
                     failure = true;
                 }
@@ -245,10 +248,10 @@ namespace Main
             foreach (var key in chromosome.Genes.Keys)
             {
                 if (fixedKeys.Contains(key)) continue;
-                chromosome.Genes[key].Gamma /= effGamma;
+                chromosome.Genes[key].UpdateGamma(chromosome.Genes[key].Gamma / effGamma);
             }
 
-            return fixedKeys; ;
+            return fixedKeys; 
         }
 
         class SequentialOptimizer
@@ -387,7 +390,7 @@ namespace Main
 
                 var newVal = gene.Gamma - delta;
                 if (newVal < GenePool.GammaMin) newVal = GenePool.GammaMin;
-                gene.Gamma = newVal;
+                gene.UpdateGamma(newVal);
                 GammaRescaling(chromo, new List<string> { key });
                 return true;
             }
@@ -399,7 +402,7 @@ namespace Main
 
                 var newVal = gene.Gamma + delta;
                 if (newVal > GenePool.GammaMax) newVal = GenePool.GammaMax;
-                gene.Gamma = newVal;
+                gene.UpdateGamma(newVal);
                 GammaRescaling(chromo, new List<string> { key });
                 return true;
             }

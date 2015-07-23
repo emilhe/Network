@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BusinessLogic.Cost;
 using BusinessLogic.ExportStrategies;
 using BusinessLogic.Generators;
 using BusinessLogic.Interfaces;
@@ -105,7 +106,7 @@ namespace BusinessLogic.Utils
 
         public static CountryNode[] CreateNodesNew(double offset = 0, Dictionary<string, double> offshoreFractions = null)
         {
-            var nodes = AccessClient.GetAllCountryDataNew(TsSource.VE50PCT, (int)(offset * Utils.Stuff.HoursInYear));
+            var nodes = AccessClient.GetAllCountryDataNew(TsSource.VE50PCT, (int)(offset * Stuff.HoursInYear));
             if (offshoreFractions == null) return nodes;
 
             foreach (var key in offshoreFractions.Keys)
@@ -169,6 +170,7 @@ namespace BusinessLogic.Utils
         {         
             //var data = FileUtils.FromJsonFile<Dictionary<string, HydroInfo>>(@"C:\Users\Emil\Dropbox\Master Thesis\HydroData2005Kies.txt");
             var data = FileUtils.FromJsonFile<Dictionary<string, HydroInfo>>(@"C:\Users\Emil\Dropbox\Master Thesis\HydroDataExtended2005Kies.txt");
+            var hydroFractions = new Dictionary<string, double>();
             // Create storages.
             foreach (var node in nodes)
             {
@@ -176,13 +178,24 @@ namespace BusinessLogic.Utils
                 if(!pump) match.PumpCapacity = 0;
                 //match.Capacity = 1e12;
                 //match.ReservoirCapacity = 1e12;
+                
+                //if (match.InflowPattern.Average()/24 > node.Model.AvgLoad)
+                //{
+                //    // It is not allowed for a country to have more than 100% production from hydro.
+                //    match.InflowPattern = match.InflowPattern.Mult(node.Model.AvgLoad/(match.InflowPattern.Average()/24));
+                //}
+
                 var hydro = new HydroReservoirGenerator(match);
                 node.Storages.Add(hydro.InverseGenerator);
                 node.Storages.Add(hydro.Pump);
                 node.Generators.Add(hydro);
                 // Adjust the model to take hydro production into account (inflow pattern is in days).
-                node.Model.AvgProduction = match.InflowPattern.Average()/24.0;
+                var hourly = match.InflowPattern.Average()/24.0;
+                node.Model.AvgProduction.Add("Hydro",hourly);
+                hydroFractions.Add(node.Name, hourly/node.Model.AvgLoad);
             }
+            // TODO: CHANGE - THIS IS DANGEROUS!!
+            GenePool.HydroFractions = hydroFractions;
         }
 
         public static void SetupRealBiomass(CountryNode[] nodes)
@@ -197,6 +210,7 @@ namespace BusinessLogic.Utils
             item.RowHeader.Equals(type) &&
             item.ColumnHeader.Equals("Installed capacity") &&
             item.Year.Equals(Year)).ToArray();
+            var biomassFractions = new Dictionary<string, double>();
             // Create storages.
             foreach (var node in nodes)
             {
@@ -213,20 +227,23 @@ namespace BusinessLogic.Utils
                 var gen = new BiomassGenerator(cap, eMatch.Value);
                 node.Generators.Add(gen);
                 node.Storages.Add(gen.InverseGenerator);
-                node.Model.AvgProduction += hourly;
+                node.Model.AvgProduction.Add("Biomass",hourly);
+                biomassFractions.Add(node.Name, hourly / node.Model.AvgLoad);
             }
+            // TODO: CHANGE - THIS IS DANGEROUS!!
+            GenePool.BiomassFractions = biomassFractions;
         }
 
-        public static void SetupAutoBackup(CountryNode[] nodes, double frac)
-        {
-            var amount = nodes.Select(item => item.Model.AvgLoad).Sum()*frac;
-            var weights = nodes.Select(item => item.Model.AvgDeficit).ToArray().Norm(amount * 8766);
-            // Create storages.
-            for (int i = 0; i < nodes.Length; i++)
-            {
-                nodes[i].Generators.Add(new ConstantGenerator("Auto backup", weights[i]));
-            }
-        }
+        //public static void SetupAutoBackup(CountryNode[] nodes, double frac)
+        //{
+        //    var amount = nodes.Select(item => item.Model.AvgLoad).Sum()*frac;
+        //    var weights = nodes.Select(item => item.Model.AvgDeficit).ToArray().Norm(amount * 8766);
+        //    // Create storages.
+        //    for (int i = 0; i < nodes.Length; i++)
+        //    {
+        //        nodes[i].Generators.Add(new ConstantGenerator("Auto backup", weights[i]));
+        //    }
+        //}
 
         // public static void SetupTradeWindHydro(CountryNode[] nodes)
         //{

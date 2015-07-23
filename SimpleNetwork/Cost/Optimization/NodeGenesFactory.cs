@@ -40,7 +40,8 @@ namespace BusinessLogic.Cost.Optimization
             if (Math.Abs(dAlpha) > 1e-6) throw new ArgumentException("Alpha value wrong");
             if (Math.Abs(gGamma) > 1e-6) throw new ArgumentException("Gamma value wrong");
             // THIS IS HACK; HOW TO AVOID?
-            GenePool.ApplyOffshoreFraction(result);
+            GenePool.ApplyFractions(result);
+            //GenePool.ApplyOffshoreFraction(result);
 
             return result;
         }
@@ -113,7 +114,8 @@ namespace BusinessLogic.Cost.Optimization
             if (Math.Abs(dAlpha) > 1e-6) throw new ArgumentException("Alpha value wrong");
             if (Math.Abs(gGamma) > 1e-6) throw new ArgumentException("Gamma value wrong");
             // THIS IS HACK; HOW TO AVOID?
-            GenePool.ApplyOffshoreFraction(result);
+            GenePool.ApplyFractions(result);
+            //GenePool.ApplyOffshoreFraction(result);
 
             return result;
         }

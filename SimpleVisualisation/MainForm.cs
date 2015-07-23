@@ -8,6 +8,7 @@ using BusinessLogic;
 using BusinessLogic.Cost;
 using BusinessLogic.Cost.Optimization;
 using BusinessLogic.Cost.Transmission;
+using BusinessLogic.ExportStrategies;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Nodes;
 using BusinessLogic.Simulation;
@@ -41,32 +42,64 @@ namespace Main
             TimeManager.Instance().StartTime = new DateTime(1979, 1, 1);
             TimeManager.Instance().Interval = 60;
 
-            //Tables.PrintLinkInfo(3);
+            //Article.ExportFigureData();
 
-            //foreach(var file in Directory.GetFiles(@"C:\Users\Emil\Dropbox\BACKUP\Python\sandbox\Layouts"))
+            UncSyncScheme.Bias = 0;
+            var costCalc = new ParallelNodeCostCalculator(4) { CacheEnabled = false, Full = false };
+            costCalc.SpawnCostCalc = () => new NodeCostCalculator(new ParameterEvaluator(new FullCore(1, () =>
+            {
+                var nodes = ConfigurationUtils.CreateNodesNew();
+                ConfigurationUtils.SetupRealHydro(nodes);
+                ConfigurationUtils.SetupRealBiomass(nodes);
+                return nodes;
+            }, "ReferenceNEW"))) { CacheEnabled = false };
+            Optimization.Sequential(1, "ReferenceNEW" + "@unbiased", costCalc);
+
+            //var nodes = ConfigurationUtils.CreateNodesNew();
+            //ConfigurationUtils.SetupRealBiomass(nodes);
+            //ConfigurationUtils.SetupRealHydro(nodes);
+
+            //var genes = NodeGenesFactory.SpawnBeta(0.5,1,0);
+            //foreach (var gene in genes)
             //{
-            //    if(file.Contains(".pdf")) continue;
+            //    gene.Value.UpdateGamma(1);
+            //    //gene.Value.BiomassFraction = 0.1;
+            //    //gene.Value.HydroFraction = 0.2;
+            //}
+            //genes.Export().ToJsonFile(@"C:\Temp\genes.txt");
+
+            Tables.PrintLinkInfo(3);
+
+            //Tables.PrintOverviewTable();
+
+            //foreach (var file in Directory.GetFiles(@"C:\Users\Emil\Dropbox\BACKUP\Python\sandbox\Layouts2"))
+            //{
+            //    if (file.Contains(".pdf")) continue;
             //    var data = FileUtils.FromJsonFile<NodeGenes>(file);
             //    data.Export().ToJsonFile(file);
             //}
 
             //return;
 
-            //        var paths = new[]
+            //StorageAnalysis.StorageTransmission();
+
+            //Figures.PlayGround.ExportChromosomeData();
+
+            //var paths = new[]
             //        {
             //            //@"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\overviews\dataSync.txt",
-            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\overviews\realReference.txt",
-            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\overviews\real5h.txt",
-            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\overviews\real35h.txt",
-            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_prod\overviews\real5h+35h.txt"              
+            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\realReference.txt",
+            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\real5h.txt",
+            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\real35h.txt",
+            //            @"C:\Users\Emil\Dropbox\BACKUP\Python\data_dev\overviews\real5h+35h.txt"              
             //        };
-            //        foreach (var path in paths)
-            //        {
-            //            var blob =
-            //FileUtils.FromJsonFile<Dictionary<string, Dictionary<double, BetaWrapper>>>(path);
-            //            Tables.PrintOverviewTable(blob);
-            //            Console.WriteLine();
-            //        }
+            //foreach (var path in paths)
+            //{
+            //    var blob =
+            //        FileUtils.FromJsonFile<Dictionary<string, Dictionary<double, BetaWrapper>>>(path);
+            //    Tables.PrintOverviewTable(blob);
+            //    Console.WriteLine();
+            //}
 
             //        var load = CountryInfo.GetMeanLoadSum();
 
@@ -186,6 +219,8 @@ namespace Main
             //Print(optima[3], calc, "SEQ-offshore50");
             //Print(optima[7], calc, "CS-offshore50");
 
+            //StorageAnalysis.ExportStorageReal(new List<double> {1});
+
             var hydroInfo = new Dictionary<string, HydroInfo>();
             var lines = File.ReadAllLines(@"C:\Users\Emil\Dropbox\Master Thesis\HydroDataExtended.csv");
             foreach (var line in lines)
@@ -214,14 +249,14 @@ namespace Main
                 });
             }
             var resRatio =
-                hydroInfo.Where(item => item.Value.ReservoirCapacity >= 0)
-                    .Select(item => item.Value.ReservoirCapacity/item.Value.InflowPattern.Average()).Average();
+                hydroInfo.Where(item => item.Value.ReservoirCapacity >= 0 && item.Value.InflowPattern.Average() > 0)
+                    .Select(item => item.Value.ReservoirCapacity / item.Value.InflowPattern.Average()).Average();
             var capRatio =
-                hydroInfo.Where(item => item.Value.Capacity >= 0)
+                hydroInfo.Where(item => item.Value.Capacity >= 0 && item.Value.InflowPattern.Average() > 0)
                     .Select(item => item.Value.Capacity / item.Value.InflowPattern.Average()).Average();
             var pumpRatio =
-                hydroInfo.Where(item => item.Value.PumpCapacity >= 0)
-                    .Select(item => item.Value.PumpCapacity/item.Value.InflowPattern.Average()).Average();
+                hydroInfo.Where(item => item.Value.PumpCapacity >= 0 && item.Value.InflowPattern.Average() > 0)
+                    .Select(item => item.Value.PumpCapacity / item.Value.InflowPattern.Average()).Average();
             foreach (var info in hydroInfo)
             {
                 if (info.Value.ReservoirCapacity < 0)
@@ -236,12 +271,14 @@ namespace Main
                 if (info.Value.PumpCapacity < 0)
                 {
                     info.Value.PumpCapacity = info.Value.InflowPattern.Average() * pumpRatio;
-                    info.Value.Corrected = true;  
+                    info.Value.Corrected = true;
                 }
             }
             hydroInfo.ToJsonFile(@"C:\Users\Emil\Dropbox\Master Thesis\HydroDataExtended2005Kies.txt");
 
             Tables.PrintHydroData();
+
+            StorageAnalysis.OptimizeStuff();
 
             //var sample = new NodeChromosome(new NodeGenes(1, 1));
             //var calc = new NodeCostCalculator(new ParameterEvaluator(false) { CacheEnabled = false });

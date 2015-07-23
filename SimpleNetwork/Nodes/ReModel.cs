@@ -15,9 +15,10 @@ namespace BusinessLogic.Nodes
 
         public string Name { get; private set; }
         public double AvgLoad { get { return _mAvgLoad; } }
-        public double AvgDeficit { get { return _mAvgLoad - AvgProduction; } }
-        public double AvgProduction { get; set; }
+        //public double AvgDeficit { get { return _mAvgLoad - AvgProduction; } }
+        //public double AvgProduction { get; set; }
         public int Count { get { return LoadTimeSeries.Count; } }
+        public Dictionary<string, double> AvgProduction { get; set; } 
 
         public double Alpha
         {
@@ -68,6 +69,7 @@ namespace BusinessLogic.Nodes
             SolarTimeSeries = solar;
 
             _mAvgLoad = LoadTimeSeries.GetAverage();
+            AvgProduction = new Dictionary<string, double>();
 
             Alpha = 0.5;
             Gamma = 1.0;
@@ -98,10 +100,11 @@ namespace BusinessLogic.Nodes
 
         private void UpdateScaling()
         {
-            var scale = Math.Max(AvgDeficit, 0);
-            OnshoreWindTimeSeries.SetScale(_mAlpha * scale * _mGamma * (1 - OffshoreFraction));
-            if (OffshoreWindTimeSeries != null) OffshoreWindTimeSeries.SetScale(_mAlpha * scale * _mGamma * OffshoreFraction);
-            SolarTimeSeries.SetScale((1 - _mAlpha) * scale * _mGamma);
+            var totalProd = _mGamma*_mAvgLoad;
+            var scale = totalProd - AvgProduction.Values.Sum();
+            OnshoreWindTimeSeries.SetScale(_mAlpha * scale * (1 - OffshoreFraction));
+            if (OffshoreWindTimeSeries != null) OffshoreWindTimeSeries.SetScale(_mAlpha * scale * OffshoreFraction);
+            SolarTimeSeries.SetScale((1 - _mAlpha) * scale);
         }
 
     }

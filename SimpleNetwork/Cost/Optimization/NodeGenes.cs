@@ -120,7 +120,7 @@ namespace BusinessLogic.Cost
                     Gamma = gene.Value.Gamma,
                     OffshoreFraction = gene.Value.OffshoreFraction,
                     HydroFraction = gene.Value.HydroFraction,
-                    BioFraction = gene.Value.BioFraction,
+                    BiomassFraction = gene.Value.BiomassFraction,
                 });
             }
         }

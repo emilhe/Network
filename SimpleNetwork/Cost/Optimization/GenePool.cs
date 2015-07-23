@@ -32,9 +32,10 @@ namespace BusinessLogic.Cost
         public static double LevyAlpha = 1.5; //0.5
         public static double LevyBeta = 0; // 1
 
-        // Offshore fractions
         public static Dictionary<string, double> OffshoreFractions;
-
+        // In units of mean load.
+        public static Dictionary<string, double> HydroFractions;
+        public static Dictionary<string, double> BiomassFractions;
 
         #region Gene modification
 
@@ -357,12 +358,37 @@ namespace BusinessLogic.Cost
             ApplyOffshoreFraction(chromosome.Genes);
         }
 
+        public static void ApplyFractions(NodeGenes genes)
+        {
+            ApplyOffshoreFraction(genes);
+            ApplyBiomassFractions(genes);
+            ApplyHydroFractions(genes);
+        }
+
         public static void ApplyOffshoreFraction(NodeGenes genes)
         {
             if (OffshoreFractions == null) return;
             foreach (var key in OffshoreFractions.Keys)
             {
                 genes[key].OffshoreFraction = OffshoreFractions[key];
+            }
+        }
+
+        public static void ApplyBiomassFractions(NodeGenes genes)
+        {
+            if (BiomassFractions == null) return;
+            foreach (var key in BiomassFractions.Keys)
+            {
+                genes[key].BiomassFraction = BiomassFractions[key] / genes[key].Gamma;
+            }
+        }
+
+        public static void ApplyHydroFractions(NodeGenes genes)
+        {
+            if (HydroFractions == null) return;
+            foreach (var key in HydroFractions.Keys)
+            {
+                genes[key].HydroFraction = HydroFractions[key] / genes[key].Gamma;
             }
         }
 
