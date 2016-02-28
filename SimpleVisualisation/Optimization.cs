@@ -165,7 +165,7 @@ namespace Main
             (new NodeChromosome(optimum)).Genes.ToJsonFile(@"C:\proto\simplex.txt");
         }
 
-        public static void Sequential(int k, string tag = "", ParallelNodeCostCalculator calc = null, NodeChromosome seed = null)
+        public static void GreedyAxialSearch(int k, string tag = "", ParallelNodeCostCalculator calc = null, NodeChromosome seed = null)
         {
             var name = string.Format(@"C:\Users\Emil\Dropbox\BACKUP\Layouts\VE50gadK={0}@{1}", k, tag);
 
@@ -182,7 +182,7 @@ namespace Main
                     CacheEnabled = false,
                 };
             }
-            var opt = new SequentialOptimizer(calc);
+            var opt = new GasOptimizer(calc);
             var best = opt.Optimize(seed);
 
             Console.WriteLine("Final cost is {0} after {1} evals", best.Cost, opt.Evals);
@@ -254,7 +254,7 @@ namespace Main
             return fixedKeys; 
         }
 
-        class SequentialOptimizer
+        class GasOptimizer
         {
 
             public static double LimTol { get; set; }
@@ -271,7 +271,7 @@ namespace Main
             private double _mStep;
             public Dictionary<int, double> Steps { get; set; }
 
-            public SequentialOptimizer(ParallelNodeCostCalculator calc)
+            public GasOptimizer(ParallelNodeCostCalculator calc)
             {
                 _mCalc = calc;
 
